@@ -57,6 +57,6 @@ Each sprint or task includes a **short `.md` proof** with:
 
 ## Current Status
 
-| Sprint/Project                  | Status         | Notes                   |
-|---------------------------------|----------------|-------------------------|
-| Pre-Linux OS Basics             | 🔄 In progress | First proofs in `docs/` |
+| Sprint/Project                  | Status         | Notes                                     |
+|---------------------------------|----------------|-------------------------------------------|
+| Pre-Linux OS Basics             | 🔄 In progress | First proofs in `00_pre-linux-os-basics/` |
