@@ -27,3 +27,39 @@ To represent the negative version of a positive number `X` (e.g., `-1`):
 3. Add `1` to the results: `1111 1110 + 1 = 1111 1111`
 
 ### Floating point (IEEE-754)
+IEEE-754 is a technical standard that defines how computers represent and handle floating-point numbers.
+
+#### How Floats Are Stored: Sign + Exponent + Fraction
+
+Think of scientific notation (e.g. 6.022 x 10²³), but in binary. A float is split into three parts:
+- **Sign bit (1 bit):** `0` is positive, `1` if negative.
+- **Exponent (8 bits for 32-bit float):** Represents the "power" (like `23` in `10²³`). It's stored with a bias to handle negative exponents. For 32-bit floats, this bias is `127`, meaning `Actual Exponent = Stored Exponent - 127`). Stored exponent range: `1 – 254`; corresponding to actual exponents: `-126 – 127`.
+- **Fraction/Mantissa (23 bits for 32-bit float):** The significant digits of the number (like the `6.022` from `6.022 x 10²³`).
+
+**Example:** Storing 0.15625 in 32-bit float
+
+**Step 1) Convert to 0.15625 binary:**
+
+To convert a decimal fraction to binary, multiply by 2 repeatedly abd take the integer parts (`0` or `1`) until the fraction becomes zero or until you have enough bits. For `0.15625`:
+- 0.15625 x 2 = 0.3125 &rarr; **integer part 0**
+- 0.3125 x 2 = 0.625 &rarr; **integer part 0**
+- 0.625 x 2 = 1.25 &rarr; **integer part 1**
+- 0.25 x 2 = 0.5 &rarr; **integer part 0**
+- 0.5 x 2 = 1 &rarr; **integer part 1**
+Reading the integer parts from top to bottom, we get `0.00101₂`. Thus, `0.15625 = 0.00101₂`.
+
+**Step 2) Normalize to Scientific Notation**
+
+In binary scientific notation, we express the number as 1.xxxx x 2<sup>exponent</sup>. For `0.00101₂`, we move the binary point three places to the right to get `1.01₂`. The is equivalent to multiplying by `2⁻³`. So:
+- Value: `1.01₂ x 2⁻³`
+- The leading 1 is implicit in the representation (not stored), so we focus on the fractional part "01".
+
+**Step 3) Determine the Sign Bit**
+
+Since `0.15625` is positive, the sign bit is `0`.
+
+**Step 4) Calculate the Stored Exponent**
+
+The actual exponent is `-3`. We add the bias (127) to get the stored exponent: `-3 + 127 = 124`
+
+Now, convert 124 to binary (8 bits): 
