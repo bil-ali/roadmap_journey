@@ -1,4 +1,4 @@
-# [Pre-Linux OS Basics Sprint / Day 1 / OSTEP Prereq Knowledge]
+# [Pre-Linux OS Basics Sprint / Day 1 (1/9/2025) / OSTEP Prereq Knowledge]
 
 **Task:**
 
@@ -30,22 +30,25 @@ To represent the negative version of a positive number `X` (e.g., `-1`):
 <br>
 
 ### Floating point (IEEE-754)
-IEEE-754 is a technical standard that defines how computers represent and handle floating-point numbers.
 
-#### How Floats Are Stored: Sign + Exponent + Fraction
+IEEE-754 is a technical standard that defines how computers represent and handle floating-point numbers. A float is split into three parts:
 
-Think of scientific notation (e.g. 6.022 x 10²³), but in binary. A float is split into three parts:
-- **Sign bit (1 bit):** `0` is positive, `1` if negative.
-- **Exponent (8 bits for 32-bit float):** Represents the "power" (like `23` in `10²³`). It's stored with a bias to handle negative exponents. For 32-bit floats, this bias is `127`, meaning `Actual Exponent = Stored Exponent - 127`). Stored exponent range: `1 – 254`; corresponding to actual exponents: `-126 – 127`.
+- **Sign bit (1 bit):** `0` if positive, `1` if negative.
+- **Exponent (8 bits for 32-bit float):** Represents the "power" (like `23` in `10²³`). It's stored with a bias to handle negative exponents, meaning `Actual Exponent = Stored Exponent - Bias`)<br>
+For 32-bit floats, this bias is `127`. Stored exponent range: `1 – 254`; corresponding to actual exponents: `-126 – 127`.
 - **Fraction/Mantissa (23 bits for 32-bit float):** The significant digits of the number (like the `6.022` from `6.022 x 10²³`).
 
 The formula for the value of a IEEE-754 float is: <br>
-`value = (-1)^sign x (1 + fraction) x 2^(exponent - bias)`
+`Value = (-1)^Sign x (1 + Fraction) x 2^(Exponent - Bias)`
 
-#### **Example: Storing 0.15625 in 32-bit float**
+#### **Example 1: Storing 0.15625 in 32-bit float**
 
-**Step 1) Convert `0.15625` to binary:**
+**Step 1) Determine the Sign Bit**
+<br>
+Since `0.15625` is positive, the sign bit is **`0`**.
 
+**Step 2) Convert `0.15625` to binary:**
+<br>
 To convert a decimal fraction to binary, multiply by 2 repeatedly and take the integer parts (`0` or `1`) until the fraction becomes zero or until you have enough bits. For `0.15625`:
 - 0.15625 x 2 = 0.3125 &rarr; **integer part `0`**
 - 0.3125 x 2 = 0.625 &rarr; **integer part `0`**
@@ -55,36 +58,129 @@ To convert a decimal fraction to binary, multiply by 2 repeatedly and take the i
 
 Reading the integer parts from top to bottom, we get `0.00101₂`. Thus, `0.15625 = 0.00101₂`.
 
-**Step 2) Normalize to Scientific Notation**
-
+**Step 3) Normalize to Scientific Notation**
+<br>
 In binary scientific notation, we express the number as 1.xxxx x 2<sup>exponent</sup>. For `0.00101₂`, we move the binary point three places to the right to get `1.01₂`. This is equivalent to multiplying by `2⁻³`. So:
 - Value: `1.01₂ x 2⁻³`
 - The leading `1.` is implicit in the representation (not stored), so we focus on the fractional part "`01`".
 
-**Step 3) Determine the Sign Bit**
-
-Since `0.15625` is positive, the sign bit is `0`.
-
 **Step 4) Calculate the Stored Exponent**
-
+<br>
 The actual exponent is `-3`. We add the bias (`127`) to get the stored exponent: `-3 + 127 = 124`
-
-Now, convert 124 to binary (8 bits): `01111100₂`
+<br>
+Now, convert 124 to binary (8 bits): `01111100`
 
 **Step 5) Extract the Fraction (Mantissa)**
-
+<br>
 The normalizaed value is `1.01₂`. The fraction part is the bits after the decimal point, which is "`01₂`". However, since IEEE-754 requires a 23-bit fraction, we pad with zeros to the right: `01000000000000000000000₂`.
 
 > \*\*NOTE** <br>Converting this from binary to decimal: `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
 
-**Step 6) Combine All Parts**
-
+**Step 6) Full binary representation:**
+<br>
 The 32-bit float consists of:
 - Sign bit: 1 bit (`0`)
 - Exponent: 8 bits (`01111100₂`)
 - Fraction: 23 bits (`01000000000000000000000₂`)
-Thus, the full binary representation is: <br>
-**`00111110001000000000000000000000`**
 
-Grouped into 4-bit nibbles for hexadecimal conversion:
-- `0011` =
+Thus, the full binary representation is: <br>
+**`0011 1110 0010 0000 0000 0000 0000 0000`**<br>
+The hexadecimal representation is: `0x3E200000`.
+
+#### **How the Float is Read from Memory and Interpreted**
+
+**Step 1: Read and Reconstruct the 32-Bit Value**
+<br>
+The CPU fetches **4 bytes** from memory addresses `0x1000` to `0x1003`. Assuming the system is **litte-endian**, the CPU then reverses the order of the bytes to get the correct 32-bit value: `0x3E200000`.
+
+**Step 2: Interpret the Bits**
+<br>
+The CPU parses the 32-bit string according to IEEE-754, splitting it into the three defined fields:
+- **Bit 31 (The Sign Bit):** `0`, meaning the number is **positive**.
+- **Bits 30-23 (The Exponent Bits:** `01111100` &rarr; `124`.
+- **Bits 22&ndash;0 (The Fraction Bits):** `01000000000000000000000`
+
+**Step 3: Apply the IEEE-754 Formula**
+<br>
+`Value = (-1)^Sign x (1 + Fraction) x 2^(Exponent - Bias)`
+1. **Calculate the Sign:**
+    `(-1)^Sign` = (-1)^0 = `1`
+2. **Calculate the true Exponent:**
+    `Exponent - Bias` = 124 - 127 = `-3`
+3. **Calculate the Significand (1+ Fraction):**<br>
+    `1.01000000000000000000000₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> + 0 x 2<sup>-3</sup> + . . . + 0 x 2<sup>-23</sup> = 1 + 0 + 0.25 + 0 + . . . + 0 = `1.25`.
+4. **Final Value:**<br>
+    `1 x 1.25 x 2⁻³ = 0.15625`
+
+<!-- 
+#### **Example 2: Storing 35.7911 in 32-bit float**
+
+**Step 1) Sign Bit**:
+<br>
+Since `35.7911` is positive, the sign bit is **`0`**.
+
+**Step 2) Convert `35.7911` to binary:**
+
+- **Integer part (`35`):**<br>
+    35 ÷ 2 = 17 remainder `1`<br>
+    17 ÷ 2 = 8 remainder `1`<br>
+    8 ÷ 2 = 4 remainder `0`<br>
+    4 ÷ 2 = 2 remainder `0`<br>
+    2 ÷ 2 = 1 remainder `0`<br>
+    1 ÷ 2 = 0 remainder `1`
+
+    So, `35` in binary is `100011`.
+- **Fraction part (0.7911):**<br>
+    0.7911 x 2 = 1.5822 &rarr; `1`<br>
+    0.5822 x 2 = 1.1644 &rarr; `1`<br>
+    0.1644 x 2 = 0.3288 &rarr; `0`<br>
+    0.3288 x 2 = 0.6576 &rarr; `0`<br>
+    0.6576 x 2 = 1.3152 &rarr; `1`<br>
+    0.3152 x 2 = 0.6304 &rarr; `0`<br>
+    0.6304 x 2 = 1.2608 &rarr; `1`<br>
+    0.2608 x 2 = 0.5216 &rarr; `0`<br>
+    0.5216 x 2 = 1.0432 &rarr; `1`<br>
+    0.0432 x 2 = 0.0864 &rarr; `0`<br>
+    0.0864 x 2 = 0.1728 &rarr; `0`<br>
+    0.1728 x 2 = 0.3456 &rarr; `0`<br>
+    0.3456 x 2 = 0.6912 &rarr; `0`<br>
+    0.6912 x 2 = 1.3824 &rarr; `1`<br>
+    0.3824 x 2 = 0.7648 &rarr; `0`<br>
+    0.7648 x 2 = 1.5296 &rarr; `1`<br>
+    0.5296 x 2 = 1.0592 &rarr; `1`<br>
+    0.0592 x 2 = 0.1184 &rarr; `0`<br>
+    0.1184 x 2 = 0.2368 &rarr; `0`<br>
+    . . .
+    
+    So, the fractional part in binary is approximately `1100101010000101100...`
+- **Combine integer and fractional parts:**<br>
+    `100011.1100101010000101100...`
+
+**Step 3) Normalize to Scientific Notation**
+<br>
+Move the binary point 5 places to the left:<br>
+`1.000111100101010000101100...` x `2^5`.
+
+**Step 4) Calculate the Stored Exponent**
+<br>
+The actual exponent is `5`. To get the stored exponent: `5 + 127 = 132`.
+<br>
+Now, convert 132 to binary: (8 bits): `1000 0100`
+
+**Step 5) Extract the Fraction (Mantissa)**
+<br>
+The significand is `1.000111100101010000101100...`, so the fraction bits are `00011110010101000010110` (23 bits).
+
+**Step 6) Full binary representation:**
+<br>
+- **Sign:** `0`
+- **Exponent:** `10000100`
+- **Fraction:** `00011110010101000010110`
+
+Thus, the full binary representation is: <br>
+**`0100 0010 0000 1111 0010 1010 0001 0110`**<br>
+The hexadecimal representation is: `0x420F2A16`.
+-->
+
+
+### Endianness
