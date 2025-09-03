@@ -187,6 +187,31 @@ The hexadecimal representation is: `0x420F2A16`.
 
 **Endianness** defines whether the most significant byte (MSB) or least significant byte (LSB) is placed at the lowest memory address when storing multi-byte data types in computer memory.
 
-**Big Endian**
+**Big-Endian**
 <br>
-`0x12` &rarr;
+`0x12` &rarr; `0x32` &rarr; `0x56` &rarr; `0x78` = `0x12345678`
+
+**Little-Endian**
+<br>
+`0x78` &rarr; `0x56` &rarr; `0x32` &rarr; `0x12` = `0x12345678`
+
+#### How to Determine Endianness
+``` c
+#include <studio.h>
+int main()
+{
+    int num = 0x12345678
+    char *byte = (char *)&num;
+
+    if (*byte == 0x78)
+    {
+        printf("Little-Endian\n");
+    }
+    else if (*byte == 0x12)
+    {
+        printf("Big-Endian\n");
+    }
+    return 0;
+}
+
+```
