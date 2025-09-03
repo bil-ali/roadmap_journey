@@ -184,3 +184,9 @@ The hexadecimal representation is: `0x420F2A16`.
 
 
 ### Endianness
+
+**Endianness** defines whether the most significant byte (MSB) or least significant byte (LSB) is placed at the lowest memory address when storing multi-byte data types in computer memory.
+
+**Big Endian**
+<br>
+`0x12` &rarr;
