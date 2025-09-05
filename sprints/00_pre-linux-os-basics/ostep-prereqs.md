@@ -112,6 +112,8 @@ The CPU parses the 32-bit string according to IEEE-754, splitting it into the th
 4. **Final Value:**<br>
     `1 x 1.25 x 2⁻³ = 0.15625`
 
+<br>
+
 <!-- 
 #### **Example 2: Storing 35.7911 in 32-bit float**
 
@@ -213,5 +215,132 @@ int main()
     }
     return 0;
 }
-
 ```
+
+
+### Alignment and Padding
+
+#### **Alignment**
+The requirement that data types in memory must start at specific memory addresses that are multiples of their size. Because CPUs read memory in chunks (called **`memory words`** or **`cache lines`**), and we want to avoid bit-shifting or crashes. For example,
+- A 4-byte `int` should start at an address divisible by 4.
+- A 8-byte `double` should start at an address divisible by 8.
+> \*\*NOTE** <br>
+> A **`Memory Word`** is the basic unit of data a CPU can work with in a single operation. On a modern 64-bit system (typically 8 bytes).
+>
+> A **`Cache Line`** is a larger block of memoery (e.g., 64 bytes) that the CPU's cache loads from the main RAM all at once to be ready for super-fast access.
+
+#### **Padding**
+Extra bytes inserted by the compiler between fields in a `struct`/`class` to ensure each field is properly aligned.<br>
+It can also be added at the end of a `struct` to ensure alignment in arrays.
+
+#### **Example:** `struct X { char c; int i; };`
+1. **Member Sizes:**
+   - `char c`: 1 byte
+   - `int i`: 4 bytes
+2. **Without Padding:**
+   - If the struct started at address `0x1000`:
+     - `c` would be at `0x1000` (aligned)
+     - `i` would start at `0x1001` (misaligned)
+3. **Compiler Adds Padding:**
+   - To align `i`, the compiler inserts **3 bytes of padding after** `c`:
+     - `c` at `0x1000`
+     - Padding at `0x1001`,`0x1002`,`0x1003`.
+     - `i` starts at `0x1004` (aligned).
+4. **Total Size:**
+    - `char c`: 1 byte
+    - Padding: 3 bytes
+    - `int i`: 4 bytes
+    - **Total: 8 bytes**
+
+<hr>
+<br>
+
+## 2) From source to a running program (the whole pipeline)
+
+### The toolchain: preprocess &rarr; compile &rarr; assemble &rarr; link
+
+####  **1\. Preprocessing (`cpp`)** 
+
+The preprocessor handles all lines beginning with a `#` directive.
+<br>
+**Key Operations:**
+- **`#include` Expansion** <br>
+Finds the specified header files (like `stdio.h`) and literally copy-pastes their contents in source file.
+- **Macro Expansion** <br>
+Replaces all instances of defined macros (like `MESSAGE`) with their actual values.
+- **Conditional Compilation** <br>
+Processes `#if`, `#ifdef`, `#endif` directives, including or excluding blocks of code based on defined conditions.
+
+**Input**: `hello.c`, **Output**: `hello.i`
+
+####  **2\. Compilation (`cc1`)** 
+
+The compiler takes the preprocessed code and translates it into **assembly language**.
+<br>
+**Key Operations:**
+- **Parsing & Syntax Analysis** (checking for syntax errors)
+- **Semantic Analysis** (type checking)
+- **Optimization** (high-level optimizations)
+- **Code Generation** (outputs a human-readable assembly language `.s` file)
+
+**Input**: `hello.i`, **Output**: `hello.s`
+
+#### **3\. Assembly (`as`)**
+
+Takes the assembly code and translates it into machine code (pure binary)
+<br>
+**Key Operations:**
+- **Mnemonic Translation**<br>
+  Converts human-readable assembly mnemonics into their binary opcodes.
+- **Resolving Addresses**<br>
+  Assigns preliminary addresses to instructions and data.
+- **Creating the Object File**<br>
+  Outputs a structured file containing:
+  1. **Machine Code**<br>(binary)
+  2. **A Symbol Table**<br>(directory of names (`_main`, `_printf`, etc.) in the file, noting which ones are defined vs undefined)
+  3. **Relocation Information**<br>(instructions for the linker on how to adjust addresses once final locations are known)
+
+
+**Input**: `hello.s`, **Output**: `hello.o`
+
+#### **4\. Linking (`ld`)**
+
+The linker combines one or more `.o` object files and libraries into a single, executable file.
+<br>
+**Key Operations:**
+- **Symbol Resolution**<br>
+  The linker's **main job**. It looks at the symbol tables from the `.o` files, and when is sees an undefined symbol, it searches through all the linked libraries and other `.o` files to find its definition.
+- **Relocation**<br>
+  Assigns final memory addresses to all the coe and data sections. It then goes back and updates all the preliminary addresses that the assembler created with these final addresses (using the Relocation Information from the **Symbol Table**).
+- **Library Handling**<br>
+  It can link two types of libraries:
+  - **Static Libraries**<br>
+  `.a` on Linux, `.lib` on Windows.
+  The library code is physically copied into final executable.
+  - **Dynamic/Shared Libraries**<br>
+  `.so` on Linux, `.dll` on Windows.
+  The library code is only referenced in the final executable, so the library is loaded into memory at runtime.
+
+**Input**: `hello.o` + `libc.a`, **Output**: `hello` (executable)
+
+#### **Summary:**
+```
+hello.c (Source)
+      |
+      v Preprocessing (cpp)
+hello.i (Preprocessed)
+      |
+      v Compilation (cc1)
+hello.s (Assembly)
+      |
+      v Assembly (as)
+hello.o (Object File) + libc.a (Library)
+      |               /
+      v Linking (ld) /
+   hello (Executable)
+```
+
+> \*\*NOTE** <br>The Python "Toolchain", by contrast, is a two-stage process.
+> 1. Compilation to ByteCode
+> 2. Interpretation by the Python Virtual Machine
+> ![SVG Image](img/0.svg)
