@@ -340,7 +340,20 @@ hello.o (Object File) + libc.a (Library)
    hello (Executable)
 ```
 
+<!-- --- -->
 > \*\*NOTE** <br>The Python "Toolchain", by contrast, is a two-stage process.
 > 1. Compilation to ByteCode
 > 2. Interpretation by the Python Virtual Machine
-> ![SVG Image](img/0.svg)
+> 
+> <img src="img/0.svg" alt="SVG Image" width="40%"/>
+<!-- --- -->
+
+<br>
+
+### Executable layout
+
+An executable file is a highly structured toolbox.
+This structure is divided into named **sections** (or **segments** when loaded into memory), each with a specific purpose and set of permissions (read, write, execute).
+
+#### **The Common Sections/Segments**
+1. `.text` (Code Segment)
