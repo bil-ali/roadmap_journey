@@ -1,5 +1,5 @@
-# [Pre-Linux OS Basics Sprint / Day 1 (1/9/2025) / OSTEP Prereq Knowledge]
-
+# [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
+## Day 14 (1/9/25 - 14/9/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -74,7 +74,9 @@ Now, convert 124 to binary (8 bits): `01111100`
 <br>
 The normalizaed value is `1.01₂`. The fraction part is the bits after the decimal point, which is "`01₂`". However, since IEEE-754 requires a 23-bit fraction, we pad with zeros to the right: `01000000000000000000000₂`.
 
+> <!-- --- -->
 > \*\*NOTE** <br>Converting this from binary to decimal: `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
+> <!-- --- -->
 
 **Step 6) Full binary representation:**
 <br>
@@ -224,10 +226,13 @@ int main()
 The requirement that data types in memory must start at specific memory addresses that are multiples of their size. Because CPUs read memory in chunks (called **`memory words`** or **`cache lines`**), and we want to avoid bit-shifting or crashes. For example,
 - A 4-byte `int` should start at an address divisible by 4.
 - A 8-byte `double` should start at an address divisible by 8.
+
+> <!-- --- -->
 > \*\*NOTE** <br>
-> A **`Memory Word`** is the basic unit of data a CPU can work with in a single operation. On a modern 64-bit system (typically 8 bytes).
+> A **`Memory Word`** is the basic unit of data a CPU can work with in a single operation. On a modern 64-bit system, typically 8 bytes.
 >
-> A **`Cache Line`** is a larger block of memoery (e.g., 64 bytes) that the CPU's cache loads from the main RAM all at once to be ready for super-fast access.
+> A **`Cache Line`** is a larger block of memory (e.g. 64 bytes) that the CPU's cache loads from the main RAM all at once to be ready for super-fast access.
+> <!-- --- -->
 
 #### **Padding**
 Extra bytes inserted by the compiler between fields in a `struct`/`class` to ensure each field is properly aligned.<br>
@@ -238,7 +243,7 @@ It can also be added at the end of a `struct` to ensure alignment in arrays.
    - `char c`: 1 byte
    - `int i`: 4 bytes
 2. **Without Padding:**
-   - If the struct started at address `0x1000`:
+   - Let the struct started at address `0x1000`:
      - `c` would be at `0x1000` (aligned)
      - `i` would start at `0x1001` (misaligned)
 3. **Compiler Adds Padding:**
@@ -252,8 +257,10 @@ It can also be added at the end of a `struct` to ensure alignment in arrays.
     - `int i`: 4 bytes
     - **Total: 8 bytes**
 
+
 <hr>
 <br>
+
 
 ## 2) From source to a running program (the whole pipeline)
 
@@ -309,9 +316,9 @@ The linker combines one or more `.o` object files and libraries into a single, e
 <br>
 **Key Operations:**
 - **Symbol Resolution**<br>
-  The linker's **main job**. It looks at the symbol tables from the `.o` files, and when is sees an undefined symbol, it searches through all the linked libraries and other `.o` files to find its definition.
+  The linker's **main job**. It looks at the symbol tables from the `.o` files, and when it sees an undefined symbol, it searches through all the linked libraries and other `.o` files to find its definition.
 - **Relocation**<br>
-  Assigns final memory addresses to all the coe and data sections. It then goes back and updates all the preliminary addresses that the assembler created with these final addresses (using the Relocation Information from the **Symbol Table**).
+  Assigns final memory addresses to all the code and data sections. It then goes back and updates all the preliminary addresses that the assembler created with these final addresses (using the Relocation Information from the **Symbol Table**).
 - **Library Handling**<br>
   It can link two types of libraries:
   - **Static Libraries**<br>
@@ -340,13 +347,13 @@ hello.o (Object File) + libc.a (Library)
    hello (Executable)
 ```
 
-<!-- --- -->
+> <!-- --- -->
 > \*\*NOTE** <br>The Python "Toolchain", by contrast, is a two-stage process.
 > 1. Compilation to ByteCode
 > 2. Interpretation by the Python Virtual Machine
 > 
 > <img src="img/0.svg" alt="SVG Image" width="40%"/>
-<!-- --- -->
+> <!-- --- -->
 
 <br>
 
@@ -356,4 +363,348 @@ An executable file is a highly structured toolbox.
 This structure is divided into named **sections** (or **segments** when loaded into memory), each with a specific purpose and set of permissions (read, write, execute).
 
 #### **The Common Sections/Segments**
-1. `.text` (Code Segment)
+##### **1. `.text` (Code Segment)**
+- **Contents**<br>
+  All the executable machine code (i.e. the actual instruction for the CPU).
+- **Permissions: Read-Only and Execute**
+  - **Read-only** to prevent a program from accidentally modifying its own instructions.
+  - **Executable** so the CPU can run the instructions.
+
+##### **2. `.rodata` (Read-Only Data)**
+- **Contents**<br>
+  Constants and literal values that should never change during execuation.
+- **Permissions: Read-Only and Execute**<br>
+
+##### **3. `.data` (Initialized Data)**
+- **Contents**<br>
+  Global and static variables that have an explicit initial value set in the source code.
+  > <!-- --- -->
+  > \*\*NOTE** <br>Physically stored in the executable file on disk.
+  > <!-- --- -->
+- **Permissions: Read-Write**<br>
+  Because these variables are supposed to be changed during runtime.
+
+##### **4. `.bss` (Block started by Symbol)**
+- **Contents**<br>
+  Global and static variables that are initialized to zero or have no explicit initializer.
+  > <!-- --- -->
+  > \*\*NOTE** <br>Occupies no physical space on the disk in the executable file. This section in the executable is more like a note saying "When you load this program, please allocate 10,000 bytes of memory and fill it all with zeros.
+  > <!-- --- -->
+- **Permissions: Read-Write**<br>
+
+##### **5. "Metadata" and Instructions for the OS**
+Beyond the raw data and code, the executable file contains **headers** full of crucial metadata that tells the OS how to load and run it.
+1. **The Entry Point (`_start`)**<br>
+   The file specifies exactly where the OS should start executing the program. The entry point is usuallly a symbol named `_start`.
+2. **Dynamic Linking Information**<br>
+   Contains a "shopping list" of required shared libraries and a list of symbols needed from them. When the OS loads the program, the **dynamic linker** reads this list to perform dynamic linking.
+
+#### **Visual Summary: From Disk to Memory**
+<img src="img/1.svg" alt="SVG Image">
+
+
+<hr>
+<br>
+
+
+## 3) Program Start: From Command to Running Process
+Imagine we type `./my_program` into shell and hit enter. Here's what happens, step-by-step.
+
+### **Step 1: The `execve` System Call**
+
+The shell calls the the `execve` system call to execute program.
+- **`execve`'s Job:** To replace the current process's memory with the contents of a new program file and then start running that new program.
+
+The shell passes the path to the executable file (`./my_program`) and the arguments (`argv`) and environment variables 
+(`envp`) to the kernel. The kernel now takes over.
+
+### **Step 2: The Kernel's Loader**
+
+The kernel's "**loader**" is responsible or setting up a new process in memory. Here's what it does:
+
+**1\. Creates a New Process with a Fresh Virtual Address Space**<br>
+Creates (or reuses) a process structure. A key part of this is creating a brand new, empty **virtual address space**.
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> The **process structure** or **Process Control Block (PCB)** is a data structure inside the kernel's memory that contains all the information the OS needs to manage and track a specific process.<br>
+> It consists of:
+> - **Process ID (PID)**
+> - **Process State:** Is it running, waiting, or ready to run? 
+> - **Program Counter:** The address of the next instruction to execute.
+> - **CPU Registers:** A saved copy of all the CPU's working memory for this process (so it can be paused and resumed)
+> - **Memory Management Info:** Pointers to the virtual address space.
+> - **Accounting Info:** How much CPU time has this process used?
+> - **I/O Status Info:** What files, network sockets, or devices is this process using?
+> <!-- --- -->
+
+**2\. Maps Code and Data into Memory**
+- Parses the headers of the executable file. It looks for the "program headers" that describe the **segments** (`.text`,`.data`, etc.) and where they need to be loaded.
+- Performs **memory mapping**: setting up the process's page tables so that a specific **virtual address** points to the corresponding **physical page**. The actual code is only loaded from disk into physical RAM by the kernel when the CPU tries to access it (a "**page fault**").
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> A **page fault** is when a program tries to access a portion of memory (a page) that is not currently in physical RAM.
+> <!-- --- -->
+
+**3\. Creates a Stack and an Empty Heap**
+- **The Stack:** 
+  Kernel allocates physical memory for the stack and maps it to a virtual address at the very top of the process's address space. The stack grows downwards. This memory is read-write.
+- **The Heap:** Kernel sets up a single page of memory for the "program break" and maps it. This is the start of the heap. Initially, it's mostly empty, but it will grow upwards later (when `malloc()` or `brk()` are called).
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> The "**program break**" is a kernel-maintained pointer that defines the current end of the process's data segment—the boundary between the heap's allocated memory and the unmapped memory beyond it.
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> ```
+> High Addresses  +----------------------+
+>                 |      Kernel Space    | (Memory reserved for the OS)
+>                 +----------------------+
+>                 |                      |
+>                 |         STACK        | <- Grows DOWNWARD
+>                 |           |          |
+>                 |           v          |
+>                 |          ...         |
+>                 |                      |
+>                 |           ^          |
+>                 |           |          |
+>                 |          HEAP        | <- Grows UPWARD
+>                 |                      |
+>                 |          BSS         | (Uninitialized data)
+>                 +----------------------+
+>                 |          Data        | (Initialized data)
+>                 +----------------------+
+>                 |         rodata       | (Constants)
+>                 +----------------------+
+>                 |          Text        | (Program's code)
+> Low Addresses   +----------------------+
+> ```
+> <!-- --- -->
+
+**4\. Maps Needed Shared Libraries**
+- Reads the list of shared libraries from the executable's headers.
+- It finds these libraries on the filesystem and recursively maps their code (`.text`) and read-only date (`.rodata`) segments into the process's address space, just like it did for the main program in `2.`.
+
+**5\. Places Initial Data on the Stack**<br>
+Prepares the initial environment for the program by pushing information onto the new stack it just created: `argc`, `argv[]`, `envp[]`, `auxv`.
+
+
+### **Step 3: The Handoff to `_start`**
+Once the kernel has successfully built the entire virtual environment, the final step is to set the CPU's instruction pointer (`%rip`) to the address of the entry point specified in the executable header (`_start`) and let the CPU run.
+
+#### **The Job of `_start`**
+1. **Set up the C runtime environment**
+2. **Extract arguments for `main`.** It reads `argc`, `argv`, and `envp` from the stack.
+3. **Initialize the standard library**
+4. **Call our `main` function.** (`main(argc, argv, envp)`)
+5. **Handle the return.** When `main()` returns, `_start` tarkes its return value, passes it to the `exit()` system call, and terminates the process.
+
+<br>
+
+### User vs kernel mode
+
+The CPU is designed with multiple levels of privilege, often called **rings**.
+
+#### **Kernel Mode (Ring 0)**
+
+Where the OS kernel runs.<br>
+Code here has the **highest level of privilege**: full, unrestricted access to the CPU and all hardware. It can do anything.
+
+#### **User Mode (Ring 3)**
+
+Where all our applications (processes) run.<br>
+Code running in User Mode is "sandboxed and restricted to the **lowest level of privilege**. It is physcially prevented by the CPU from:
+- Direct Hardware Access
+- Modifying Page Tables
+- Disabling Interrupts
+- Halting the CPU
+- Changing Privilege Levels
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> An **Interrupt** is a signal sent to the CPU that immediately grabs its attention, forcing it to temporarily stop what it's doing and execute a special piece of code called an **interrupt handler**.
+> <br>
+> Two types: **Hardware Interrupts** and **Software Interrupts**
+> 
+> Interrupts are what allow the CPU to respond to event in real-time (`e.g.` keyboard key pressed).
+> 
+> The computer's timer chip is advised to generate a hardware interrrupt **many times per second**. Every time the timer interrupt fires, the kernel has to decide:
+> - Has the current program used up its fair share of CPU time?
+> If yes, it saves the program's state and switches to running a different program.
+>
+> This happens extremely fast for milliseconds at a time, allowing the CPU to "multi-task".
+> <!-- --- -->
+
+
+<hr>
+<br>
+
+
+## 4) The process and its memory (while running)
+
+### Virtual address space
+
+**Virtual Address Space** is an abstraction provided by the OS and Memory Management Unit (MMU) that presents each running process with a private, linear range of memory addresses. It is "virtual" because it's independent of physical memory, creating the illusion that the process has exclusive access to the entire system's memory.
+
+Virtual memory is **mapped** to physical memory by the kernel loader after `execve`, with physical RAM only being allocated **lazily** at first access.
+
+### Heap and Stack
+
+#### **Heap**
+
+- A region for **dynamic memory allocation**. This is memory you explicitly request at runtime using functions like `malloc()`, `calloc()`, or `new`. It is used for data that must persist beyond the lifetime of a single function call or whose size is unknown at compile time.
+- **Managed by a memory allocator library** (e.g. `malloc`).
+- The heap's size is not fixed. It **grows upward** toward higher memory. Size is managed explicitly by the programmer (with `malloc()` and `free()`).
+- The top of the heap, the **program break**, is+ moved using `brk()`, `sbrk()`, and `mmap()`  system calls. `malloc()` uses these implicitly.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> `mmap()` for very large allocations.
+> `mmap()` creates an independent mapping that is not connected to the main heap.
+> <!-- --- -->
+
+#### **Stack**
+
+- A region for **automatic memory allocation**. It handles function calls and storage of local variables, function arguments, return addresses, and saved register values.
+- **Managed by compiler**.
+- Starts at a high memory address and **grows downward** toward lower addresses. Each function call pushes a "**stack frame**" onto the stack. When a function returns, its entire frame is popped off the stack. This allocation and freeing is automatic and handled by the compiler.
+- A typical **stack frame** contains, in order:
+  1. Function Arguments
+  2. Return Address
+  3. Saved Frame Pointer (a pointer to the previous stack frame)
+  4. Local Variables
+  5. Temporary Data
+
+Once the stack and heap meet, the program is out of memory.
+
+### Memory bugs and why they crash
+
+Memory bugs crash because they violate the contracts and assumptions made by the OS and the **memory allocator**.
+
+> <!-- -- -->
+> \*\*NOTE**<br>
+> The **Memory Allocator** is a software library (e.g., part of the C standard library `glibc`) that managaes a pool of memory within a process's virtual address space.
+> 
+> It acts as an intermediary between a program and the OS.
+> 1. It asks the OS for large chunks of memory (using system calls like `brk`, `sbrk`, `mmap`).
+> 2. It then takes that large chunk and it up into smaller pieces to fulfull your many small `malloc()` requests.
+> 3. It keeps complex data structures (like linked lists) to track which parts of that large chunk are free and which are allocated.
+> 4. When you call `free()`, it doesn't usually return the memory to the Os immediately. Instead, it just marks that small piece as "free" in its internal list so it can be reused by a future `malloc()` call.
+> <!-- -- -->
+
+#### 1. Out-of-Bounds Access
+
+Reading or writing to an array or buffer outside of its allocated boundaries.
+
+##### **Why it crashes**
+A program's virtual address space is a map of **valid** (mapped to something) and **invalid** (unmapped) addresses. The allocator or the compiler gives you a pointer to a block of valid addresses. When you access memory outside that block, one of two things happens:
+1. **You touch an unmapped address:**<br>
+   The MMU triggers a **page fault**. The OS responds by sending the `SIGSEGV` (Segmentation Violation) signal to the process, which typically terminates it immediately.
+2. **You touch a mapped address that belonds to something else:**<br>
+   Might overwrite the contents of a different variable, a part of the heap's internal data structures, or even your own function's return address on the stack. This **corrupts data** but doesn't cause an immediate crash.
+
+#### 2. Use-After-Free (Dangling Pointer)
+
+Continuing to use a pointer after the memory it points to has been `free()`'d or has gone out of scope.
+
+##### **Why it crashes**
+Once `free` is called on a block of memory, the allocator now owns that block and can reassign it to a future `malloc()` call. If you use the old (dangling) pointer, two things can happen:
+1. **The memory is reallocated:**<br>
+   The allocator may have given the freed block to another part of the program. A write operation on this block corrupts the new, completely unrelated data.
+2. **The memory is unmapped:**<br>
+   To improve performance, the allocator may return large blocks of memory to the OS using a system call like `munmap`. Any operation on this block will result in **out-of-bounds access** (**page fault** &rarr; `SIGSEGV` system call).
+
+#### 3. Double Free
+
+Calling `free()` on the same pointer twice without an intervening `malloc()`.
+
+##### **Why it crashes**
+This corrupts the allocator's internal metadata.
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> The allocator stores metadata in the heap, consisting of (at least) two lists:
+> 1. A list of **allocated** blocks.
+> 2. A list of **free** blocks
+> 
+> When you call `malloc`, it searches the **free list** for a block that's big enough.
+> <br>
+> When you call `free`, it takes the block and adds it to the **free list**.
+> 
+> Right before every single piece of memory that `malloc` gives you, it secretly stores a small header&mdash;a piece of metadata that describes the block that follows.
+>
+> ```
+> +-----------------------------------------------------------------------+
+> |  |              |  |              |  |                               | |
+> |H | Your 100-byte|H | Your 40-byte |H |       Free 60-byte block      | |
+> |E |   block      |E |   block      |E |    (on the free list)         | |
+> |A |   (allocated)|A |   (allocated)|A |                               | |
+> |D |              |D |              |D |                               | |
+> |E |              |E |              |E |                               | |
+> |R |              |R |              |R |                               | |
+> +-----------------------------------------------------------------------+
+> ^                  ^                  ^
+> Pointer returned   Pointer returned   This block's metadata is part
+> by malloc(100)     by malloc(40)      of the free list, pointing to
+>                                      the next free block.
+> ```
+> What's in this header:
+> - **Size of the block**
+> - **Flags** (bits indicating if allocated or free)
+> - **Pointers** (to link to the next block in the free list)
+> <!-- --- -->
+
+**The first `free(ptr)`** correctly puts the block on the "free list.":
+1. It take the pointer `ptr` and goes backwards in memory to find the **metadata header** for that memory block.
+2. It changes the flag in the metadata from `allocated` to `free`.
+3. It splices the header to this now-free block into the **free list** linked list.
+
+**The second `free(ptr)`**
+1. The allocator takes `ptr` and goes to the same metadata.
+2. It unexpectedly finds the metadata's flag status is already `free`.
+3. It attempts to add the the block to the **free list** a second time, corrupting the linked list.
+
+The crash often doesn't happen at the moment of the double-free. It's triggered later by a subsequent `malloc()` or `free()` call.
+
+#### 4. Memory Leak
+
+Allocating memory with `malloc()` but never `free()`ing it.
+
+##### **Why it crashes**
+It doesn't cause an immediate crash, it slowly **wastes memory**. The heap grows and grows until the process runs out of available virtual address space or the system runs out of physical RAM. At this point, any `malloc()` call will fail and return `NULL`. Trying to use this `NULL` pointer will cause the program to crash,
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+NEVER KILL YOURSELF
