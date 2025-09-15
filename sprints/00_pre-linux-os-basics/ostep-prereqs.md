@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## Day 14 (1/9/25 - 14/9/25)
+## Day 15 (1/9/25 - 15/9/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -75,7 +75,8 @@ Now, convert 124 to binary (8 bits): `01111100`
 The normalizaed value is `1.01₂`. The fraction part is the bits after the decimal point, which is "`01₂`". However, since IEEE-754 requires a 23-bit fraction, we pad with zeros to the right: `01000000000000000000000₂`.
 
 > <!-- --- -->
-> \*\*NOTE** <br>Converting this from binary to decimal: `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
+> \*\*NOTE** <br>
+> Converting this from binary to decimal: `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
 > <!-- --- -->
 
 **Step 6) Full binary representation:**
@@ -556,9 +557,9 @@ Virtual memory is **mapped** to physical memory by the kernel loader after `exec
 #### **Heap**
 
 - A region for **dynamic memory allocation**. This is memory you explicitly request at runtime using functions like `malloc()`, `calloc()`, or `new`. It is used for data that must persist beyond the lifetime of a single function call or whose size is unknown at compile time.
-- **Managed by a memory allocator library** (e.g. `malloc`).
-- The heap's size is not fixed. It **grows upward** toward higher memory. Size is managed explicitly by the programmer (with `malloc()` and `free()`).
-- The top of the heap, the **program break**, is+ moved using `brk()`, `sbrk()`, and `mmap()`  system calls. `malloc()` uses these implicitly.
+- **Managed by a memory allocator library.**
+- The heap **grows upward** toward higher memory. Size is managed explicitly by the programmer (with `malloc()` and `free()`).
+- The top of the heap, the **program break**, is moved using `brk()`, `sbrk()`, and `mmap()`  system calls. `malloc()` uses these implicitly.
 
 > <!-- --- -->
 > \*\*NOTE**<br>
@@ -590,9 +591,9 @@ Memory bugs crash because they violate the contracts and assumptions made by the
 > 
 > It acts as an intermediary between a program and the OS.
 > 1. It asks the OS for large chunks of memory (using system calls like `brk`, `sbrk`, `mmap`).
-> 2. It then takes that large chunk and it up into smaller pieces to fulfull your many small `malloc()` requests.
+> 2. It then takes that large chunk and splits it up into smaller pieces to fulfill your many small `malloc()` requests.
 > 3. It keeps complex data structures (like linked lists) to track which parts of that large chunk are free and which are allocated.
-> 4. When you call `free()`, it doesn't usually return the memory to the Os immediately. Instead, it just marks that small piece as "free" in its internal list so it can be reused by a future `malloc()` call.
+> 4. When you call `free()`, it doesn't usually return the memory to the OS immediately. Instead, it just marks that small piece as "free" in its internal list so it can be reused by a future `malloc()` call.
 > <!-- -- -->
 
 #### 1. Out-of-Bounds Access
@@ -674,7 +675,61 @@ The crash often doesn't happen at the moment of the double-free. It's triggered 
 Allocating memory with `malloc()` but never `free()`ing it.
 
 ##### **Why it crashes**
-It doesn't cause an immediate crash, it slowly **wastes memory**. The heap grows and grows until the process runs out of available virtual address space or the system runs out of physical RAM. At this point, any `malloc()` call will fail and return `NULL`. Trying to use this `NULL` pointer will cause the program to crash,
+It doesn't cause an immediate crash, it slowly **wastes memory**.
+
+The heap grows and grows until the process runs out of available virtual address space or the system runs out of physical RAM. At this point, any `malloc()` call will fail and return `NULL`. Trying to use this `NULL` pointer will cause the program to crash.
+
+
+<hr>
+<br>
+
+
+## 5) Calling conventions and the stack (how functions really call)
+
+### The Need for a Calling Convention
+
+When one function calls another, they need a strict agreement on:
+1. **Where to put the arguments** so the callee can find them.
+2. **Where to put the return value** so the caller can find it.
+3. **Which registers can be freely used** and which must be saved and restored.
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **Registers** are a very small number of ultra-fast, super-efficient storage locations built directly into the CPU chip itself; they are the fastest form of storage in a computer.
+> <br>
+> Accessing a register is much faster than accessing RAM, because they're on the CPU, which uses registers for all its immediate tasks:
+> - Holding values it's working on right now
+> - Performing calculations
+> - Keeping track of addresses
+> - etc.
+>
+> Registers are **fixed-size**. On a `64-bit` CPU, most general-purpose registers are `64 bits` (`8` bytes) wide.
+> <!-- --- -->
+
+This agreement or **calling convention** is called the **Application Binary Interface (ABI)**. Without it, compilers for different languages/version could never work together.
+
+The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
+
+#### **1. Passing Arguments and Return Values**
+
+- **Integer/Pointer Arguments:**<br>
+  The first 6 arguments are passed through CPU registers (in the following order):
+  - `rdi` (1st arg)
+  - `rsi` (2nd arg)
+  - `rdx` (3rd arg)
+  - `rcx` (4th arg)
+  - `r8` (5th arg)
+  - `r9` (6th arg)
+  - Any additional arguments are pushed to stack.
+- **Return Value:**<br>
+  The result of a function is passed back to the caller in the `rax` register (or `rdx:rax` for very large values).
+
+#### **2. Caller-Saved vs. Callee-Saved Registers**
+
+- **Call-Saved (Volatile) Registers:**<br>
+  (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`, `r9`, `r10`, `r11`)
+  - **Rule:** The callee us free to **clobber** (overwrite) these registers without saving them.
+  - **Responsibility:** If the caller has a value in one of these registers that it needs to survive the function call, **the caller must save it** *before* setting up the arguments and calling the function. 
 
 <br>
 <br>
