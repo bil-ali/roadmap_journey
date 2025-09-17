@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## Day 15 (1/9/25 - 15/9/25)
+## Day 17 (1/9/25 - 17/9/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -703,7 +703,7 @@ When one function calls another, they need a strict agreement on:
 > - Keeping track of addresses
 > - etc.
 >
-> Registers are **fixed-size**. On a `64-bit` CPU, most general-purpose registers are `64 bits` (`8` bytes) wide.
+> Registers are **fixed-size**. On a `64-bit` CPU, most general-purpose registers are `64 bits` (8 bytes) wide.
 > <!-- --- -->
 
 This agreement or **calling convention** is called the **Application Binary Interface (ABI)**. Without it, compilers for different languages/version could never work together.
@@ -726,10 +726,94 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 
 #### **2. Caller-Saved vs. Callee-Saved Registers**
 
-- **Call-Saved (Volatile) Registers:**<br>
+- **Caller-Saved (Volatile) Registers:**<br>
   (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`, `r9`, `r10`, `r11`)
-  - **Rule:** The callee us free to **clobber** (overwrite) these registers without saving them.
+  - **Rule:** The callee is free to **clobber** (overwrite) these registers without saving them.
   - **Responsibility:** If the caller has a value in one of these registers that it needs to survive the function call, **the caller must save it** *before* setting up the arguments and calling the function. 
+
+- **Callee-Saved (Non-Volatile) Registers:**<br>
+  (`rbx`, `rbp`, `r12`, `r13`, `r14`, `r15`)
+  - **Rule:** If the callee wants to use these registers, it must restore them to their original values before returning to the caller.
+  - **Responsibility:** The callee typically saves them onto the stack at the very start (in the prologue) and restores them at the very end (in the epilogue).
+
+#### **3. The Function Frames: Prologue, Body, Epilogue**
+
+The life cycle of a function can be broken down into three distinct phases: the **Prologue**, the **Body**, and the **Epilogue**.
+
+To illustrate, suppose the simple function:
+``` c
+int my_calc(int a, int b)
+{
+  int result = a + b;
+  return result;
+}
+```
+**Assembly (Simplified):**
+##### **Prologue: Setting Up the Function's Workspace**
+
+This is the function's "setup" ritual once function is called.
+
+Let the stack is set up for a function that has just been called. The `call` instruction has done two things: 1) pushed the return address onto the stack, and 2) jumped to the new function:
+  
+| Memory Address | Content (Value) | Description | Register Pointing Here |
+| --- | --- | --- | --- |
+| `0x7fffffffe110` | ... | Caller's local variables | `rbp` (Caller's frame) |
+| `...` | ... | ... | |
+| `0x7fffffffe108` | `0x400567` | **Return Address** (saved by `call`) | `rsp` |
+
+- **Step 1 (`push rbp`):** Save the Caller's Frame Pointer.
+
+  The `push` instruction does two things:
+  1. It decrements the stack pointer (`rsp`).
+  2. It then copies the value from the specified register (`rbp`) to the new memory location that `rsp` now points to.
+
+  By pushing `rbp` onto the stack, we are saving the caller's frame pointer. We are promising that when we are done, we will restore the caller's workspace exactly as we found it.
+  <br>
+  This single action creates a linked list of stack frames, allowing each function to cleanly return to its caller's perfectly restored state.
+
+  Now the stack looks like this:
+
+| Memory Address | Content (Value) | Description | Register Pointing Here |
+| --- | --- | --- | --- |
+| `0x7fffffffe110` | ... | Caller's local variables | `rbp` (Caller's frame) |
+| `...` | ... | ... | |
+| `0x7fffffffe108` | `0x400567` | **Return Address** | |
+| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** (Caller's frame pointer) | `rsp` |
+
+- **Step 2 (`move rbp, rsp`):** Establish Our Own Frame Pointer.
+
+  This copies the current stack pointer into the base pointer register. This is the moment our new stack frame is officially created, with `rbp` acting as the anchor point for the *current* function's frame:
+
+| Memory Address | Content (Value) | Description | Register Pointing Here |
+| --- | --- | --- | --- |
+| `0x7fffffffe110` | ... | Caller's local variables | |
+| `...` | ... | ... | |
+| `0x7fffffffe108` | `0x400567` | **Return Address** | |
+| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rsp`, `rbp` |
+
+- **Step 3 (`sub rsp, N`):** Allocate Space for Local Variables.
+
+  Moves the stack pointer down by `N` bytes to reserve space for local variables.
+
+  The compiler calculates the total size needed for all local variables and adjusts `rsp` by that amount in one go.
+  
+  Let `N=16`. The stack's final form for the function's execution:
+
+| Memory Address | Content (Value) | Description | Register Pointing Here |
+| --- | --- | --- | --- |
+| `0x7fffffffe110` | ... | Caller's local variables | |
+| `...` | ... | ... | |
+| `0x7fffffffe108` | `0x400567` | **Return Address** | |
+| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rbp` |
+| `0x7fffffffe0f8` | ? | **Local Variable 1** | |
+| `0x7fffffffe0f0` | ? | **Local Variable 2** | `rsp` |
+
+##### **Body: Doing the Actual Work**
+
+
+
+
+##### **Epilogue: Cleaning Up and Returning**
 
 <br>
 <br>
