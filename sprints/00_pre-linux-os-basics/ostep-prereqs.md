@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## Day 17 (1/9/25 - 17/9/25)
+## Day 18 (1/9/25 - 18/9/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -729,7 +729,7 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 - **Caller-Saved (Volatile) Registers:**<br>
   (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`, `r9`, `r10`, `r11`)
   - **Rule:** The callee is free to **clobber** (overwrite) these registers without saving them.
-  - **Responsibility:** If the caller has a value in one of these registers that it needs to survive the function call, **the caller must save it** *before* setting up the arguments and calling the function. 
+  - **Responsibility:** If the caller has a value in one of these registers that it needs to survive the function call, the caller must save it *before* setting up the arguments and calling the function. 
 
 - **Callee-Saved (Non-Volatile) Registers:**<br>
   (`rbx`, `rbp`, `r12`, `r13`, `r14`, `r15`)
@@ -751,9 +751,14 @@ int my_calc(int a, int b)
 **Assembly (Simplified):**
 ##### **Prologue: Setting Up the Function's Workspace**
 
-This is the function's "setup" ritual once function is called.
+This is the function's "setup" ritual&mdash;once the function is called&mdash; to create the **stack frame**:
+``` ass
+push rbp
+move rbp, rsp
+sub rsp, N
+```
 
-Let the stack is set up for a function that has just been called. The `call` instruction has done two things: 1) pushed the return address onto the stack, and 2) jumped to the new function:
+Let the stack is set up for a function that has just been called. The `call` instruction has done two things: **1)** pushed the return address onto the stack, and **2)** jumped to the new function:
   
 | Memory Address | Content (Value) | Description | Register Pointing Here |
 | --- | --- | --- | --- |
@@ -767,7 +772,7 @@ Let the stack is set up for a function that has just been called. The `call` ins
   1. It decrements the stack pointer (`rsp`).
   2. It then copies the value from the specified register (`rbp`) to the new memory location that `rsp` now points to.
 
-  By pushing `rbp` onto the stack, we are saving the caller's frame pointer. We are promising that when we are done, we will restore the caller's workspace exactly as we found it.
+  By pushing `rbp` onto the stack, we are saving the caller's frame pointer so we can restore the caller's stack when we're done.
   <br>
   This single action creates a linked list of stack frames, allowing each function to cleanly return to its caller's perfectly restored state.
 
@@ -782,7 +787,7 @@ Let the stack is set up for a function that has just been called. The `call` ins
 
 - **Step 2 (`move rbp, rsp`):** Establish Our Own Frame Pointer.
 
-  This copies the current stack pointer into the base pointer register. This is the moment our new stack frame is officially created, with `rbp` acting as the anchor point for the *current* function's frame:
+  This copies the current stack pointer into the base pointer register (`rbp = rsp = 0x7fffffffe100`). This is the moment our new stack frame is officially created, with `rbp` acting as the anchor point for the *current* function's frame:
 
 | Memory Address | Content (Value) | Description | Register Pointing Here |
 | --- | --- | --- | --- |
@@ -794,7 +799,6 @@ Let the stack is set up for a function that has just been called. The `call` ins
 - **Step 3 (`sub rsp, N`):** Allocate Space for Local Variables.
 
   Moves the stack pointer down by `N` bytes to reserve space for local variables.
-
   The compiler calculates the total size needed for all local variables and adjusts `rsp` by that amount in one go.
   
   Let `N=16`. The stack's final form for the function's execution:
@@ -808,10 +812,47 @@ Let the stack is set up for a function that has just been called. The `call` ins
 | `0x7fffffffe0f8` | ? | **Local Variable 1** | |
 | `0x7fffffffe0f0` | ? | **Local Variable 2** | `rsp` |
 
+> <!-- --- -->
+> \*\*NOTE** <br>
+> The compiler automatically **spills** the register-based arguments (`a` in `edi`, `b` in `esi`) onto the stack between the **Prologue** and **Body steps**.
+> <!-- --- -->
+
 ##### **Body: Doing the Actual Work**
 
+The function body uses the registers and the stack space that was just set up:
+``` ass
+mov    eax, DWORD PTR [rbp-4]   ; Load local var 'a'
+add    eax, DWORD PTR [rbp-8]   ; Add local var 'b'
+mov    DWORD PTR [rbp-12], eax  ; Store the result in 'result'
+```
+1. `mov eax, DWORD PTR [rbp-4]`<br>
+   Loads the 4-byte value from `[rbp-4]` in memory into the `eax` register.
+2. `add eax, DWORD PTR [rbp-8]`<br>
+   Adds the 4-byte value from `[rbp-8]` in memory to the value in `eax`.
+3. `mov DWORD PTR [rbp-12], eax`<br>
+   Stores the 4-byte value from `eax` into memory at `[rbp-12]`.
 
+The final state of the stack:
 
+| Memory Address | Content (Value) | Description | Register Pointing Here |
+| --- | --- | --- | --- |
+| `0x7fffffffe110` | ... | Caller's local variables | |
+| `...` | ... | ... | |
+| `0x7fffffffe108` | `0x400567` | **Return Address** | |
+| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rbp` |
+| `0x7fffffffe0fc` | `10` | **Local Var: `a`** | |
+| `0x7fffffffe0f8` | `20` | **Local Var: `b`** | |
+| `0x7fffffffe0f4` | `30` | **Local Var: `result`** | |
+| `...` | ... | ... | |
+| `0x7fffffffe0f0` | ? | (Unused space) | `rsp` |
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> `DWORD PTR` is a **size directive** for the assembler.
+> 
+> **`PTR`**: Signifies the following expression is a memory address to be dereferenced.<br>
+> **`DWORD`**: Stands for "Double Word", which represents 32 bits.
+> <!-- --- -->
 
 ##### **Epilogue: Cleaning Up and Returning**
 
