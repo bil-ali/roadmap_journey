@@ -686,7 +686,7 @@ The heap grows and grows until the process runs out of available virtual address
 
 ## 5) Calling conventions and the stack (how functions really call)
 
-### The Need for a Calling Convention
+**The Need for a Calling Convention**
 
 When one function calls another, they need a strict agreement on:
 1. **Where to put the arguments** so the callee can find them.
@@ -710,7 +710,7 @@ This agreement or **calling convention** is called the **Application Binary Inte
 
 The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 
-#### **1. Passing Arguments and Return Values**
+### **1. Passing Arguments and Return Values**
 
 - **Integer/Pointer Arguments:**<br>
   The first 6 arguments are passed through CPU registers (in the following order):
@@ -724,7 +724,7 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 - **Return Value:**<br>
   The result of a function is passed back to the caller in the `rax` register (or `rdx:rax` for very large values).
 
-#### **2. Caller-Saved vs. Callee-Saved Registers**
+### **2. Caller-Saved vs. Callee-Saved Registers**
 
 - **Caller-Saved (Volatile) Registers:**<br>
   (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`, `r9`, `r10`, `r11`)
@@ -736,7 +736,7 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
   - **Rule:** If the callee wants to use these registers, it must restore them to their original values before returning to the caller.
   - **Responsibility:** The callee typically saves them onto the stack at the very start (in the prologue) and restores them at the very end (in the epilogue).
 
-#### **3. The Function Frames: Prologue, Body, Epilogue**
+### **3. The Function Frames: Prologue, Body, Epilogue**
 
 The life cycle of a function can be broken down into three distinct phases: the **Prologue**, the **Body**, and the **Epilogue**.
 
@@ -749,13 +749,13 @@ int my_calc(int a, int b)
 }
 ```
 **Assembly (Simplified):**
-##### **Prologue: Setting Up the Function's Workspace**
+#### **Prologue: Setting Up the Function's Workspace**
 
 This is the function's "setup" ritual&mdash;once the function is called&mdash; to create the **stack frame**:
 ``` ass
-push rbp
-move rbp, rsp
-sub rsp, N
+push  rbp;
+move  rbp, rsp;
+sub   rsp, N;
 ```
 
 Let the stack is set up for a function that has just been called. The `call` instruction has done two things: **1)** pushed the return address onto the stack, and **2)** jumped to the new function:
@@ -778,23 +778,23 @@ Let the stack is set up for a function that has just been called. The `call` ins
 
   Now the stack looks like this:
 
-| Memory Address | Content (Value) | Description | Register Pointing Here |
-| --- | --- | --- | --- |
-| `0x7fffffffe110` | ... | Caller's local variables | `rbp` (Caller's frame) |
-| `...` | ... | ... | |
-| `0x7fffffffe108` | `0x400567` | **Return Address** | |
-| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** (Caller's frame pointer) | `rsp` |
+  | Memory Address | Content (Value) | Description | Register Pointing Here |
+  | --- | --- | --- | --- |
+  | `0x7fffffffe110` | ... | Caller's local variables | `rbp` (Caller's frame) |
+  | `...` | ... | ... | |
+  | `0x7fffffffe108` | `0x400567` | **Return Address** | |
+  | `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** (Caller's frame pointer) | `rsp` |
 
 - **Step 2 (`move rbp, rsp`):** Establish Our Own Frame Pointer.
 
   This copies the current stack pointer into the base pointer register (`rbp = rsp = 0x7fffffffe100`). This is the moment our new stack frame is officially created, with `rbp` acting as the anchor point for the *current* function's frame:
 
-| Memory Address | Content (Value) | Description | Register Pointing Here |
-| --- | --- | --- | --- |
-| `0x7fffffffe110` | ... | Caller's local variables | |
-| `...` | ... | ... | |
-| `0x7fffffffe108` | `0x400567` | **Return Address** | |
-| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rsp`, `rbp` |
+  | Memory Address | Content (Value) | Description | Register Pointing Here |
+  | --- | --- | --- | --- |
+  | `0x7fffffffe110` | ... | Caller's local variables | |
+  | `...` | ... | ... | |
+  | `0x7fffffffe108` | `0x400567` | **Return Address** | |
+  | `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rsp`, `rbp` |
 
 - **Step 3 (`sub rsp, N`):** Allocate Space for Local Variables.
 
@@ -803,33 +803,33 @@ Let the stack is set up for a function that has just been called. The `call` ins
   
   Let `N=16`. The stack's final form for the function's execution:
 
-| Memory Address | Content (Value) | Description | Register Pointing Here |
-| --- | --- | --- | --- |
-| `0x7fffffffe110` | ... | Caller's local variables | |
-| `...` | ... | ... | |
-| `0x7fffffffe108` | `0x400567` | **Return Address** | |
-| `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rbp` |
-| `0x7fffffffe0f8` | ? | **Local Variable 1** | |
-| `0x7fffffffe0f0` | ? | **Local Variable 2** | `rsp` |
+  | Memory Address | Content (Value) | Description | Register Pointing Here |
+  | --- | --- | --- | --- |
+  | `0x7fffffffe110` | ... | Caller's local variables | |
+  | `...` | ... | ... | |
+  | `0x7fffffffe108` | `0x400567` | **Return Address** | |
+  | `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rbp` |
+  | `0x7fffffffe0f8` | ? | **Local Variable 1** | |
+  | `0x7fffffffe0f0` | ? | **Local Variable 2** | `rsp` |
 
 > <!-- --- -->
 > \*\*NOTE** <br>
 > The compiler automatically **spills** the register-based arguments (`a` in `edi`, `b` in `esi`) onto the stack between the **Prologue** and **Body steps**.
 > <!-- --- -->
 
-##### **Body: Doing the Actual Work**
+#### **Body: Doing the Actual Work**
 
-The function body uses the registers and the stack space that was just set up:
+The function body uses the registers and the stack space that was just set up to carry out the actual function code:
 ``` ass
-mov    eax, DWORD PTR [rbp-4]   ; Load local var 'a'
-add    eax, DWORD PTR [rbp-8]   ; Add local var 'b'
-mov    DWORD PTR [rbp-12], eax  ; Store the result in 'result'
+mov    eax, DWORD PTR [rbp-4];
+add    eax, DWORD PTR [rbp-8];
+mov    DWORD PTR [rbp-12], eax;
 ```
-1. `mov eax, DWORD PTR [rbp-4]`<br>
+1. **`mov eax, DWORD PTR [rbp-4]`**<br>
    Loads the 4-byte value from `[rbp-4]` in memory into the `eax` register.
-2. `add eax, DWORD PTR [rbp-8]`<br>
+2. **`add eax, DWORD PTR [rbp-8]`**<br>
    Adds the 4-byte value from `[rbp-8]` in memory to the value in `eax`.
-3. `mov DWORD PTR [rbp-12], eax`<br>
+3. **`mov DWORD PTR [rbp-12], eax`**<br>
    Stores the 4-byte value from `eax` into memory at `[rbp-12]`.
 
 The final state of the stack:
@@ -854,7 +854,74 @@ The final state of the stack:
 > **`DWORD`**: Stands for "Double Word", which represents 32 bits.
 > <!-- --- -->
 
-##### **Epilogue: Cleaning Up and Returning**
+#### **Epilogue: Cleaning Up and Returning**
+
+This is the "cleanup" ritual:
+``` ass
+mov    eax, DWORD PTR [rbp-12];
+leave;
+ret;
+```
+1. **`mov eax, DWORD PTR [rbp-12]`**<br>
+   Loads the 32-bit result from its stack location into the `eax` register. **Calling convention** mandates that integer and pointer return values are placed in `rax`/`eax`.
+
+2. **`leave`**<br>
+   Performs two operations:
+
+   **First Operation (`move rsp, rbp`)**:<br>
+   `rsp` now points to the same address as `rbp`. This **instantly deallocates the entire stack frame**:
+
+    | Memory Address | Content (Value) | Description | Register Pointing Here |
+    | --- | --- | --- | --- |
+    | `0x7fffffffe110` | ... | Caller's local variables | |
+    | `...` | ... | ... | |
+    | `0x7fffffffe108` | `0x400567` | **Return Address** | |
+    | `0x7fffffffe100` | `0x7fffffffe110` | **Saved `rbp`** | `rsp`, `rbp` |
+
+   **Second Operation (`pop rbp`)**:<br>
+   Pops the top value off the stack and loads it into the `rbp`. `pop` also incrememnts `rsp` by 8. This **restores the caller's frame pointer**:
+
+    | Memory Address | Content (Value) | Description | Register Pointing Here |
+    | --- | --- | --- | --- |
+    | `0x7fffffffe110` | ... | Caller's local variables | |
+    | `...` | ... | ... | |
+    | `0x7fffffffe108` | `0x400567` | **Return Address** | `rsp`, `rbp` |
+
+3. **`ret`**<br>
+   Pops the top value off the stack and loads it into the `rip` (Instruction Pointer) register. The CPU's next instruction will now be fetched from `0x400567`, **fully returning control to the caller**:
+
+    | Memory Address | Content (Value) | Description | Register Pointing Here |
+    | --- | --- | --- | --- |
+    | `0x7fffffffe110` | ... | Caller's local variables | `rsp`, `rbp` |
+
+### **4. Recursion**
+
+Recursion work seamlessly because of this stack mechanism. Every time a function calls itself, a brand new **stack frame** is created.
+- Each call gets its own set of arguments, saved registers, and local variables on the stack.
+- The `rbp` and `rsp` pointers are updated to point to the new frame.
+- When the function returns, its frame is popped off the stack, and the previous function's frame is restored, with all its local variables intact.
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **x86-64 CPU Registers: A Comprehensive Reference**
+> 
+> | Category | Register | 64-bit | 32-bit | Primary Purpose |
+> | --- | --- | --- | --- | --- |
+> | **General Purpose** | Accumulator | `rax` | `eax` | **Function return value.** Used for arithmetic operations. The canonical register for results. |
+> | | Counter | `rcx` | `ecx` | **Loop counter.** Used by `loop` instructions and `rep` string prefixes. **Caller-saved**. |
+> | | Data | `rdx` | `edx` | **Extended arithmetic.** Hold high bits for multiply/divide operations. **Caller-saved**. |
+> | | Base | `rbx` | `ebx` | **Base pointer.** Often used for data addressing. **Callee-saved**. |
+> | **Stack Management** | Stack Pointer | `rsp` | `esp` | **Points to the top of the stack.** The current end of the stack frame. Changed by `push`, `pop`, `call`, `ret`. |
+> | | Base Pointer | `rbp` | `ebp` | **Frame Pointer.** Points to the base of the current stack frame. Used to access arguments and locals. **Callee-saved**. |
+> | **Function Arguments** | Destination Index | `rdi` | `edi` | **1st Integer/Pointer Argument.** Also used as destination for string operations. **Caller-saved**. |
+> | | Source Index | `rsi` | `esi` | **2nd Integer/Pointer Argument.** Also used as source for string operations. **Caller-saved**. |
+> | **Extended GPRs** | 8-11 | `r8`-`r11` | `r8d`-`r11d` | **3rd, 4th, 5th, 6th Integer Arguments.** **Caller-saved**. `r11` is also used by the syscall mechanism |
+> | | 12-15 | `r12`-`r15` | `r12d`-`r15d` | **General purpose, but have a special property: Callee-saved.** Must be restored before returning to the caller. |
+> | **Special Purpose** | Instruction Pointer | `rip` | `eip` | **The most important register.** Holds the memory address of the **next instruction** to be executed. Cannot be accessed directly like GPRs. Changed by `jmp`, `call`, `ret`, and interrupts. |
+> | | Flags Register | `rflags` | `eflags` | **Status and Control Register.** A collection of single-bit flags that report on the results of operations (e.g. Zero Flag `ZF`, Carry Flag `CF`, Sign Flag `SF`). Also contains control flags that change CPU behavior. |
+> <!-- --- -->
+
+## 6) Assembly literacy
 
 <br>
 <br>
