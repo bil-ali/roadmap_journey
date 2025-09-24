@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## Day 18 (1/9/25 - 18/9/25)
+## Day 23 (1/9/25 - 23/9/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -94,7 +94,7 @@ The hexadecimal representation is: `0x3E200000`.
 
 **Step 1: Read and Reconstruct the 32-Bit Value**
 <br>
-The CPU fetches **4 bytes** from memory addresses `0x1000` to `0x1003`. Assuming the system is **litte-endian**, the CPU then reverses the order of the bytes to get the correct 32-bit value: `0x3E200000`.
+The CPU fetches **4 bytes** from memory addresses `0x1000` to `0x1003`. Assuming the system is **little-endian**, the CPU then reverses the order of the bytes to get the correct 32-bit value: `0x3E200000`.
 
 **Step 2: Interpret the Bits**
 <br>
@@ -373,7 +373,7 @@ This structure is divided into named **sections** (or **segments** when loaded i
 
 ##### **2. `.rodata` (Read-Only Data)**
 - **Contents**<br>
-  Constants and literal values that should never change during execuation.
+  Constants and literal values that should never change during execution.
 - **Permissions: Read-Only and Execute**<br>
 
 ##### **3. `.data` (Initialized Data)**
@@ -487,7 +487,7 @@ Creates (or reuses) a process structure. A key part of this is creating a brand 
 
 **4\. Maps Needed Shared Libraries**
 - Reads the list of shared libraries from the executable's headers.
-- It finds these libraries on the filesystem and recursively maps their code (`.text`) and read-only date (`.rodata`) segments into the process's address space, just like it did for the main program in `2.`.
+- It finds these libraries on the filesystem and recursively maps their code (`.text`) and read-only data (`.rodata`) segments into the process's address space, just like it did for the main program in `2.`.
 
 **5\. Places Initial Data on the Stack**<br>
 Prepares the initial environment for the program by pushing information onto the new stack it just created: `argc`, `argv[]`, `envp[]`, `auxv`.
@@ -501,7 +501,7 @@ Once the kernel has successfully built the entire virtual environment, the final
 2. **Extract arguments for `main`.** It reads `argc`, `argv`, and `envp` from the stack.
 3. **Initialize the standard library**
 4. **Call our `main` function.** (`main(argc, argv, envp)`)
-5. **Handle the return.** When `main()` returns, `_start` tarkes its return value, passes it to the `exit()` system call, and terminates the process.
+5. **Handle the return.** When `main()` returns, `_start` takes its return value, passes it to the `exit()` system call, and terminates the process.
 
 <br>
 
@@ -532,7 +532,7 @@ Code running in User Mode is "sandboxed and restricted to the **lowest level of 
 > 
 > Interrupts are what allow the CPU to respond to event in real-time (`e.g.` keyboard key pressed).
 > 
-> The computer's timer chip is advised to generate a hardware interrrupt **many times per second**. Every time the timer interrupt fires, the kernel has to decide:
+> The computer's timer chip is advised to generate a hardware interrupt **many times per second**. Every time the timer interrupt fires, the kernel has to decide:
 > - Has the current program used up its fair share of CPU time?
 > If yes, it saves the program's state and switches to running a different program.
 >
@@ -587,7 +587,7 @@ Memory bugs crash because they violate the contracts and assumptions made by the
 
 > <!-- -- -->
 > \*\*NOTE**<br>
-> The **Memory Allocator** is a software library (e.g., part of the C standard library `glibc`) that managaes a pool of memory within a process's virtual address space.
+> The **Memory Allocator** is a software library (e.g., part of the C standard library `glibc`) that manages a pool of memory within a process's virtual address space.
 > 
 > It acts as an intermediary between a program and the OS.
 > 1. It asks the OS for large chunks of memory (using system calls like `brk`, `sbrk`, `mmap`).
@@ -604,7 +604,7 @@ Reading or writing to an array or buffer outside of its allocated boundaries.
 A program's virtual address space is a map of **valid** (mapped to something) and **invalid** (unmapped) addresses. The allocator or the compiler gives you a pointer to a block of valid addresses. When you access memory outside that block, one of two things happens:
 1. **You touch an unmapped address:**<br>
    The MMU triggers a **page fault**. The OS responds by sending the `SIGSEGV` (Segmentation Violation) signal to the process, which typically terminates it immediately.
-2. **You touch a mapped address that belonds to something else:**<br>
+2. **You touch a mapped address that belongs to something else:**<br>
    Might overwrite the contents of a different variable, a part of the heap's internal data structures, or even your own function's return address on the stack. This **corrupts data** but doesn't cause an immediate crash.
 
 #### 2. Use-After-Free (Dangling Pointer)
@@ -749,14 +749,6 @@ int my_calc(int a, int b)
 }
 ```
 **Assembly (Simplified):**
-#### **Prologue: Setting Up the Function's Workspace**
-
-This is the function's "setup" ritual&mdash;once the function is called&mdash; to create the **stack frame**:
-``` ass
-push  rbp;
-move  rbp, rsp;
-sub   rsp, N;
-```
 
 Let the stack is set up for a function that has just been called. The `call` instruction has done two things: **1)** pushed the return address onto the stack, and **2)** jumped to the new function:
   
@@ -765,6 +757,15 @@ Let the stack is set up for a function that has just been called. The `call` ins
 | `0x7fffffffe110` | ... | Caller's local variables | `rbp` (Caller's frame) |
 | `...` | ... | ... | |
 | `0x7fffffffe108` | `0x400567` | **Return Address** (saved by `call`) | `rsp` |
+
+#### **Prologue: Setting Up the Function's Workspace**
+
+This is the function's "setup" ritual&mdash;once the function is called&mdash;to create the **stack frame**:
+``` asm
+push  rbp
+move  rbp, rsp
+sub   rsp, N
+```
 
 - **Step 1 (`push rbp`):** Save the Caller's Frame Pointer.
 
@@ -814,16 +815,18 @@ Let the stack is set up for a function that has just been called. The `call` ins
 
 > <!-- --- -->
 > \*\*NOTE** <br>
-> The compiler automatically **spills** the register-based arguments (`a` in `edi`, `b` in `esi`) onto the stack between the **Prologue** and **Body steps**.
+> The compiler may automatically **spill** the register-based arguments (`a` in `edi`, `b` in `esi`) onto the stack between the **Prologue** and **Body steps**.
+>
+> **In modern, optimized code, the body just directly uses registers to access arguments.**
 > <!-- --- -->
 
 #### **Body: Doing the Actual Work**
 
 The function body uses the registers and the stack space that was just set up to carry out the actual function code:
-``` ass
-mov    eax, DWORD PTR [rbp-4];
-add    eax, DWORD PTR [rbp-8];
-mov    DWORD PTR [rbp-12], eax;
+``` asm
+mov    eax, DWORD PTR [rbp-4]
+add    eax, DWORD PTR [rbp-8]
+mov    DWORD PTR [rbp-12], eax
 ```
 1. **`mov eax, DWORD PTR [rbp-4]`**<br>
    Loads the 4-byte value from `[rbp-4]` in memory into the `eax` register.
@@ -851,16 +854,16 @@ The final state of the stack:
 > `DWORD PTR` is a **size directive** for the assembler.
 > 
 > **`PTR`**: Signifies the following expression is a memory address to be dereferenced.<br>
-> **`DWORD`**: Stands for "Double Word", which represents 32 bits.
+> **`DWORD`**: Stands for "Double Word", which represents 32 bits (4 bytes).
 > <!-- --- -->
 
 #### **Epilogue: Cleaning Up and Returning**
 
 This is the "cleanup" ritual:
-``` ass
-mov    eax, DWORD PTR [rbp-12];
-leave;
-ret;
+``` asm
+mov    eax, DWORD PTR [rbp-12]
+leave
+ret
 ```
 1. **`mov eax, DWORD PTR [rbp-12]`**<br>
    Loads the 32-bit result from its stack location into the `eax` register. **Calling convention** mandates that integer and pointer return values are placed in `rax`/`eax`.
@@ -883,9 +886,9 @@ ret;
 
     | Memory Address | Content (Value) | Description | Register Pointing Here |
     | --- | --- | --- | --- |
-    | `0x7fffffffe110` | ... | Caller's local variables | |
+    | `0x7fffffffe110` | ... | Caller's local variables | `rbp` |
     | `...` | ... | ... | |
-    | `0x7fffffffe108` | `0x400567` | **Return Address** | `rsp`, `rbp` |
+    | `0x7fffffffe108` | `0x400567` | **Return Address** | `rsp` |
 
 3. **`ret`**<br>
    Pops the top value off the stack and loads it into the `rip` (Instruction Pointer) register. The CPU's next instruction will now be fetched from `0x400567`, **fully returning control to the caller**:
@@ -900,6 +903,8 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 - Each call gets its own set of arguments, saved registers, and local variables on the stack.
 - The `rbp` and `rsp` pointers are updated to point to the new frame.
 - When the function returns, its frame is popped off the stack, and the previous function's frame is restored, with all its local variables intact.
+
+<br>
 
 > <!-- --- -->
 > \*\*NOTE** <br>
@@ -921,7 +926,95 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 > | | Flags Register | `rflags` | `eflags` | **Status and Control Register.** A collection of single-bit flags that report on the results of operations (e.g. Zero Flag `ZF`, Carry Flag `CF`, Sign Flag `SF`). Also contains control flags that change CPU behavior. |
 > <!-- --- -->
 
+
+<hr>
+<br>
+
+
 ## 6) Assembly literacy
+
+### **1. Instructions: The Basic Vocabulary**
+
+| Category | Example Instructions | What They Do |
+| --- | --- | --- |
+| **Loads/Stores** | `mov`, `push`, `pop` | Move data between memory and registers. |
+| **Arithmetic/Logic** | `add`, `sub`, `inc`, `and`, `or`, `xor`, `shl` | Perform calculations and bitwise operations on data in registers. |
+| **Branches (Jumps)** | `jmp`, `je`, `jne`, `jg`, `jl` | Change the flow of execution. They make the `rip` instruction pointer jump to a new address.<br> This is how `if`, `for`, and `while` are implemented.|
+| **Calls/Returns** | `call`, `ret` | `call` jumps to a function's code and pushes the return address.<br> `ret` pops that address and jumps back. |
+
+### **2. Addressing: How to Talk About Memory**
+
+Programs rarely use absolute addresses for accessing memory; they use formulas. The common pattern is **Base + Offset** addressing: `[BaseReg + Constant]`.
+- **`BaseReg`**: Almost always `rbp` or `rsp` for accessing function arguments and local vars.
+- **`Constant`**: A fixed number of bytes.
+- **e.g.**: `[rbp - 8]`; `[rbp + 16]`; `[rax - rdx*8]` (Classic **array access**).
+
+### **3. Condition Codes**
+
+The CPU has a special register called `RFLAGS` (or `EFLAGS`). It's a collection of single-bit **flags** that are automatically set by most arithmetic and logic instructions.
+
+| Common Flags | Full Name | Set to 1 when... | Typical Use |
+| --- | --- | --- | --- |
+| **ZF** | Zero Flag | The result of an operation is zero. | Testing for equality (**`a == b`**) |
+| **CF** | Carry Flag | An operation generated a **carry** (unsigned overflow) | Working with unsigned numbers. |
+| **SF** | Sign Flag | The result of an operation is **negative**. | Working with signed numbers. |
+| **OF** | Overflow Flag | An operation generated a **signed overflow**. | Working with signed numbers. |
+
+#### **How Branches Use Them**
+
+**Branches** (`jump` instructions) test these flags. Since there is no "if" statement in assembly, conditional logic is implemented at the machine level as "calculate, set flags, then jump based on flags."
+- `cmp a, b` doesn't store a result. It calculates `a - b` and sets the **flags** based on the result.
+- `je target` means **Jump if Equal**, which in application, is "jump if the **ZF flag is set**." It's the instruction that follows a `cmp`.
+- `jne target` means **Jump If Not Equal** ("jump is ZF is 0").
+
+##### **Example**
+
+Suppose the following simple C `if/else` statement:
+``` c
+if (a == 10) {
+  return_value = 1;
+} else {
+  return_value = 2;
+}
+// ... rest of code ...
+```
+This code directly translated to assembly is as follows:
+``` asm
+cmp   edi, 10     ; Compare the first argument to 10 (sets flags)
+jne   .L2         ; Jump to label .L2 if they are *not* equal (if ZF=0)
+mov   eax, 1      ; This line only runs if the comparison was *equal*
+jmp   .L3         ; Skip the next line
+.L2:
+mov   eax, 2      ; This line runs if it was *not equal*
+.L3:
+; ... rest of code ...
+```
+
+### **4. How to Read a Small Function: A Practical Guide**
+#### **C Code**:
+``` c
+int add_and_increment(int a, int b) {
+  int result = a + b;
+  return result + 1;
+}
+```
+#### **Assembly**:
+``` asm
+add_and_increment:
+    ; ----- PROLOGUE -----
+    push    rbp
+    mov     rbp, rsp
+    sub     rsp, 16
+
+    ; ----- BODY -----
+    lea     eax, [rdi + rsi]
+    add     eax, 1
+
+    ; ----- EPILOGUE -----
+    leave
+    ret
+```
+
 
 <br>
 <br>
