@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## Day 25 (1/9/25 - 25/9/25)
+## (1/9/25 - 9/10/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -24,7 +24,7 @@ For an `n`-bit number, the range of values is from `-2^(n-1)` to `2^(n-1) - 1`.
 
 To represent the negative version of a positive number `X` (e.g., `-1`):
 1. Start with the positive binary representation (`+1`): `0000 0001`
-2. Invert all the bits: `0000 0101` &rarr; `1111 1110`
+2. Invert all the bits: `0000 0001` &rarr; `1111 1110`
 3. Add `1` to the results: `1111 1110 + 1 = 1111 1111`
 
 <br>
@@ -35,7 +35,7 @@ IEEE-754 is a technical standard that defines how computers represent and handle
 
 - **Sign bit (1 bit):** `0` if positive, `1` if negative.
 - **Exponent (8 bits for 32-bit float):** Represents the "power" (like `23` in `10²³`). It's stored with a bias to handle negative exponents, meaning `Actual Exponent = Stored Exponent - Bias`)<br>
-For 32-bit floats, this bias is `127`. Stored exponent range: `1 – 254`; corresponding to actual exponents: `-126 – 127`.
+For 32-bit floats, this bias is `127`. Stored exponent range: `1–254`; corresponding to actual exponents: `-126–127`.
 - **Fraction/Mantissa (23 bits for 32-bit float):** The significant digits of the number (like the `6.022` from `6.022 x 10²³`).
 
 The formula for the value of a IEEE-754 float is: <br>
@@ -76,7 +76,7 @@ The normalizaed value is `1.01₂`. The fraction part is the bits after the deci
 
 > <!-- --- -->
 > \*\*NOTE** <br>
-> Converting this from binary to decimal: `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
+> Converting this from binary (base-2) to decimal (base-10): `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
 > <!-- --- -->
 
 **Step 6) Full binary representation:**
@@ -115,9 +115,6 @@ The CPU parses the 32-bit string according to IEEE-754, splitting it into the th
 4. **Final Value:**<br>
     `1 x 1.25 x 2⁻³ = 0.15625`
 
-<br>
-
-<!-- 
 #### **Example 2: Storing 35.7911 in 32-bit float**
 
 **Step 1) Sign Bit**:
@@ -185,8 +182,8 @@ The significand is `1.000111100101010000101100...`, so the fraction bits are `00
 Thus, the full binary representation is: <br>
 **`0100 0010 0000 1111 0010 1010 0001 0110`**<br>
 The hexadecimal representation is: `0x420F2A16`.
--->
 
+<br>
 
 ### Endianness
 
@@ -220,6 +217,7 @@ int main()
 }
 ```
 
+<br>
 
 ### Alignment and Padding
 
@@ -248,7 +246,7 @@ It can also be added at the end of a `struct` to ensure alignment in arrays.
      - `c` would be at `0x1000` (aligned)
      - `i` would start at `0x1001` (misaligned)
 3. **Compiler Adds Padding:**
-   - To align `i`, the compiler inserts **3 bytes of padding after** `c`:
+   - To align `i`, the compiler inserts **3 bytes of padding after `c`**:
      - `c` at `0x1000`
      - Padding at `0x1001`,`0x1002`,`0x1003`.
      - `i` starts at `0x1004` (aligned).
@@ -419,9 +417,11 @@ The shell calls the the `execve` system call to execute program.
 The shell passes the path to the executable file (`./my_program`) and the arguments (`argv`) and environment variables 
 (`envp`) to the kernel. The kernel now takes over.
 
+<br>
+
 ### **Step 2: The Kernel's Loader**
 
-The kernel's "**loader**" is responsible or setting up a new process in memory. Here's what it does:
+The kernel's "**loader**" is responsible for setting up a new process in memory. Here's what it does:
 
 **1\. Creates a New Process with a Fresh Virtual Address Space**<br>
 Creates (or reuses) a process structure. A key part of this is creating a brand new, empty **virtual address space**.
@@ -455,7 +455,7 @@ Creates (or reuses) a process structure. A key part of this is creating a brand 
 
 > <!-- --- -->
 > \*\*NOTE**<br>
-> The "**program break**" is a kernel-maintained pointer that defines the current end of the process's data segment—the boundary between the heap's allocated memory and the unmapped memory beyond it.
+> The **program break** is a kernel-maintained pointer that defines the current end of the process's data segment—the boundary between the heap's allocated memory and the unmapped memory beyond it.
 > <!-- --- -->
 
 > <!-- --- -->
@@ -492,6 +492,7 @@ Creates (or reuses) a process structure. A key part of this is creating a brand 
 **5\. Places Initial Data on the Stack**<br>
 Prepares the initial environment for the program by pushing information onto the new stack it just created: `argc`, `argv[]`, `envp[]`, `auxv`.
 
+<br>
 
 ### **Step 3: The Handoff to `_start`**
 Once the kernel has successfully built the entire virtual environment, the final step is to set the CPU's instruction pointer (`%rip`) to the address of the entry point specified in the executable header (`_start`) and let the CPU run.
@@ -552,6 +553,8 @@ Code running in User Mode is "sandboxed and restricted to the **lowest level of 
 
 Virtual memory is **mapped** to physical memory by the kernel loader after `execve`, with physical RAM only being allocated **lazily** at first access.
 
+<br>
+
 ### Heap and Stack
 
 #### **Heap**
@@ -580,6 +583,8 @@ Virtual memory is **mapped** to physical memory by the kernel loader after `exec
   5. Temporary Data
 
 Once the stack and heap meet, the program is out of memory.
+
+<br>
 
 ### Memory bugs and why they crash
 
@@ -724,6 +729,8 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 - **Return Value:**<br>
   The result of a function is passed back to the caller in the `rax` register (or `rdx:rax` for very large values).
 
+<br>
+
 ### **2. Caller-Saved vs. Callee-Saved Registers**
 
 - **Caller-Saved (Volatile) Registers:**<br>
@@ -735,6 +742,8 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
   (`rbx`, `rbp`, `r12`, `r13`, `r14`, `r15`)
   - **Rule:** If the callee wants to use these registers, it must restore them to their original values before returning to the caller.
   - **Responsibility:** The callee typically saves them onto the stack at the very start (in the prologue) and restores them at the very end (in the epilogue).
+
+<br>
 
 ### **3. The Function Frames: Prologue, Body, Epilogue**
 
@@ -897,6 +906,8 @@ ret
     | --- | --- | --- | --- |
     | `0x7fffffffe110` | ... | Caller's local variables | `rsp`, `rbp` |
 
+<br>
+
 ### **4. Recursion**
 
 Recursion work seamlessly because of this stack mechanism. Every time a function calls itself, a brand new **stack frame** is created.
@@ -933,7 +944,7 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 
 ## 6) Assembly literacy
 
-### **1. Instructions: The Basic Vocabulary**
+### **Instructions: The Basic Vocabulary**
 
 | Category | Example Instructions | What They Do |
 | --- | --- | --- |
@@ -942,14 +953,18 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 | **Branches (Jumps)** | `jmp`, `je`, `jne`, `jg`, `jl` | Change the flow of execution. They make the `rip` instruction pointer jump to a new address.<br> This is how `if`, `for`, and `while` are implemented.|
 | **Calls/Returns** | `call`, `ret` | `call` jumps to a function's code and pushes the return address.<br> `ret` pops that address and jumps back. |
 
-### **2. Addressing: How to Talk About Memory**
+<br>
+
+### **Addressing: How to Talk About Memory**
 
 Programs rarely use absolute addresses for accessing memory; they use formulas. The common pattern is **Base + Offset** addressing: `[BaseReg + Constant]`.
 - **`BaseReg`**: Almost always `rbp` or `rsp` for accessing function arguments and local vars.
 - **`Constant`**: A fixed number of bytes.
-- **e.g.**: `[rbp - 8]`; `[rbp + 16]`; `[rax - rdx*8]` (Classic **array access**).
+- **e.g.**: `[rbp - 8]`; `[rbp + 16]`; `[rax - rdx*8]` (Classic array access).
 
-### **3. Condition Codes**
+<br>
+
+### **Condition Codes**
 
 The CPU has a special register called `RFLAGS` (or `EFLAGS`). It's a collection of single-bit **flags** that are automatically set by most arithmetic and logic instructions.
 
@@ -990,7 +1005,9 @@ mov   eax, 2      ; This line runs if it was *not equal*
 ; ... rest of code ...
 ```
 
-### **4. How to Read a Small Function: A Practical Guide**
+<br>
+
+### **How to Read a Small Function: A Practical Guide**
 #### **C Code**:
 ``` c
 int add_and_increment(int a, int b) {
@@ -1016,8 +1033,78 @@ add_and_increment:
 ```
 
 
+<hr>
 <br>
+
+
+## 7) System calls vs library calls
+
+**The big picture:** The application talk to the library. The library talks to the kernel on your behalf.
+
+### **System Calls**
+
+A **system call** is the only way a user program can request a service from the OS kernel.
+
+#### **How it Works: The Controlled Gate**
+1. **Special Instruction**: Ringing the doorbell to the kernel.<br>
+   Common examples:
+   - `int 0x80` (Classic Linux 32-bit)
+   - `syscall` (Modern x86-64 Linux)
+   - `svc` (ARM)
+2. **CPU Switch to Kernel Mode**: From `User Mode` to `Kernel Mode`.
+3. **Kernel Takes Over**:<br>
+   CPU starts executing a pre-defined **system call handler** function, that looks at the registers to figure out what you want.
+4. **The "What" and "How"**:<br>
+   You must communicate your request by placing specific values *before* `syscall`:
+   - **System Call Number**: e.g., `0` for `sys_read`, `1` for `sys_write`, etc. This goes on `rax`.
+   - **Arguments**: Up to 6 for the call, placed in `rdi`, `rsi`, `rdx`, `r10`, `r8`, `r9`.
+5. **Kernel Performs the Task**
+6. **Return to User Model**: Kernel places a return value in `rax` and switches CPU back to `User Mode`.
+
+#### **Examples of System Calls:**
+- `read`/`write`, `open`/`close`, `fork`/`execve`, `mmap`/`brk`, `exit`
+
 <br>
+
+### **Library Calls**
+
+A **library call** is a function that lives in a shared library (e.g., `libc.so`, the C standard library) that is loaded into your process's memory space. It runs entirely in **User Mode**.
+
+#### **Example: The Journey of `printf("Hello, %s!\n", name)`**
+1. **`printf` Call**
+2. **Library Work (in User Mode)**:<br>
+   - The `printf` code in `libc` parses the format string "Hello %s~\n".
+   - It loops through the string, copying characters into an internal memory buffer (in the heap).
+   - When it encounter `%s`, it fetches the `name` argument and copies its string into the buffer.
+3. **System Call**:<br>
+   The buffer has a limited size. When it's full, or when the program ends, `printf` will finally make a `write` **system call** to ask the kernel to actually send the buffered data to the screen.
+   > <!-- --- -->
+   > \*\*NOTE** <br>
+   > By buffering data, `printf` can make one `write` system call for 100 chars instead of 100 `write` system calls for 1 char each.
+   > <!-- --- -->
+
+#### **Examples of Library Calls:**
+- `printf`/`scanf`, `fopen`/`fclose`, `malloc`/`free`, `strcpy`/`strlen`
+
+<br>
+
+### **Summary**
+| Feature | Systsem Call | Library Call |
+| --- | --- | --- |
+| **Definition** | A controlled entry point into the kernel. | A function in a user-space library. |
+| **Privilege Level** | Executes in **Kernel Mode (Ring 0)** | Executes in **User Mode (Ring 3)** |
+| **Invocation** | Via a special CPU instruction (`syscall`, `int 0x80`) | Via a standard function call (`call printf`) |
+| **Performance** | **Slow** (requires full context switch) | **Fast** (no privilege switch) |
+| **Functionality** | Primitive, low-level (read/write bytes, manage processes) | Complex, high-level (formatting, buffering, data structures) |
+| **Example** | `write(1, "hello", 5)` | `printf("Hello, %s!", name)` |
+
+
+<hr>
+<br>
+
+
+## 8 ) Files and I/O (the Unix mental model)
+
 <br>
 <br>
 <br>
