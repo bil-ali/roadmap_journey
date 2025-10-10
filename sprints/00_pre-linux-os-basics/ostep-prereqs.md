@@ -715,7 +715,7 @@ This agreement or **calling convention** is called the **Application Binary Inte
 
 The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 
-### **1. Passing Arguments and Return Values**
+### 1. Passing Arguments and Return Values
 
 - **Integer/Pointer Arguments:**<br>
   The first 6 arguments are passed through CPU registers (in the following order):
@@ -731,7 +731,7 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 
 <br>
 
-### **2. Caller-Saved vs. Callee-Saved Registers**
+### 2. Caller-Saved vs. Callee-Saved Registers
 
 - **Caller-Saved (Volatile) Registers:**<br>
   (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`, `r9`, `r10`, `r11`)
@@ -745,7 +745,7 @@ The most common one for 64-bit Linux/macOS is the **`System V AMD64 ABI`**:
 
 <br>
 
-### **3. The Function Frames: Prologue, Body, Epilogue**
+### 3. The Function Frames: Prologue, Body, Epilogue
 
 The life cycle of a function can be broken down into three distinct phases: the **Prologue**, the **Body**, and the **Epilogue**.
 
@@ -908,7 +908,7 @@ ret
 
 <br>
 
-### **4. Recursion**
+### 4. Recursion
 
 Recursion work seamlessly because of this stack mechanism. Every time a function calls itself, a brand new **stack frame** is created.
 - Each call gets its own set of arguments, saved registers, and local variables on the stack.
@@ -944,7 +944,7 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 
 ## 6) Assembly literacy
 
-### **Instructions: The Basic Vocabulary**
+### Instructions: The Basic Vocabulary
 
 | Category | Example Instructions | What They Do |
 | --- | --- | --- |
@@ -955,7 +955,7 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 
 <br>
 
-### **Addressing: How to Talk About Memory**
+### Addressing: How to Talk About Memory
 
 Programs rarely use absolute addresses for accessing memory; they use formulas. The common pattern is **Base + Offset** addressing: `[BaseReg + Constant]`.
 - **`BaseReg`**: Almost always `rbp` or `rsp` for accessing function arguments and local vars.
@@ -964,7 +964,7 @@ Programs rarely use absolute addresses for accessing memory; they use formulas. 
 
 <br>
 
-### **Condition Codes**
+### Condition Codes
 
 The CPU has a special register called `RFLAGS` (or `EFLAGS`). It's a collection of single-bit **flags** that are automatically set by most arithmetic and logic instructions.
 
@@ -1007,7 +1007,8 @@ mov   eax, 2      ; This line runs if it was *not equal*
 
 <br>
 
-### **How to Read a Small Function: A Practical Guide**
+### How to Read a Small Function: A Practical Guide
+
 #### **C Code**:
 ``` c
 int add_and_increment(int a, int b) {
@@ -1041,7 +1042,7 @@ add_and_increment:
 
 **The big picture:** The application talk to the library. The library talks to the kernel on your behalf.
 
-### **System Calls**
+### System Calls
 
 A **system call** is the only way a user program can request a service from the OS kernel.
 
@@ -1066,7 +1067,7 @@ A **system call** is the only way a user program can request a service from the 
 
 <br>
 
-### **Library Calls**
+### Library Calls
 
 A **library call** is a function that lives in a shared library (e.g., `libc.so`, the C standard library) that is loaded into your process's memory space. It runs entirely in **User Mode**.
 
@@ -1088,7 +1089,7 @@ A **library call** is a function that lives in a shared library (e.g., `libc.so`
 
 <br>
 
-### **Summary**
+### Summary
 | Feature | Systsem Call | Library Call |
 | --- | --- | --- |
 | **Definition** | A controlled entry point into the kernel. | A function in a user-space library. |
@@ -1104,6 +1105,56 @@ A **library call** is a function that lives in a shared library (e.g., `libc.so`
 
 
 ## 8 ) Files and I/O (the Unix mental model)
+
+### File Descriptors (FDs)
+
+When a program opens something (like a file, a network connection, etc.), the OS gives it a **file descriptor** as a handle for that resource. File descriptor is a small, non-negative integer index into the **file descriptor table**.
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **File descriptor table** is a kernel-managed data structure that exists for each process. Each slot in the table can contain a pointer to a kernel object.
+> <!-- --- -->
+
+#### **Standard FDs (Always Open)**
+- **0 = stdin (Standard Input)**: The source from which the program reads input (keyboard by default)
+- **1 = stdout (Standard Output)**: The destination where the program writes normal output (terminal by default)
+- **2 = stderr (Standard Error)**: The destination where the program writes its error messages (terminal by default)
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **FD is OPEN** &rarr; The slot for that FD index contains a valid, non-NULL pointer to a kernel object. The resource (file, socket, etc.) is active and can be used.
+> <!-- --- -->
+
+#### **Redirection**
+
+**Redirection** is the process where the shell creates a new child process and modifies its file descriptor table before it executes the target program.
+
+##### **Example:**
+``` bash
+./myprogram < input.txt > output.txt 2> errors.txt
+```
+- **`./myprogram`**
+  - This is the target program.
+- **`< input.txt` (Redirecting Standard Input - FD 0)**
+  - The shell opens the file `input.txt` for reading. 
+  - Whenever `myprogram` tries to read from stdin, it will now read lines `input.txt` instead of waiting for keyboard input.
+- **`> output.txt` (Redirecting Standard Output - FD 1)**
+  - The shell creates (or overwrites) the file `output.txt` for writing.
+  - Any normal output that `myprogram` produces is written to `output.txt` instead of appearing on terminal screen.
+- **`2> errors.txt` (Redirecting Standard Error - FD 2)**
+  - The shell creates (or overwrites) the file `errors.txt` for writing.
+  - Any error messages that `myprogram` generates are written to `errors.txt` instead of appearing on terminal screen.
+
+##### **Common Redirection Operators & Syntax**
+| Operator | Syntax | Description |
+| --- | --- | --- |
+| Input Redirection | `command < file` | Connect `file` to stdin (FD 0) |
+| Output Redirection | `command > file` | Connect stdout (FD 1) to `file` (overwrite) |
+| Output Append | `command >> file` | Connect stdout (FD 1) to `file` (append) |
+| Error Redirection | `command 2> file` | Connect stderr (FD 2) to `file` (overwrite) |
+| Error Append | `command 2>> file` | Connect stderr (FD 2) to `file` (append) |
+| Combine stdout & stderr | `command > file 2>&1` | Redirect stdout to file, then send stderr to the same place as stdout. The &1 means "the same location as file descriptor 1"  |
+| Combine (shorthand) | `command &> file` | Redirect both stdout and stderr to file |
 
 <br>
 <br>
