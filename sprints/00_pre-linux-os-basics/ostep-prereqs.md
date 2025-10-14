@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## (1/9/25 - 9/10/25)
+## (1/9/25 - 14/10/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -1104,11 +1104,11 @@ A **library call** is a function that lives in a shared library (e.g., `libc.so`
 <br>
 
 
-## 8 ) Files and I/O (the Unix mental model)
+## 8) Files and I/O (the Unix mental model)
 
 ### File Descriptors (FDs)
 
-When a program opens something (like a file, a network connection, etc.), the OS gives it a **file descriptor** as a handle for that resource. File descriptor is a small, non-negative integer index into the **file descriptor table**.
+When a program opens something (like a file, a network connection, etc.), the OS gives it a **file descriptor** as a handle for that resource. A **file descriptor** is a small, non-negative integer index into the **file descriptor table**.
 
 > <!-- --- -->
 > \*\*NOTE** <br>
@@ -1127,7 +1127,7 @@ When a program opens something (like a file, a network connection, etc.), the OS
 
 #### **Redirection**
 
-**Redirection** is the process where the shell creates a new child process and modifies its file descriptor table before it executes the target program.
+**Redirection** is the process where the shell creates a new child process and modifies its file descriptor table before executing the target program.
 
 ##### **Example:**
 ``` bash
@@ -1157,6 +1157,59 @@ When a program opens something (like a file, a network connection, etc.), the OS
 | Combine (shorthand) | `command &> file` | Redirect both stdout and stderr to file |
 
 <br>
+
+### "Everything is a File": The Universal Interface
+
+In Unix/Linux systems, almost every resource is represented as something you can interact with using the same simple file operations: `open()`, `read()`, `write()`, and `close()`.<br> The OS gives everything a "file-like" interface, even when it's not actually a file on disk.
+
+The same simple `read()`/`write()` interface works on many different things:
+1. **Regular Files**
+   - **Example**: `/home/user/document.txt`
+   - **What it is**: Actual file stored on disk
+   - **How you'd use it**: `cat document.txt`, `vim document.txt`
+2. **Directories**
+   - **Examples**: `/home/user/`
+   - **What it is**: A file that contains names and references to other files
+   - **How you'd use it**: `ls /home/user/`
+3. **Pipes**
+   - **Examples**: `|` symbol in commands
+   - **What it is**: A temporary connection where one program's output becomes another's input
+   - **How you'd use it**: `ls | grep "txt"`
+4. **Sockets**
+   - **Examples**: Network connections to websites
+   - **What it is**: Endpoints for network communication
+   - **How you'd use it**: Web browsers use sockets to talk to servers, using the same `read()/write()` calls as files
+5. **Devices**
+   - **Examples**: `/dev/sda` (hard disk), `/dev/ttyS0` (serial port)
+   - **What it is**: Hardware represented as files
+   - **How you'd use it**: `cat /dev/zero > empty_file.txt` (Read from hard drive like a file)
+6. **Pseudo-Files - Kernel Information**
+   - **Examples**: `/proc/cpuinfo`, `/sys/class/net/eth0`
+   - **What it is**: Virtual files that expose system information or controls
+   - **How you'd use it**:
+      ``` bash
+      cat /proc/cpuinfo   # Read CPU info as if it were a file
+      echo 1 > /sys/class/leds/input3::capslock/brightness  # Control hardware LED
+      ```
+
+<br>
+
+### Unbuffered I/O vs Buffered I/O
+
+**Talking directly to the OS every time** vs **Using a middleman (buffer) to batch operations**
+
+#### **Unbuffered I/O: The Direct Approach**
+
+``` c
+```
+
+
+##### **Pros**:
+
+##### **Cons**:
+
+#### **Buffered I/O: The Efficient Approach**
+
 <br>
 <br>
 <br>
