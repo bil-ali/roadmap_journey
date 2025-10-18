@@ -1196,22 +1196,217 @@ The same simple `read()`/`write()` interface works on many different things:
 
 ### Unbuffered I/O vs Buffered I/O
 
-**Talking directly to the OS every time** vs **Using a middleman (buffer) to batch operations**
+**Talking directly to the OS every time** vs **Using a middleman (buffer) to batch operations.**
 
 #### **Unbuffered I/O: The Direct Approach**
 
 ``` c
+char buffer[100];
+ssize_t bytes_read = read(fd, buffer, sizeof(buffer));
+ssize_t bytes_written = write(fd, buffer, bytes_read);
 ```
-
+- Each `read()` or `write()` is a **system call**.
+- Program stops, switches to kernel mode, the OS handles the operation, then returns.
 
 ##### **Pros**:
+- **Immediate** - Data gets written/read right now
+- **Predictable** - You know exactly when operation happen
 
 ##### **Cons**:
+- **Slow** - System calls are expensive (context switching overhead)
+- **Inefficient** - Many small reads/writes
+
+**Use Case:** When dealing with non-regular files (sockets, pipes) or when precise control is needed.
 
 #### **Buffered I/O: The Efficient Approach**
 
+``` c
+FILE *file = fopen("data.txt", "r+")
+char buffer[100];
+fread(buffer, 1, sizof(buffer), file);
+fprintf(file, "Hello %s\n", name);
+fflush(file);
+```
+- The C library maintains a **buffer** (typically 4KB-8KB) in your program's memory
+- Small reads/writes go to this buffer first
+- Only when buffer is full (or you call `fflush`) does it make a system call
+
+##### **Pros:**
+- **Much faster** - Fewer system calls
+- **More efficient** - Batches small operations together
+
+##### **Cons:**
+- **Unpredictable** - Data might sit in buffer for a while
+- **Risk of data loss** - If program crashes, buffered data disappear
+
+##### **Buffering Strategies:**
+1. **Fully Buffered (files)**
+   - Flushes when buffer is full
+   - Most efficient for file I/O
+2. **Line Buffered (terminals)**
+   - Flushes when it sees a newline `\n`
+   - Good for interactive output: `printf("Hello\n");` shows immediately
+3. **Unbuffered**
+   - Flushes immediately every time
+   - `stderr` is unbuffered so errors show immediately
+
+#### **When to Use Which**
+Use **buffered I/O** for most file operations.<br>
+Use **unbuffered I/O** when you need data to be written immediately (logs, critical data, real-time communication, errors).
+
 <br>
+
+### Blocking vs Non-blocking I/O
+
+**The Fundamental Question:** What happens when you ask for data that isn't ready?
+
+#### **Blocking I/O: The Simple Way**
+
+``` c
+char buffer[100];
+// If no data is available, this call will PAUSE your program until data arrives
+ssize_t bytes = read(socket_fd, buffer, sizeof(buffer));
+// Program continues here only after data is received
+```
+##### **What Blocking Means:**
+- Program calls `read()` or `write()`
+- If the data isn't ready (nothing to read, or buffer full for writing), the program **stops completely**
+- It waits (blocks) until the operation can complete
+- Only then does it continue execution
+
+**Use Case:** Simple programs, scripts, or situations where waiting is acceptable.
+
+#### **Non-blocking I/O: The Scalable Way**
+
+##### **The Problem with Blocking:**
+If you're handling 1000 network connections, with blocking I/O, you'd need 1000 threads. This doesn't scale well.
+
+##### **Solution: Non-blocking + Readiness APIs**
+
+``` c
+// 1. Make the socket non-blocking
+fcntl(socket_fd, F_SETFL, O_NONBLOCK);
+
+// 2. Use epoll/select/poll to check which FDs are ready
+struct epoll_event events[10];
+int ready_count = epoll_wait(epoll_fd, events, 10, -1);
+
+// 3. Only read from FDs that have data ready
+for (int i = 0; i < ready_count; i++) {
+  if events[i].events & EPOLLIN) {
+    ssize_t bytes = read(events[i].data.fd, buffer, sizeof(buffer));
+    // This won't block because we know data is available
+  }
+}
+```
+###### **How Non-blocking + epoll Works:**
+``` txt
+Program: "Kernel, which of my 1000 sockets have data ready?"
+Kernel: "sockets 42, 87, and 903 have data waiting"
+Program: "Okay, I'll read from just those three and ignore the others"
+```
+
+###### **Use Case:**
+- Building servers that handle many simultaneous connections
+- When performance nad scalability are critical
+- When you need responsice applications that can't afford to block.
+
+##### **Key Differences**
+| **Blocking I/O** | **Non-blocking I/O** |
+| --- | --- |
+| One operation at a time | Many operations simultaneously |
+| Thread sleeps while waiting | Thread stays awake |
+| Simple to code (linear flow) | Complex to code (event-driven logic) |
+| Poor scalability (one thread per connection) | Great scalability (one thread handles many connections) |
+| Wastes CPU cycles (sleeping threads) | Efficient CPU usage (no sleeping threads) |
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **Readiness APIs** (`select`, `poll`, `epoll`) are mechanisms that let you ask the OS: *"which of my file descriptors are ready for I/O right now?"*
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> ### Processes vs Threads
+> #### **What is a Process?**
+> A **process** is a running program with its own complete, isolated environment:
+> - **Private memory space**
+> - **Own file descriptors**
+> - **Separate resources** (CPU time, memory, etc.)
+> - **Independent state** (One process crashing doesn't make other processes crash)
+> 
+> #### **What is a Thread?**
+> A **thread** is a path of execution within a process:
+> - **Shared memory** (between all threads in a process)
+> - **Shared file descriptors**
+> - **Lightweight** (Creating a thread is much faster than creating a process)
+> - **Dependent** (If main thread crashes, all threads in that process die)
+> 
+> Each thread needs its own stack.
+> <!-- --- -->
+
+
+<hr>
 <br>
+
+
+## 9) Exceptions, Interrupts, and Signals
+
+### Exceptions (faukts, traps, abortys)
+
+**Exceptions** are synchronous events produced by the CPI as a direct result of executing a specific problematic instruction (e.g., divide-by-zero, page fault).
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **Synchronous** as in they happen at a predictable point in your code execution.
+> <!-- --- -->
+
+#### **Categories**
+- **Faults**<br>
+  Detected *before* the erroneous instruction completes. Kernel can attempt to fix the cause and resume the instruction. (**e.g.**, page fault), invalid opcode.
+- **Traps**<br>
+  Detected *after* instruction completes. Used for things like breakpoints of system calls. (**e.g.**, syscalls in some architectures).
+- **Aborts**<br>
+  Fatal conditions (e.g., CPU panic). Not typically fixable. (**e.g.**, double fault, hardware failure).
+
+#### **The exact sequence:**
+1. CPU detects exception while executing problematic instruction.
+2. CPU switches to kernel mode (privilege change), saves minimal CPU state (program counter, flags) into a **trap frame** or CPU-defined registers and jumps to an exception vector (address from the **exception table**).
+3. Kernel's exception handler runs. The handler examines the cause and context.
+4. Kernel turns the exception into a **signal** or terminates the process.
+
+<!-- --- -->
+> \*\*NOTE**<br>
+> **Exception table** is a table that maps exception numbers to handler function addresses.<br>
+> Its `x86` implementation is the **IDT (Interrupt Descriptor Table)**, which handles both exceptions AND interrupts.
+<!-- --- -->
+
+
+#### **Common exceptions:**
+- `SIGFPE` - Floating point exception (divide by zero)
+- `SIGSEGV` - Segmentation fault (invalid memory access)
+- `SIGILL` - Invalid opcode
+
+<br>
+
+### Interrupts
+
+An **Interrupt** is a signal sent to the CPU that immediately grabs its attention, forcing it to temporarily stop what it's doing and execute a special piece of code called an **interrupt handler**.
+
+#### **Hardware Interrupts**
+**Hardware interrupts** are **asynchronous** events generated by external hardware devices that pause the CPU's execution at unpredictable times to handle urgent external events.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> "**External** events" as in unrelated from the currently executing instruction.
+> <!-- --- -->
+
+Typical sources:
+- Timer/tick
+- I/O completion
+- DMA controller, ACPI, etc.
+
+
 <br>
 <br>
 <br>
