@@ -549,7 +549,7 @@ Code running in User Mode is "sandboxed and restricted to the **lowest level of 
 
 ### Virtual address space
 
-**Virtual Address Space** is an abstraction provided by the OS and Memory Management Unit (MMU) that presents each running process with a private, linear range of memory addresses. It is "virtual" because it's independent of physical memory, creating the illusion that the process has exclusive access to the entire system's memory.
+**Virtual Address Space** is an abstraction provided by the OS and **Memory Management Unit (MMU)** that presents each running process with a private, linear range of memory addresses. It is "virtual" because it's independent of physical memory, creating the illusion that the process has exclusive access to the entire system's memory.
 
 Virtual memory is **mapped** to physical memory by the kernel loader after `execve`, with physical RAM only being allocated **lazily** at first access.
 
@@ -1363,9 +1363,9 @@ Program: "Okay, I'll read from just those three and ignore the others"
 
 #### **Categories**
 - **Faults:**<br>
-  Detected *before* the erroneous instruction completes. Kernel can attempt to fix the cause and resume the instruction. (**e.g.**, page fault), invalid opcode.
+  Detected *before* the erroneous instruction completes. Kernel can attempt to fix the cause and resume the instruction. (**e.g.**, page fault, invalid opcode_.
 - **Traps:**<br>
-  Detected *after* instruction completes. Used for things like breakpoints of system calls. (**e.g.**, syscalls in some architectures, breakpoints).
+  Detected *after* instruction completes. Used for things like breakpoints or system calls. (**e.g.**, syscalls in some architectures, breakpoints).
 - **Aborts:**<br>
   Fatal conditions (e.g., CPU panic). Not typically fixable. (**e.g.**, double fault, hardware failure).
 
@@ -1464,24 +1464,67 @@ Typical sources:
 
 
 #### **Common Signals**
-- **SIGINT** &mdash; interactive interrupt (Ctrl+C)
-- **SIGTERM** &mdash; termination request
-- **SIGKILL** &mdash; uncatchable kill
-- **SIGCHLD** &mdash; child process status changed
-- **SIGSEGV** &mdash; segmentation fault (often from **page fault**)
-- **SIGFPE**, **SIGILL**, **SIGBUS** &mdash; arithmetic error, illegal instruction, bus error
-- **Real-time signals** (**SIGRTMIN**, **SIGRTMAX**) &mdash; queued, carry data
+- **`SIGINT`** &mdash; interactive interrupt (Ctrl+C)
+- **`SIGTERM`** &mdash; termination request
+- **`SIGKILL`** &mdash; uncatchable kill
+- **`SIGCHLD`** &mdash; child process status changed
+- **`SIGSEGV`** &mdash; segmentation fault (often from **page fault**)
+- **`SIGFPE`**, **`SIGILL`**, **`SIGBUS`** &mdash; arithmetic error, illegal instruction, bus error
+- **Real-time signals** (**`SIGRTMIN`**, **`SIGRTMAX`**) &mdash; queued, carry data
 
 #### **Signal Lifecycle (how delivery works)**
 1. Kernel decides to send a signal to a processs
-2. Kernel sets a **pending** bit for that signal in the process's **signal mask** and records any associated data (for real-time signals)
+2. Kernel adds the signal to the process's **pending signals** list and records any associated data (for real-time signals)
+3. When the process is about to return to User Mode (after a system call, interrupt, exception, etc.) or at certain safe points, kernel checks pending signals excluding any signals currently blocked by the **signal mask**
 > <!-- --- -->
 > \*\*NOTE**<br>
 > **Signal Mask** is the "to-do" list of signals currently blocked by the process.
->
-> 
 > <!-- --- -->
-3. 
+4. For each unblocked pending signal:
+   - If a custom handler exists: The kernel sets up a fake function call on the user stack so that when returning to user mode, the signal handler runs first, then automatically returns to the original code
+   - If default action is to terminate / dump core / ignore / stop / continue, kernel performs that action
+5. Signal handler runs on the process's stack (unless the process used `sigaltstack` to provide an alternate stack)
+6. When handler returns, it restores saved context (from  trap frame) and resumes interrupted execution.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **Real-Time/Queued Signals vs Standard Signals**
+> - **Standard signals** are not queued, thus multiple rapid signals may get coalesced. They also carry little data (only the signal number), and do not guarantee delivery ordering.
+> - **Real-time signals** are queued, meaning every instance is delivered separately (no possibility of coalescence). They can carry extra data (integers or pointers), and guarantee FIFO delivery order.
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **Default actions of signals**
+> - **Terminate** the process (e.g., `SIGTERM`)
+> - **Terminate and dump core** (e.g., `SIGSEGV`)
+> - **Ignore** (e.g., `SIGCHILD`)
+> - **Stop** or **Continue** a proces (`SIGSTROP`, `SIGCONT`)
+> <!-- --- -->
+
+
+<hr>
+<br>
+
+
+## 10) Virtual Memory
+
+Virtual memory is a system that creates the illusion that each program has its own private, continuous memory space, while in reality the hardware and kernel are doing complex mapping behind the scenes.
+
+### The Core Concept: Virtual vs Physical Addresses
+
+**Physical Memory:** The actual RAM chips in the computer.
+- Limited resource
+- Shared by all running programs and the kernel
+- Address `0x12345` = Actual physical location on RAM
+
+**Virtual Memory:** Each program's "private view" of memory.
+- Each process thinks it owns the entire address space (**e.g.**, `0x00000000` to `0xFFFFFFFF` on 32-bit)
+- Address `0x12345` in Processs A **≠** Address `0x12345` in Process B
+- The MMU translates every virtual address into a physical address by consulting **page tables** maintained by kernel.
+- Virtual addresses are split into a **virtual page number** and an **offset** within the page.
+
+### Page Tables
 
 <br>
 <br>
