@@ -518,7 +518,7 @@ Code here has the **highest level of privilege**: full, unrestricted access to t
 #### **User Mode (Ring 3)**
 
 Where all our applications (processes) run.<br>
-Code running in User Mode is "sandboxed and restricted to the **lowest level of privilege**. It is physcially prevented by the CPU from:
+Code running in User Mode is "sandboxed and restricted to the **lowest level of privilege**. It is physically prevented by the CPU from:
 - Direct Hardware Access
 - Modifying Page Tables
 - Disabling Interrupts
@@ -1489,7 +1489,7 @@ Typical sources:
 > <!-- --- -->
 > \*\*NOTE**<br>
 > **Real-Time/Queued Signals vs Standard Signals**
-> - **Standard signals** are not queued, thus multiple rapid signals may get coalesced. They also carry little data (only the signal number), and do not guarantee delivery ordering.
+> - **Standard signals** are not queued, thus multiple rapid signals may get **coalesced**. They also carry little data (only the signal number), and do not guarantee delivery ordering.
 > - **Real-time signals** are queued, meaning every instance is delivered separately (no possibility of coalescence). They can carry extra data (integers or pointers), and guarantee FIFO delivery order.
 > <!-- --- -->
 
@@ -1524,7 +1524,105 @@ Virtual memory is a system that creates the illusion that each program has its o
 - The MMU translates every virtual address into a physical address by consulting **page tables** maintained by kernel.
 - Virtual addresses are split into a **virtual page number** and an **offset** within the page.
 
+<br>
+
 ### Page Tables
+
+Every process has its own **page table**, created and managed by the kernel.
+This page table tells the MMU how to translate virtual addresses into physical addresses and what permissions apply.
+
+#### **The Translation Process**
+``` txt
+Program executes instruction using virtual address 0x4000
+        ↓
+MMU splits 0x4000 → (Virtual Page Number, Offset)
+        ↓
+MMU checks TLB (Translation Lookaside Buffer)
+        ↓
+If miss → walks the page tables (multi-level lookup)
+        ↓
+Finds: Virtual Page 4 → Physical Frame 0x123000
+        ↓
+MMU combines Physical Frame (0x123000) + Offset (0)
+        ↓
+CPU accesses physical address 0x123000 in RAM
+```
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **TLB (Translation Lookaside Buffer)** is a small, extremely fast cache inside the CPU that remembers recent virtual-to-physical address translations. Specifically, it stores **Virtual Page Number &rarr; Physical Frame Number** (no offsets):
+> ```
+> TLB Contents:
+> [VPN 2] → Physical Frame 0x456000
+> [VPN 4] → Physical Frame 0x123000
+> [VPN 7] → Physical Frame 0x789000
+> ```
+> <!-- --- -->
+
+#### **Virtual Address Breakdown**
+
+A virtual address is divided into two parts:
+| Portion | Description | Example (for `4 KiB` pages) |
+| --- | --- | --- |
+| **Page Number** | Identifies which virtual page this address belongs to | `0x4000` / `0x1000` = `page 4` |
+| **Offset** | Location within that page | `0x4000` % `0x1000` = `0` |
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> `4 KiB` (**kibibytes**) = `4096 bytes` = `0x1000` in hexadecimal
+> <!-- --- -->
+
+The division and modulo are just for conceptual understanding. MMU actually splits by bits.
+
+**Formula:**<br>
+If the page size = **2<sup>n</sup>** bytes
+- **Offset** = **n** bits
+- **Page number** = **(total address bits - n)** bits
+
+4 KiB = 2<sup>12</sup> &rarr; offset = **12 bits**<br>
+(and remaining bits for the VPN)
+``` yaml
+Virtual Address
+0x4000 = [Virtual Page Number | Offset]
+0x4000 = [0100 | 0000 0000 0000]
+```
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> Above illustration uses `0x4000` to avoid hanging zeros, but 16-bit memory addresses aren't accurate to reality.
+>
+> For example, in a 32-bit system, it would actually be `0x00004000`.<br>
+> Offset = **12 bits**<br>
+> VPN = 32 - 12 = **20 bits**<br>
+> `0x00004000` = [`0000 0000 0000 0000 0100` | `0000 0000 0000`]
+> 
+> <!-- --- -->
+
+#### **What a Page Table Entry (PTE) Contains**
+
+A **PTE** is usually 4&ndash;8 bytes and has **bitfields** that tell the MMU what to do:
+| Field | Purpose |
+| --- | --- |
+| **Physical Frame Number (PFN)** | Which physical page in RAM backs this virtual page |
+| **Present Bit (P)** | 1 = Page is in memory; 0 = triggers a **page fault** |
+| **R/W Bit** | 0 = Read-only; 1 = Writable |
+| **U/S Bit** | 0 = Kernel-only (supervisor); 1 = User-accessible |
+| **A (Accessed)** | Set by hardware when the page is read/written |
+| **D (Dirty)** | Set when the page is written to |
+| **NX (No-Execute)** | Optional bit disallowing code execution from this page |
+| **Caching bits** | Control cache behavior for special memory regions |
+| **Frame Address** | The upper bits containing the actual physical frame number |
+
+> <!-- --- -->
+> \*\*NOTE** <br>
+> **Bitfields** are a way to pack multiple pieces of data into a single integer by using specific bits for specific purposes.
+> <!-- --- -->
+
+#### **Page Table Example**
+
+#### **Page Faults**
+
+#### **Multi-Level Page Tables**
 
 <br>
 <br>
