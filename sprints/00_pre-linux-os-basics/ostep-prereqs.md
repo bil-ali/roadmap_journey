@@ -1522,7 +1522,7 @@ Virtual memory is a system that creates the illusion that each program has its o
 - Each process thinks it owns the entire address space (**e.g.**, `0x00000000` to `0xFFFFFFFF` on 32-bit)
 - Address `0x12345` in Processs A **≠** Address `0x12345` in Process B
 - The MMU translates every virtual address into a physical address by consulting **page tables** maintained by kernel.
-- Virtual addresses are split into a **virtual page number** and an **offset** within the page.
+- Virtual addresses are split into a **virtual page number (VPN)** and an **offset** within the page.
 
 <br>
 
@@ -1598,33 +1598,162 @@ Virtual Address
 > 
 > <!-- --- -->
 
-#### **What a Page Table Entry (PTE) Contains**
+#### **Page Table Entry (PTE) Structure (e.g., x86-64)**
 
-A **PTE** is usually 4&ndash;8 bytes and has **bitfields** that tell the MMU what to do:
-| Field | Purpose |
-| --- | --- |
-| **Physical Frame Number (PFN)** | Which physical page in RAM backs this virtual page |
-| **Present Bit (P)** | 1 = Page is in memory; 0 = triggers a **page fault** |
-| **R/W Bit** | 0 = Read-only; 1 = Writable |
-| **U/S Bit** | 0 = Kernel-only (supervisor); 1 = User-accessible |
-| **A (Accessed)** | Set by hardware when the page is read/written |
-| **D (Dirty)** | Set when the page is written to |
-| **NX (No-Execute)** | Optional bit disallowing code execution from this page |
-| **Caching bits** | Control cache behavior for special memory regions |
-| **Frame Address** | The upper bits containing the actual physical frame number |
+A **PTE** is usually a 4&ndash;8 bytes and has **bitfields**, where some bits store the physical frame address, and others store control flags:
+| Field | Name | Purpose |
+| --- | --- | --- |
+| **Frame Address** | Physical frame number (top bits) | Where in RAM the page is stored |
+| **P (Present)** | Present bit | 1 = in memory, 0 = on disk (page fault) |
+| **R/W (Read/Write)** | Read/write bit | 0 = read-only, 1 = writable |
+| **U/S (User/Supervisor)** | User vs kernel access | 0 = kernel-only, 1 = accessible by user processes |
+| **A (Accessed)** | Accessed flag | Set by hardware when the page is read or written (used for LRU/aging) |
+| **D (Dirty)** | Dirty flag | Set by hardware when the page is modified (Tells OS it must be written back to disk before eviction) |
+| **NX (No-Execute)** | Execute-disable bit | Prevents code execution (used for DEP / W^X protection) |
+| **Caching bits** | Cache control | Control how/if this page is cached by the CPU |
+| **Other OS bits** | Custom flags | Reserved for the kernel (**e.g.**, copy-on-write, swapped-out, etc.) |
 
 > <!-- --- -->
 > \*\*NOTE** <br>
-> **Bitfields** are a way to pack multiple pieces of data into a single integer by using specific bits for specific purposes.
+> **Bitfields** are a way to pack multiple pieces of data into a **single integer** by using specific bits for specific purposes.
 > <!-- --- -->
 
-#### **Page Table Example**
+#### **Page Table Example (Single-Level)**
+
+| Virtual Page | Virtual Address | Physical Frame | Present | RW | US | NX | Notes |
+| --- | --- | --- | --- | --- | --- | -- | --- |
+| 0 | `0x0000`&ndash;`0x0FFF` | `0x000AB000` | 1 | 0 | 1 | 0 | Code (read-only, exec) |
+| 1 | `0x1000`&ndash;`0x1FFF` | `0x000AC000` | 1 | 1 | 1 | 0 | Data (read/write) |
+| 2 | `0x2000`&ndash;`0x2FFF` | `0x000AD000` | 1 | 1 | 1 | 1 | Stack (RW, no-exec) |
+| 3 | `0x3000`&ndash;`0x3FFF` | &mdash; | 0 | &mdash; | &mdash; | &mdash; | Unmapped (page fault) |
+
+> <!-- --- -->
+> \*\*NOTE**
+> #### **Actual Bitfield Representation (Virtual Page 2)**
+> Assuming x86-64 with 4 KiB pages
+> ##### **Bit positions (typical)**
+> ``` txt
+> bit 0     = P (Present)
+> bit 1     = RW (Read/Write)
+> bit 2     = US (User/Supervisor)
+> bit 3     = PWT
+> bit 4     = PCD
+> bit 5     = A (Accessed)
+> bit 6     = D (Dirty)
+> bit 7     = PAT
+> bit 8     = G (Global)
+> bit 9-11  = AVL (OS)
+> bit 12-51 = Physical Frame Number (PFN)
+> bit 52-62 = available / OS-specific / high PFN bits on some systems
+> bit 63    = NX (No Execute)
+> ```
+>
+> ##### **Compute the 64-bit PTE value**
+> ``` yaml
+> # Physical-frame field
+> frame_field = 0x000AD << 12 = 0x000AD000
+> (as full 64-bit) = 0x00000000000AD000
+> 
+> # Low flags (bits 0..11)
+> P = 1 << 0 = 0x0000000000000001
+> RW = 1 << 1 = 0x0000000000000002
+> US  = 1 << 2 = 0x0000000000000004
+> A = 1 << 5 = 0x0000000000000020
+> D = 1 << 6 = 0x0000000000000040
+> low_flags = 0x1 + 0x2 + 0x4 + 0x20 + 0x40 = 0x67
+> 
+> # NX (bit 63)
+> nx_bit = 1 << 63 = 0x8000000000000000
+> 
+> # Final 64-bit PTE
+> PTE = frame_field | low_flags | nx_bit
+>     = 0x00000000000AD000 | 0x67 | 0x8000000000000000
+>     = 0x80000000000AD067
+> ```
+>
+> The VPN isn't part of the PTE. A page table is an array of PTEs, and the VPN is the index.
+> <!-- --- -->
 
 #### **Page Faults**
 
+If the Present Bit = 0, that's a **page fault**. This means the page isn't currently in physical memory (it might be on disk, unallocated, or invalid).
+
+##### **The Page Fault Process**
+``` txt
+Program access virtual address 0x4000
+        ↓
+MMU checks TLB → miss
+        ↓
+MMU walks page tables
+        ↓
+PTE: [Disk Address][Present=0]
+        ↓
+MMU triggers PAGE FAULT exception
+        ↓
+CPU switches kernel mode and jumps to the kernel's page fault handler
+```
+
+##### **Kernel's Page Fault Handler**
+
+Once in the kernel, the OS decides *why* the page is missing and what to do:
+1. **Check the faulting virtual address and access type**<br>
+   - Is it a valid address?
+   - Was it read, write, or execute access?
+2. **If valid and backed by disk (swap/file)**<br>
+   - Find or allocate a free physical frame in RAM
+   - Read the page's contents from disk into that frame
+   - Update the page table
+   - Resume the process exactly where it left off (the instruction is retried)
+3. **If invalid access** (**e.g.**, NULL pointer or forbidden region)
+   - The kernel sends a signal like `SIGSEGV`
+   - The process is usually terminated
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **Swap**: Anonymous memory (heap, stack) that was pushed to disk when RAM was full.
+> <br>
+> **File**: Memory-mapped files or executable code that lives on disk.
+>
+> Both mean the data needs to be read from disk into RAM, but they come from different places on disk.
+> <!-- --- -->
+
+##### **Major vs. Minor Page Faults**
+
+The key difference is where the needed data comes from.
+- **Minor Page Fault**: The data is already in physical RAM, but not currently mapped to process's page table.
+- **Major Page Fault**: The data is not in physical RAM and must be loaded from disk.
+
 #### **Multi-Level Page Tables**
 
+For large virtual spaces (like 65-bit), a single flat page tbale would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
+``` css
+Virtual Address
+ └──> [PML4][PDPT][PD][PT][Offset]
+```
+Each level indexes into a smaller table until the final PTE is reached. This makes page tables **sparse** (memory is only used for regions that are actually mapped).
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **PML4** = Page Map Level 4 (Top Level)<br>
+> **PDPT** = Page Directory Pointer Table (Level 2)<br>
+> **PD** = Page Directory (Level 3)<br>
+> **PT** = Page Table (Level 4)
+> <!-- --- -->
+
 <br>
+
+### Isolation
+
+Virtual memory provides hardware-enforced isolation that makes each process live in its own protected sandbox.
+
+**The Three Layers of Isolation:**
+
+#### **1. User vs Kernel Space**
+
+#### **2. Per-Process Page Tables**
+
+#### **3. Permission Enforcement**
+
 <br>
 <br>
 <br>
