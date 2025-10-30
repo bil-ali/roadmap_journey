@@ -641,7 +641,6 @@ This corrupts the allocator's internal metadata.
 > When you call `free`, it takes the block and adds it to the **free list**.
 > 
 > Right before every single piece of memory that `malloc` gives you, it secretly stores a small header&mdash;a piece of metadata that describes the block that follows.
->
 > ```
 > +-----------------------------------------------------------------------+
 > |  |              |  |              |  |                               | |
@@ -1199,7 +1198,6 @@ The same simple `read()`/`write()` interface works on many different things:
 **Talking directly to the OS every time** vs **Using a middleman (buffer) to batch operations.**
 
 #### **Unbuffered I/O: The Direct Approach**
-
 ``` c
 char buffer[100];
 ssize_t bytes_read = read(fd, buffer, sizeof(buffer));
@@ -1219,7 +1217,6 @@ ssize_t bytes_written = write(fd, buffer, bytes_read);
 **Use Case:** When dealing with non-regular files (sockets, pipes) or when precise control is needed.
 
 #### **Buffered I/O: The Efficient Approach**
-
 ``` c
 FILE *file = fopen("data.txt", "r+")
 char buffer[100];
@@ -1261,7 +1258,6 @@ Use **unbuffered I/O** when you need data to be written immediately (logs, criti
 **The Fundamental Question:** What happens when you ask for data that isn't ready?
 
 #### **Blocking I/O: The Simple Way**
-
 ``` c
 char buffer[100];
 // If no data is available, this call will PAUSE your program until data arrives
@@ -1282,7 +1278,6 @@ ssize_t bytes = read(socket_fd, buffer, sizeof(buffer));
 If you're handling 1000 network connections, with blocking I/O, you'd need 1000 threads. This doesn't scale well.
 
 ##### **Solution: Non-blocking + Readiness APIs**
-
 ``` c
 // 1. Make the socket non-blocking
 fcntl(socket_fd, F_SETFL, O_NONBLOCK);
@@ -1440,7 +1435,7 @@ Typical sources:
 ##### **Types of Software Interrupts**
 1. **System Call Interfaces**<br>
    - Historical: `INT 0x80` (Linux 32-bit)
-   - Modern: `SYSCALL`/`SYSENTER` (x86-64)
+   - Modern: `SYSCALL`/`SYSENTER` (`x86-64`)
    - ARM: `svc` (Superviser Call)
 2. **Debugging and Testing Interrupts**
    - `UD2` -  Guaranteed invalid opcode exception
@@ -1720,8 +1715,8 @@ Once in the kernel, the OS decides *why* the page is missing and what to do:
 ##### **Major vs. Minor Page Faults**
 
 The key difference is where the needed data comes from.
-- **Minor Page Fault**: The data is already in physical RAM, but not currently mapped to process's page table.
-- **Major Page Fault**: The data is not in physical RAM and must be loaded from disk.
+- **Minor Page Fault:** The data is already in physical RAM, but not currently mapped to process's page table.
+- **Major Page Fault:** The data is not in physical RAM and must be loaded from disk.
 
 #### **Multi-Level Page Tables**
 
@@ -1749,13 +1744,92 @@ Virtual memory provides hardware-enforced isolation that makes each process live
 **The Three Layers of Isolation:**
 
 #### **1. User vs Kernel Space**
+The virtual address space is split into two parts:
+``` yaml
+64-bit Virtual Address Space
+0x0000000000000000 - 0x00007FFFFFFFFFFF: USER SPACE (128TB)
+
+0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF: KERNEL SPACE (128TB)
+```
+Kernel addresses are either:
+- Not mapped at all (no page table entry exists)
+- Mapped with supervisor-only permissions (User/Supervisor bit = 0)
+
+If user code tries to access them, MMU raises a page fault.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> The **128TB** comes from the x86-64 architecture's **canonical addressing**, where despite 64-bit pointers, x86-64 CPUs actually use 48-bit virtual addresses.
+>
+> **48 bits = 256TB**, thus the 128TB-128TB user-kernel space split.
+>
+> These virtual addresses are **canonical**, meaning **Bits 63-48** must be all `0`s or `1`s. This creates two regions in the 64-bit space:
+> ``` yaml
+> User Space:   0x0000000000000000 - 0x00007FFFFFFFFFFF (128TB)
+> Hole:         0x0000800000000000 - 0xFFFF7FFFFFFFFFFF
+> Kernel Space: 0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF (128TB)
+> ```
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **48 bits = 256TB** because:
+> - n address bits can encode 2^n unique addresses
+> - Each address points to 1 byte of memory
+> <!-- --- -->
 
 #### **2. Per-Process Page Tables**
 
+Each process gets its own completely separate page tables. So, one process can't reach another's memory (unless the kernel explicitly maps shared pages).
+
+The same virtual address (**e.g.**, 0x400000) maps to different physical addresses in different processes.
+
 #### **3. Permission Enforcement**
 
+Every PTE has permissions flags (U/S, R/W, X, P, ...) that the MMU checks at the hardware level on *every* memory access.
+
 <br>
+
+### The "It Just Works" Magic
+
+**How Virtual Memory Creates "It Just Works" Illusion:**
+
+#### **1. Consistent Virtual Layout**
+
+Every process sees the same predictable memory layout regardless of where things actually live in physical RAM:
+``` txt
+Process A's Virtual Memory:            Process B's Virtual Memory:
+0x400000: Program Code (.text)         0x400000: Program Code (.text)
+0x600000: Initialized Data (.data)     0x600000: Initialized Data (.data)
+0x610000: Uninitialized Data (.bss)    0x610000: Uninitialized Data (.bss)
+0x620000: Heap                         0x620000: Heap
+  ...     (Lots of empty space)          ...     (Lots of empty space)
+0x7fffff: Stack                        0x7fffff: Stack
+```
+
+#### **2. Huge Contiguous Address Space**
+
+Programs are free to behave as if they have massive, contiguous memory even when physical RAM is fragmented.
+
+#### **3. Simple Programming Model**
+
+Virtual memory provides a simple layer of abstraction such that Dyanamic allocation (`malloc`), stack growth (`mmap`), and `exec`-time loading all happen without the program managing physical frames (that's automatically handled by kernel behind-the-scenes).
+
+#### **4. Portability**
+
+The OS and loader can place segments wherever in virtual space, giving **consistent semantics** across hardware. The means a program works the same on:
+- **Different Physical Memory Layouts:**
+  - Machine A: 8GB RAM, single DIMM
+  - Machine B: 64GB RAM, multiple DIMMs
+  - Machine C: 4GB RAM + 4GB swap
+- **Different CPU Architectures:**
+  - x86 (4KB pages)
+  - ARM (4KB or 64KB pages)
+  - RISC-V (4KB pages)
+
 <br>
+
+### Demand Paging
 <br>
 <br>
 <br>
