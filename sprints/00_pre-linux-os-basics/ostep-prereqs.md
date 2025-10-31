@@ -1720,7 +1720,7 @@ The key difference is where the needed data comes from.
 
 #### **Multi-Level Page Tables**
 
-For large virtual spaces (like 65-bit), a single flat page tbale would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
+For large virtual spaces (like 64-bit), a single flat page tbale would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
 ``` css
 Virtual Address
  └──> [PML4][PDPT][PD][PT][Offset]
@@ -1748,7 +1748,6 @@ The virtual address space is split into two parts:
 ``` yaml
 64-bit Virtual Address Space
 0x0000000000000000 - 0x00007FFFFFFFFFFF: USER SPACE (128TB)
-
 0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF: KERNEL SPACE (128TB)
 ```
 Kernel addresses are either:
@@ -1782,7 +1781,7 @@ If user code tries to access them, MMU raises a page fault.
 
 Each process gets its own completely separate page tables. So, one process can't reach another's memory (unless the kernel explicitly maps shared pages).
 
-The same virtual address (**e.g.**, 0x400000) maps to different physical addresses in different processes.
+The same virtual address (**e.g.**, `0x400000`) maps to different physical addresses in different processes.
 
 #### **3. Permission Enforcement**
 
@@ -1813,7 +1812,7 @@ Programs are free to behave as if they have massive, contiguous memory even when
 
 #### **3. Simple Programming Model**
 
-Virtual memory provides a simple layer of abstraction such that Dyanamic allocation (`malloc`), stack growth (`mmap`), and `exec`-time loading all happen without the program managing physical frames (that's automatically handled by kernel behind-the-scenes).
+Virtual memory provides a simple layer of abstraction such that dyanamic allocation (`malloc`), stack growth (`mmap`), and `exec`-time loading all happen without the program managing physical frames (that's automatically handled by kernel behind-the-scenes).
 
 #### **4. Portability**
 
@@ -1830,6 +1829,70 @@ The OS and loader can place segments wherever in virtual space, giving **consist
 <br>
 
 ### Demand Paging
+
+**Demand paging** is the **lazy** loading strategy of virtual memory. Pages are only brought into physical RAM when a program actually accesses them.
+
+#### **Step 1: Initial Setup**
+When a process starts, the kernel creates PTEs for the entire virtual address space, but most marked `P = 0` with NO physical frames allocated. 
+
+The kernel also reserves areas in virtual space for certain purposes using the **VMA (Virtual Memory Areas) List**:
+``` txt
+VMA #1: 0x400000-0x401000   prot=r-x  file=/bin/ls
+VMA #2: 0x600000-0x601000   prot=rw-  file=/bin/ls
+VMA #3: 0x602000-0x623000   prot=rw-  file=NULL
+VMA #4: 0x7ff...-0x800000   prot=rw-  file=NULL
+VMA #5: 0x7ff...-0x7ff...   prot=r-x  file=/lib/libc.so.6
+```
+
+Some minimal pages **are** loaded immediately:
+- **First code page**: Contains the entry point (`_start` or `main`)
+- **Initial stack page**: Enough to make the first function call
+- **Key data structures**: Process control block, minimal runtime info
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> VMA List is implementing a conceptual table called the **Virtual Memory Map**:
+> ``` txt
+> Virtual Memory Map (Conceptual):
+> 0x0000000000400000: Program Code
+> 0x0000000000600000: Global Data
+> 0x0000000000620000: Heap
+> 0x00007ffffff00000: stack
+> 0x00007ffff7a00000: Shared Libraries
+> ```
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> When **page fault handler** checks whether the faulting address is "valid," it's actually checking the **VMA List**.
+> <!-- --- -->
+
+#### **Step 2: First Access (The Page Fault)**
+On first access to such a page, the MMU raises a page fault, and CPU jumps to the kernel's page fault handler.
+
+#### **Step 3: Kernel Investigation**
+The page fault handler checks:
+- Is this a valid address? (VMA list check)
+- What type of page is it? (code, data, heap, stack, file-backed)
+- What access was attempted? (read, write, execute)
+
+#### **Step 4: The Fix**
+
+##### **Case A: Anonymous Pages (Heap, Stack)**
+``` txt
+```
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> "**Anonymous**" means these memory pages have no named file backing them on disk, unlike file-backed pages (code, data, etc.).
+> <!-- --- -->
+
+##### **Case B: File-Backed Pages (Code, Data, Mapped Files)**
+``` txt
+```
+##### **Case C: Invalid Access**
+``` txt
+```
 <br>
 <br>
 <br>
