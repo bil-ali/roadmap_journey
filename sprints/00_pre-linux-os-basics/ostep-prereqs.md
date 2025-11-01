@@ -1903,7 +1903,7 @@ Kernel actions:
 
 > <!-- --- -->
 > \*\*NOTE**<br>
-> **Frame Allocation Tables**: the kernel's physical memory management system, separate from page tables.
+> **Frame Allocation Tables/System**: the kernel's physical memory management system, separate from page tables.
 >
 > Tracks which frames are free/allocated, and which process owns each frame.
 >
@@ -1957,6 +1957,52 @@ Kernel actions:
 <br>
 
 ### Copy-on-Write (COW)
+
+COW is an optimization that delays actual copying until absolutely necessary, making operations like `fork()` extremely efficient.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> `fork()` is a system call that creates a new process by duplicating the calling process. Parent and child run separately after fork.
+> <!-- --- -->
+
+#### **How COW Works: Step by Step**
+
+##### **Step 1: After `fork()` - The Sharing Step**
+After fork, parent and child initially share the same physical pages, mapped **read-only** in both page tables.
+
+Before `fork()`:
+``` txt
+Process A Page Tables:
+VA 0x400000 → PFN 0x1000 (Read-Write)
+VA 0x500000 → PFN 0x2000 (Read-Write)
+```
+After `fork()`:
+``` txt
+Process A (Parent) Page Tables:
+VA 0x400000 → PFN 0x1000 (Read-Only) ← Changed
+VA 0x500000 → PFN 0x2000 (Read-Only) ← Changed
+
+Process B (Child) Page Tables:
+VA 0x400000 → PFN 0x1000 (Read-Write) ← Same physical frame 
+VA 0x500000 → PFN 0x2000 (Read-Write) ← Same physical frame
+
+Physical Memory:
+Frame 0x1000: [Shared data] ← Reference count = 2
+Frame 0x2000: [Shared data] ← Reference count = 2
+```
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **Reference Count** is a counter tracking how many processes are sharing a physical frame. It's stored in the `struct page` (from the frame allocation table) for each frame.
+> <!-- --- -->
+
+##### **Step 2: The Write Attempt -  Triggering COW**
+If either process writes to a shared page, the MMU raises a page fault, and the CPU switches to kernel mode.
+
+##### **Step 3: Kernel's COW Handler**
+The kernel recognizes this as a COW event (Becayse PTE is read-only while region the in VMA list is marked writable, and the physical frame has >1 process sharing it).
+
+##### **Step 4: After COW - the Split**
 <br>
 <br>
 <br>
