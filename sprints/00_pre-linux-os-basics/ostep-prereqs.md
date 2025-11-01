@@ -1852,7 +1852,7 @@ Some minimal pages **are** loaded immediately:
 > <!-- --- -->
 > \*\*NOTE**<br>
 > VMA List is implementing a conceptual table called the **Virtual Memory Map**:
-> ``` txt
+> ``` yaml
 > Virtual Memory Map (Conceptual):
 > 0x0000000000400000: Program Code
 > 0x0000000000600000: Global Data
@@ -1879,21 +1879,84 @@ The page fault handler checks:
 #### **Step 4: The Fix**
 
 ##### **Case A: Anonymous Pages (Heap, Stack)**
+"Anonymous" because these memory pages have no named file backing them on disk.
 ``` txt
+Kernel actions:
+1. **Allocate Physical Frame**
+  - Find free physical frame in RAM
+  - If RAM full: invoke page replacement algorithm, evict some page
+  - Update frame allocation tables
+
+2. **Zero the Frame** (for security)
+  - Fill the entire 4KB frame with zeros
+  - Prevents reading previous process's sensitive data
+
+3. **Update Page Table**
+  - Set PTE: [Physical Frame = X][Present = 1][Read/Write = 1]
+  - Invalidate TLB entry for this page
+
+4. **Return and Retry**
+  - Restore saved CPU state
+  - Return to user mode at the exact same instruction
+  - Instruction re-executes, now succeeds
 ```
 
 > <!-- --- -->
 > \*\*NOTE**<br>
-> "**Anonymous**" means these memory pages have no named file backing them on disk, unlike file-backed pages (code, data, etc.).
+> **Frame Allocation Tables**: the kernel's physical memory management system, separate from page tables.
+>
+> Tracks which frames are free/allocated, and which process owns each frame.
+>
+> Data structures:
+> - **`struct page` Array (Linux)**: Track frame metadata and ownership
+> - **Zone Allocators**: Enforse hardware constrainsts (DMA, etc.)
+> - **Buddy Allocator**: Efficiently find free frames of desired sizes
+> - **Per-CPU Caches**: Performance optimization
 > <!-- --- -->
 
 ##### **Case B: File-Backed Pages (Code, Data, Mapped Files)**
+For first access to code or file-mapped memory
 ``` txt
+Kernel actions:
+1. **Allocate Physical Frame**
+
+2. **Initiate Disk I/O**
+  - Calculate file offset
+  - Schedule disk read: "Read 4KB from file at offset X into physical frame Y"
+  - Current process sleeps waiting for I/O completion
+
+3. **I/O Completion**
+  - Disk controller interrupts when data ready
+  - Kernel marks process as runnable
+
+4. **Update Page Table**
+  - Set PTE: [Physical Frame = X][Present = 1][Permissions from VMA]
+
+5. **Return and Retry**
 ```
 ##### **Case C: Invalid Access**
 ``` txt
+1. **Determine Fault Type**
+  - NULL pointer, out-of-bounds, wrong permissions
+
+2. **Prepare Signal**
+  - Create siginfo_t structure with fault details
+  - Set si_addr = faulting address
+  - Set si_code = SEGV_MAPERR (not mapped) or SEGV_ACCERR (bad permission)
+
+3. **Deliver SIGSEGV**
+  - If process has SIGSEGV handler: queue signal for delivery
+  - If no handler: default action = terminate + core dump
+
+4. **Terminate Process** (typically)
+  - Create core dump file is enabled
+  - Free process resources
+  - Notify parent process
 ```
+
 <br>
+
+### Copy-on-Write (COW)
 <br>
 <br>
 <br>
