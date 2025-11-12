@@ -1655,14 +1655,14 @@ A **PTE** is usually a 4&ndash;8 bytes and has **bitfields**, where some bits st
 > US  = 1 << 2 = 0x0000000000000004
 > A = 1 << 5 = 0x0000000000000020
 > D = 1 << 6 = 0x0000000000000040
-> low_flags = 0x1 + 0x2 + 0x4 + 0x20 + 0x40 = 0x67
+> low_flags = 0x0000000000000001 + 0x0000000000000002 + 0x0000000000000004 + 0x0000000000000020 + 0x0000000000000040 = 0x0000000000000067
 > 
 > # NX (bit 63)
 > nx_bit = 1 << 63 = 0x8000000000000000
 > 
 > # Final 64-bit PTE
 > PTE = frame_field | low_flags | nx_bit
->     = 0x00000000000AD000 | 0x67 | 0x8000000000000000
+>     = 0x00000000000AD000 | 0x0000000000000067 | 0x8000000000000000
 >     = 0x80000000000AD067
 > ```
 >
@@ -1720,7 +1720,7 @@ The key difference is where the needed data comes from.
 
 #### **Multi-Level Page Tables**
 
-For large virtual spaces (like 64-bit), a single flat page tbale would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
+For large virtual spaces (like 64-bit), a single flat page table would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
 ``` css
 Virtual Address
  └──> [PML4][PDPT][PD][PT][Offset]
@@ -1775,6 +1775,7 @@ If user code tries to access them, MMU raises a page fault.
 > **48 bits = 256TB** because:
 > - n address bits can encode 2^n unique addresses
 > - Each address points to 1 byte of memory
+> - Therefore, **48 bits = 2^48 = 281,474,976,710,656 addresses = 256TB**
 > <!-- --- -->
 
 #### **2. Per-Process Page Tables**
@@ -1785,7 +1786,7 @@ The same virtual address (**e.g.**, `0x400000`) maps to different physical addre
 
 #### **3. Permission Enforcement**
 
-Every PTE has permissions flags (U/S, R/W, X, P, ...) that the MMU checks at the hardware level on *every* memory access.
+Every PTE has permissions flags (U/S, R/W, X, P, ...) that the MMU checks at the **hardware level** on *every* memory access.
 
 <br>
 
@@ -1816,7 +1817,7 @@ Virtual memory provides a simple layer of abstraction such that dyanamic allocat
 
 #### **4. Portability**
 
-The OS and loader can place segments wherever in virtual space, giving **consistent semantics** across hardware. The means a program works the same on:
+The OS and loader can place segments wherever in virtual space, giving **consistent semantics** across hardware. This means a program works the same on:
 - **Different Physical Memory Layouts:**
   - Machine A: 8GB RAM, single DIMM
   - Machine B: 64GB RAM, multiple DIMMs
@@ -1835,7 +1836,7 @@ The OS and loader can place segments wherever in virtual space, giving **consist
 #### **Step 1: Initial Setup**
 When a process starts, the kernel creates PTEs for the entire virtual address space, but most marked `P = 0` with NO physical frames allocated. 
 
-The kernel also reserves areas in virtual space for certain purposes using the **VMA (Virtual Memory Areas) List**:
+The kernel also **reserves** areas in virtual space for certain purposes using the **VMA (Virtual Memory Areas) List**:
 ``` txt
 VMA #1: 0x400000-0x401000   prot=r-x  file=/bin/ls
 VMA #2: 0x600000-0x601000   prot=rw-  file=/bin/ls
@@ -1844,7 +1845,7 @@ VMA #4: 0x7ff...-0x800000   prot=rw-  file=NULL
 VMA #5: 0x7ff...-0x7ff...   prot=r-x  file=/lib/libc.so.6
 ```
 
-Some minimal pages **are** loaded immediately:
+Some minimal pages *are* loaded immediately:
 - **First code page**: Contains the entry point (`_start` or `main`)
 - **Initial stack page**: Enough to make the first function call
 - **Key data structures**: Process control block, minimal runtime info
@@ -1909,7 +1910,7 @@ Kernel actions:
 >
 > Data structures:
 > - **`struct page` Array (Linux)**: Track frame metadata and ownership
-> - **Zone Allocators**: Enforse hardware constrainsts (DMA, etc.)
+> - **Zone Allocators**: Enforce hardware constrainsts (DMA, etc.)
 > - **Buddy Allocator**: Efficiently find free frames of desired sizes
 > - **Per-CPU Caches**: Performance optimization
 > <!-- --- -->
@@ -1993,17 +1994,45 @@ Frame 0x2000: [Shared data] ← Reference count = 2
 
 > <!-- --- -->
 > \*\*NOTE**<br>
-> **Reference Count** is a counter tracking how many processes are sharing a physical frame. It's stored in the `struct page` (from the frame allocation table) for each frame.
+> **Reference Count** is a counter tracking how many processes are sharing a physical frame. It's stored in the `struct page` (from the **frame allocation table**) for each frame.
 > <!-- --- -->
 
 ##### **Step 2: The Write Attempt -  Triggering COW**
 If either process writes to a shared page, the MMU raises a page fault, and the CPU switches to kernel mode.
 
 ##### **Step 3: Kernel's COW Handler**
-The kernel recognizes this as a COW event (Becayse PTE is read-only while region the in VMA list is marked writable, and the physical frame has >1 process sharing it).
+The kernel recognizes this as a COW event (Because PTE is read-only while the region in VMA list is marked writable, and the physical frame has >1 process sharing it).
 
 ##### **Step 4: After COW - the Split**
+After the first write by Process A:
+``` txt
+Process A (Parent) Page Tables:
+VA 0x400000 → PFN 0x3000 (Read-Write) ← NEW frame!
+VA 0x500000 → PFN 0x2000 (Read-Only) ← Still shared
+
+Process B (Child) Page Tables:
+VA 0x400000 → PFN 0x1000 ← OLD frame
+VA 0x500000 → PFN 0x2000 ← Still shared
+
+Physical Memory:
+Frame 0x1000: [Original data] → refcount = 1 (only child)
+Frame 0x2000: [Shared data] → refcount = 2 (both)
+Frame 0x3000: [Modified data] → refcount = 1 (only parent)
+```
+
+COW makes `fork()` nearly instantaneous, with no time wasted copying memory unless absolutely necessary.
+
 <br>
+
+### Shared libraries, mmap, and file-backed mappings
+
+These three mechanisms are deeply interconnected, forming a powerful memory management ecosystem that enables efficient memory sharing and file access:
+- **Shared Libraries:** Efficient code sharing via file-backed mappings
+- **mmap:** Unified interface for all types of memory mappings
+- **File-Backed Mappings:** Transparent file I/O through memory operations
+
+#### **Shared Libraries**
+**Shared libraries** (`.so` files on Linux, `.dll` on Windows) are executable code that can be loaded once in physical memory and shared across multiple processes.
 <br>
 <br>
 <br>
