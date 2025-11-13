@@ -2033,6 +2033,78 @@ These three mechanisms are deeply interconnected, forming a powerful memory mana
 
 #### **Shared Libraries**
 **Shared libraries** (`.so` files on Linux, `.dll` on Windows) are executable code that can be loaded once in physical memory and shared across multiple processes.
+
+##### **Shared Library Approach:**
+``` txt
+Physical RAM:
+[libc code] → Shared by all processes
+
+Process A Page Tables:
+VA 0x7f... → PFN 0x1000 (libc code, Read-Only)
+
+Process B Page Tables:
+VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
+
+```
+> <!-- --- -->
+> \*\*NOTE**<br>
+> As opposed to
+> ##### **Traditional (Static Linking) Approach:**
+> ``` txt
+> Process A: [Program Code + Library Code] → 4MB
+> Process B: [Program Code + Library Code] → 4MB
+> Total RAM: 8MB (library code duplicated)
+> ```
+> <!-- --- -->
+
+##### **How sharing works:**
+- Code pages are **read-only** and loaded on first access.
+- Hundreds of running programs all share the same libc pages in RAM.
+- If a process tries to modify a shared page (**e.g.**, through relocation), **copy-on-write** is used and a private copy is made for that process.
+
+#### **`mmap()` System Call**
+`mmap()` is a system call that lets user programs explicitly map files or memory regions into their virtual address space. It powers both shared libraries and flexible memory management.
+
+**mmap Modes:**
+##### **1. File-Backed Mapping**
+``` c
+// Map a file into memory
+int fd = open("data.bin", O_RDWR);
+void *addr = mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
+```
+- The mapping connects the bytes → virtual memory pages
+- Accessing that memory automatically loads pages from the file into RAM on demand
+- When you modify the memory, changes can be written back to the file (**depending on flags**)
+- Used for:
+  - Memory-mapped file I/O
+  - Implementing shared memory between processes
+  - Loeading executables and libraries efficiently
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> "**Depending on flags**" refers to the flag passed to `mmap()` as argument. Two possibilities:
+> - **`MAP_SHARED`** &mdash; Changes write back to file
+> - **`MAP_PRIVATE`** &mdash; Changes are private (Copy-on-Write)
+> <!-- --- -->
+
+##### **2. Anonymous Mapping**
+``` c
+void *addr= mmap()
+```
+-
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> ``` txt
+> BEFORE mmap():
+> Virtual Memory: [Code][Data][Heap] → [Free Space] ← [Stack]
+> 
+> AFTER mmap():
+> Virtual Memory: [Code][Data][Heap] → [Free Space][Mapped File][Free Space] ← [Stack]
+> ```
+> The "**Mapped File**" region is separate from heap or stack. This is what separates `mmap()` from `malloc()`, which just uses the heap.
+> <!-- --- -->
+
 <br>
 <br>
 <br>
