@@ -2063,7 +2063,7 @@ VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
 - If a process tries to modify a shared page (**e.g.**, through relocation), **copy-on-write** is used and a private copy is made for that process.
 
 #### **`mmap()` System Call**
-`mmap()` is a system call that lets user programs explicitly map files or memory regions into their virtual address space. It powers both shared libraries and flexible memory management.
+`mmap()` is a system call that lets user programs explicitly map files or memory regions into their virtual address space.
 
 **mmap Modes:**
 ##### **1. File-Backed Mapping**
@@ -2089,9 +2089,26 @@ void *addr = mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
 
 ##### **2. Anonymous Mapping**
 ``` c
-void *addr= mmap()
+// Allocate private memory (like heap)
+void *addr= mmap(NULL, 1 * GB, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 ```
--
+- Pure RAM allocation
+- Not backed by a file &mdash; initialized as zero-filled pages
+- Used for:
+  - Dynamic memory allocation (heap)
+  - Thread stacks
+  - Temporary buffers
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> Anonymous Mapping is "Used for heap" in the sense that modern `malloc()` internally uses `mmap()` for large allocations.
+> While the `mmap()`-allocated regions are independent VMAs, separate from the traditional heap, in this case, we just treat them as heap memory.
+> <!-- --- -->
+
+##### **3. Shared Anonymous Mapping**
+``` c
+
+```
 
 > <!-- --- -->
 > \*\*NOTE**<br>
