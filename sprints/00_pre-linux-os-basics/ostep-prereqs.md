@@ -2032,6 +2032,7 @@ These three mechanisms are deeply interconnected, forming a powerful memory mana
 - **File-Backed Mappings:** Transparent file I/O through memory operations
 
 #### **Shared Libraries**
+
 **Shared libraries** (`.so` files on Linux, `.dll` on Windows) are executable code that can be loaded once in physical memory and shared across multiple processes.
 
 ##### **Shared Library Approach:**
@@ -2044,7 +2045,6 @@ VA 0x7f... → PFN 0x1000 (libc code, Read-Only)
 
 Process B Page Tables:
 VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
-
 ```
 > <!-- --- -->
 > \*\*NOTE**<br>
@@ -2063,7 +2063,20 @@ VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
 - If a process tries to modify a shared page (**e.g.**, through relocation), **copy-on-write** is used and a private copy is made for that process.
 
 #### **`mmap()` System Call**
+
 `mmap()` is a system call that lets user programs explicitly map files or memory regions into their virtual address space.
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> ``` txt
+> BEFORE mmap():
+> Virtual Memory: [Code][Data][Heap] → [Free Space] ← [Stack]
+> 
+> AFTER mmap():
+> Virtual Memory: [Code][Data][Heap] → [Free Space][Mapped File][Free Space] ← [Stack]
+> ```
+> The "**Mapped File**" region is separate from heap or stack. This is what separates `mmap()` from `malloc()`, which just uses the heap.
+> <!-- --- -->
 
 **mmap Modes:**
 ##### **1. File-Backed Mapping**
@@ -2078,7 +2091,7 @@ void *addr = mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
 - Used for:
   - Memory-mapped file I/O
   - Implementing shared memory between processes
-  - Loeading executables and libraries efficiently
+  - Loading executables and libraries efficiently
 
 > <!-- --- -->
 > \*\*NOTE**<br>
@@ -2107,22 +2120,351 @@ void *addr= mmap(NULL, 1 * GB, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 
 
 ##### **3. Shared Anonymous Mapping**
 ``` c
+void *addr = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+```
+- Creates memory region shared between processes
+- No file backing &mdash; exists only in RAM
+- Used for: 
+  - Inter-process communication (IPC)
+  - Key Use Case: Parent-Child Process Communication
 
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **Inter-Process Communication (IPC)** refers to the mechanisms that allow processes to exchange data and synchronize their activities. Since processes are isolated by virtual memory, they need special methods to communicate.
+> #### **Major IPC Methods**
+> 1. Pipes (Unnamed Pipes, Named Pipes)
+> 2. Message Queues
+> 3. Shared Memory (**Fastest IPC**)
+> 4. Signals
+> 5. Sockets
+> 6. Semaphores
+> <!-- --- -->
+
+<br>
+
+### TLB &mdash; caching translations for speed
+
+The **TLB (Translation Lookalike Buffer)** is&mdash;once again&mdash;a small, extremely fast cache inside the CPU (as part of the MMU) that remembers recent virtual-to-physical translations.
+
+#### **TLB Structure**
+``` txt
+TLB (typically 64-512 entries):
+[Virtual Page #] → [Physical Frame #] [Permissions] [ASID]
+[VPN 4] → PFN 0x123 [RWX] [ASID 1]
+[VPN 8] → PFN 0x456 [RX] [ASID 1]
+[VPN 2] → PFN 0x789 [RWX] [ASID 2]
+```
+
+#### **TLB Management Challenges**
+##### **1. Context Switching Problem**
+``` txt
+Process A uses VPN 4 → PFN 0x1000
+Process B uses VPN 4 → PFN 0x2000 (different physical frame)
+
+After context switch A→B:
+TLB still has: [VPN 4 → PFN 0x1000]
+Process B access VPN 4 → gets wrong physical frame!
+```
+###### **Solution 1: TLB Flush (Simple but expensive)**
+``` c
+// On every context switch:
+flush_tlb_all();
+// Empty the TLB completely
+```
+This comes at a **performance cost**: new process has a 100% TLB miss rate initially.
+
+###### **Solution 2: ASID/PCID**
+``` txt
+Address Space ID (ASID) or Process Context ID (PCID):
+TLB Entry: [VPN][ASID] → [PFN]
+
+Process A: ASID 1, VPN 4 → PFN 0x1000
+Process B: ASID 2, VPN 4 → PFN 0x2000
+
+Both translations can coexist in TLB!
+CPU uses current ASID to select correct translation.
+```
+
+##### **2. Multi-Core TLBs**
+Each CPU core has its own TLB, and these are not shared between cores. 
+
+The problem with this: **Process Migration**
+``` txt
+Time T0: Process P running on Core 1
+Core 1 TLB: [VPN 4→PFN 0x1000], [VPN 5→PFN 0x2000], ...
+
+Time T1: OS scheduler moves Process P to Core 2
+Core 2 TLB: [empty for Process P] ← COLD START!
+```
+The solution: **CPU Affinity** (Telling the OS: "Keep this process on specific CPU cores").
+
+##### **3. TLB Shootdowns**
+**Problem:** when CPU modifies a page table, it must invalidate that translation in all other CPU cores' TLBS.
+
+TLB shootdowns are expensive and scale poorly with many cores.
+
+#### **Instruction TLB (ITLB) vs Data TLB (DTLB)**
+
+Modern CPUs have multiple specialized TLBs organized in a hierarchy to optimize different types of memory access patterns.
+
+##### **ITLB &mdash; Instruction Translation Cache**
+- Caches virtual&rarr;physical translations for **code pages**
+- Smaller than DTLB (typically 8&ndash;64 entries)
+- Optimized for **sequential** access patterns
+- Read-only permissions
+- ITLB miss can stall the entire CPU pipeline
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> "**Code pages**" refers to the virtual memory pages that correspond to the `.text` section mapped in process's VMA list/virtual memory map.
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> The **CPU Pipeline** is like an assembly line where instructions are processed in stages rather than all at once.
+> 
+> **Basic 5-Stage RISC Pipeline**
+> ``` txt
+> 1. FETCH     → Get instruction from memory
+> 2. DECODE    → Figure out what the instruction does
+> 3. EXECUTE   → Perform the operation
+> 4. MEMORY    → Access memory if needed (load/store)
+> 5. WRITEBACK → Save results to registers
+> ```
+> <!-- --- -->
+
+##### **DTLB &mdash; Data Translation Cache**
+- Caches virtual&rarr;physical translations for **data pages**
+- Larger than ITLB (typically 64&ndash;512 entries)
+- Optimized for **random access** patterns
+- Handles both read and write permissions
+- DTLB miss stalls only the specific memory operation
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> "**Data pages**" refer to the virtual memory pages that correspond to the `.data` section mapped in process's VMA list/virtual memory map.
+> <!-- --- -->
+
+#### **Multi-Level TLB Hierarchy**
+
+Modern CPUs implements TLBs as a cache hierarchy: **The L1/L2 TLB Structure**.
+- **L1 TLB** covers the "hot" 64&ndash;256KB of actively used memory
+- **L2 TLB** covers 2&ndash;6MB of moderately used memory
+- **Page Tables** are backup for everything else
+
+##### **L1 TLB (Level 1)**
+``` txt
+Characteristics:
+- Size: 64-128 entries (very small)
+- Speed: 1-2 CPU cycles (extremely fast)
+- Location: Closest to CPU core (physically)
+- Purpose: Handle the most frequent translations
+
+Typical Breakdown:
+- L1 ITLB: 8-16 entries
+- L1 DTLB: 64-128 entries
+```
+##### **L2 TLB (Level 2)**
+``` txt
+Characteristics:
+- Size: 512-1536 entries (much larger)
+- Speed: 5-10 CPU cycles (slower but still fast)
+- Location: Shared between core or per-core
+- Purpose: Catch misses from L1 TLB
+```
+
+<br>
+
+### Multi-level page tables & scalability
+
+#### **The Problem: Single-Level Page Table Explosion**
+For 64-bit Systems:
+- **Virtual address space:** 2^64 bytes = 16 exabytes
+- **Page Size:** 4KB = 2^12 bytes
+- **Number of pages:** 2^(64-12) = 2^52 = 4.5 quadrillion pages
+- **PTE size:** 8 bytes
+- **Single-level page table size:** 4.5 quadrillion x 5 bytes = **36 petabytes!**
+
+#### **The Solution: Multi-Level Page Tables**
+Instead of one massive single-level table for all possible addresses, it's better to create a **tree structure** and only allocate nodes for addresses actually used.
+
+#### **x86-64 4-Level Page Table Structure**
+
+##### **Virtual Address Breakdown (48-bit effective):**
+``` txt
+Bits 47-39: PML4 Index (Level 1) — 9 bits
+Bits 38-30: PML3 Index (Level 2) — 9 bits
+Bits 29-21: PD Index   (Level 3) — 9 bits
+Bits 20-12: PT Index   (Level 4) — 9 bits
+Bits 11-0:  Offset     (Level 5) — 12 bits
+```
+**PML4 (Page Map Level 4)**
+- Root table &mdash; one per process
+- 512 entries, each pointing to a PDPT
+- Covers 256TB of address space (48-bit)
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> The **PML4 table** is essentially an array of 512 entries, where each entry is 8 bytes.
+> ``` txt
+> PML4 Table (starting at physical address 0x1000)
+> Index 0:    Entry 0   (address 0x1000 + 0*8 = 0x1000)
+> Index 1:    Entry 1   (address 0x1000 + 1*8 = 0x1008)
+> Index 2:    Entry 2   (address 0x1000 + 2*8 = 0x1010)
+> ...
+> Index 0x24: Entry 36  (address 0x1000 + 36*8 = 0x1120)
+> ...
+> Index 511:  Entry 511 (address 0x1000 + 511*8 = 0x2FF8)
+> ```
+> <!-- --- -->
+
+**PDPT (Page Directory Pointer Table)**
+- 512 entries, each pointing to a PD
+- Each entry covers 512GB of address space
+- Sparse: Only allocate PDPTs for used 512GB regions
+
+**PD (Page Directory)**
+- 512 entries, each pointing to a PT
+- Each entry covers 1GB of address space
+- Sparse: Only allocate PDs for used 1GB regions
+
+**PT (Page Table)**
+- 512 entries, each mapping one 4KB page
+- Each entry covers 4KB
+- Sparse: Only allocate PTs for used 2MB regions
+
+##### **The Translation Walk:**
+``` txt
+CR3 Register → PML4 Table (512 entries)
+    ↓ (Index from bits 47-39)
+PDPT Table (512 entries)
+    ↓ (Index from bits 38-30)
+PD Table (512 entries)
+    ↓ (Index from bits 29-21)
+PT Table (512 entries)
+    ↓ (Index from bits 20-12)
+Physical Frame
 ```
 
 > <!-- --- -->
 > \*\*NOTE**<br>
-> ``` txt
-> BEFORE mmap():
-> Virtual Memory: [Code][Data][Heap] → [Free Space] ← [Stack]
-> 
-> AFTER mmap():
-> Virtual Memory: [Code][Data][Heap] → [Free Space][Mapped File][Free Space] ← [Stack]
-> ```
-> The "**Mapped File**" region is separate from heap or stack. This is what separates `mmap()` from `malloc()`, which just uses the heap.
+> **CR3** register holds the physical base address of the current process's PML4 table
 > <!-- --- -->
 
-<br>
+##### **Example**
+
+Let<br>
+Virtual Address: `0x0000123456789ABC`<br>
+Page Size: 4KB (4096 bytes)<br>
+CR3 Register: `0x1000`
+
+###### **Step 1: Break Down the Virtual Address**
+``` txt
+Virtual Address (48-bit): 0x123456789ABC
+Binary: 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100
+
+PML4:   bits 47-39 = 000100100 = 0x24 (36 in decimal)  
+PDPT:   bits 38-30 = 011010001 = 0x1C2 (450 in decimal)
+PD:     bits 29-21 = 010110011 = 0x4D (77 in decimal)
+PT:     bits 20-12 = 110001001 = 0x1AB (427 in decimal)
+Offset: bits 11-0  = 101010111100 = 0xABC (2748 in decimal)
+```
+
+###### **Step 2: The Translation Walk**
+Level 1: PML4 Table
+``` txt
+CR3 = 0x1000 (PML4 table physical address)
+PML4 Index = 0x24
+
+Read PML4 Entry at: 0x1000 + (0x24 * 8) = 0x1000 + 0x120 = 0x1120
+
+PML4 Entry at 0x1120 contains: 0x2000 (points to PDPT table)
+[Present=1, Physical Address=0x2000]
+```
+
+Level 2: PDPT
+``` txt
+PDPT Table at: 0x2000
+PDPT Index = 0x1C2
+
+Read PDPT Entry at: 0x2000 + (0x1C2 * 8) = 0x2000 + 0xE10 = 0x2E10
+
+PDPT Entry at 0x2E10 contains: 0x3000 (points to PD table)
+[Present=1, Physical Address=0x3000]
+```
+
+Level 3: PD Table
+``` txt
+PD Table atL 0x3000
+PD Index = 0x4D
+
+Read PD Entry at: 0x3000 + (0x4D * 8) = 0x3000 + 0x268 = 0x3268
+
+PD Entry at 0x3268 contains: 0x4000 (points to PT Table)
+[Present=1, Physical Address=0x4000]
+```
+
+Level 4: PT Table
+``` txt
+PT Table atL 0x4000
+PT Index = 0x1AB
+
+Read PT Entry at: 0x4000 + (0x1AB * 8) = 0x4000 + 0xD58 = 0x4D58
+
+PT Entry at 0x3D58 contains: 0x5000 (points to physical frame)
+[Present=1, Physical Address=0x5000, Read/Write=1]
+```
+
+###### **Step 3: Final Physical Address**
+``` txt
+Physical Frame: 0x5000
+Offset: 0xABC
+
+Physical Address = Physical Frame + Offset
+                = 0x5000 + 0xABC = 0x5ABC
+```
+**Result:** Virtual address `0x123456789ABC` &rarr; Physical address `0x5ABC`
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **What Each Table Entry Actually Contains**
+> ``` txt
+> 63                      52 51                               12 11   0
+> +------------------------+----------------------------------+-------+
+> |        Reserved        |     Physical Page Base Address    |Flags |
+> +------------------------+----------------------------------+-------+
+> ```
+> The lower 12 bits of physical addresses are always zero for **4KB Alignment**, so we don't store them. We instead use that space for flags (P, W, U, A).
+> <!-- --- -->
+
+> <!-- --- -->
+> \*\*NOTE**<br>
+> **4KB Alignment**
+>
+> 4KB = 4096 bytes = 2^12 bytes<br>
+> 4KB aligned addresses always end with 12 zeros in binary.<br>
+> (Because, in binary, multiplying any number by 2^n means shifting left by n digits. Therefore, any number ending with n zeros is a multiple of n)
+> - 0x1000 = 0001000000000000 (aligned)
+> - 0x2000 = 0010000000000000 (aligned)
+> - 0x3000 = 0011000000000000 (aligned)
+> - 0x1230 = 0001001000110000 (NOT aligned)
+> 
+> Why Page Tables Must be 4KB Aligned:
+> 1. Page tables themselves are stored in 4KB pages
+> 2. Each page table is exactly 4KB (512 x 8 bytes each = 4096 bytes)
+> 3. Therefore, every page table starts at a 4KB boundary
+> <!-- --- -->
+
+#### **The 5-Level Page Table Extension**
+
+In modern day, the 256TB memory space offered by 48-bit addresses leads to serious scalability limitations. The solution: **57-bit addresses**.
+``` txt
+57-bit virtual address space = 2^57 bytes
+= 131,072 terabytes
+= 128 petabytes total
+= 64PB user space + 64PB kernel space
+```
+
 <br>
 <br>
 <br>
