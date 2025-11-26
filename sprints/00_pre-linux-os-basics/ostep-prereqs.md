@@ -2395,7 +2395,7 @@ PDPT Entry at 0x2E10 contains: 0x3000 (points to PD table)
 
 Level 3: PD Table
 ``` txt
-PD Table atL 0x3000
+PD Table at: 0x3000
 PD Index = 0x4D
 
 Read PD Entry at: 0x3000 + (0x4D * 8) = 0x3000 + 0x268 = 0x3268
@@ -2406,7 +2406,7 @@ PD Entry at 0x3268 contains: 0x4000 (points to PT Table)
 
 Level 4: PT Table
 ``` txt
-PT Table atL 0x4000
+PT Table at: 0x4000
 PT Index = 0x1AB
 
 Read PT Entry at: 0x4000 + (0x1AB * 8) = 0x4000 + 0xD58 = 0x4D58
@@ -2443,7 +2443,7 @@ Physical Address = Physical Frame + Offset
 >
 > 4KB = 4096 bytes = 2^12 bytes<br>
 > 4KB aligned addresses always end with 12 zeros in binary.<br>
-> (Because, in binary, multiplying any number by 2^n means shifting left by n digits. Therefore, any number ending with n zeros is a multiple of n)
+> *(Because, in binary, multiplying any number by 2^n means shifting left by n digits. Therefore, any number ending with n zeros is a multiple of n)*
 > - 0x1000 = 0001000000000000 (aligned)
 > - 0x2000 = 0010000000000000 (aligned)
 > - 0x3000 = 0011000000000000 (aligned)
@@ -2464,6 +2464,42 @@ In modern day, the 256TB memory space offered by 48-bit addresses leads to serio
 = 128 petabytes total
 = 64PB user space + 64PB kernel space
 ```
+With this, page table explosion once again becomes an issue, necessitating the 5-level page table extension.
+
+##### **5-Level Page Table Structure:**
+``` txt
+Bits 57-48: PML5 Index (9 bits)
+Bits 47-39: PML4 Index (9 bits)
+Bits 38-30: PML3 Index (9 bits)
+Bits 29-21: PD Index   (9 bits)
+Bits 20-12: PT Index   (9 bits)
+Bits 11-0:  Offset     (12 bits)
+```
+
+**PML5 (Page Map Level 5) &mdash; The New Root**<br>
+- 512 entries, each pointing to a PML4 table
+- Each entry covers 256TB of address space
+- Total coverage 512 * 256TB = 128PB
+
+##### **New Translation Walk:**
+``` txt
+CR3 Register → PML5 Table (512 entries)
+    ↓ (Index from bits 56-48)
+PML4 Table (512 entries)
+    ↓ (Index from bits 47-39)
+PDPT Table (512 entries)
+    ↓ (Index from bits 38-30)
+PD Table (512 entries)
+    ↓ (Index from bits 29-21)
+PT Table (512 entries)
+    ↓ (Index from bits 20-12)
+Physical Frame
+```
+
+<br>
+
+### Page replacement, swap, and thrashing
+
 
 <br>
 <br>
