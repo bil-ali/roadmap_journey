@@ -75,7 +75,7 @@ Now, convert 124 to binary (8 bits): `01111100`
 The normalizaed value is `1.01₂`. The fraction part is the bits after the decimal point, which is "`01₂`". However, since IEEE-754 requires a 23-bit fraction, we pad with zeros to the right: `01000000000000000000000₂`.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > Converting this from binary (base-2) to decimal (base-10): `1.01₂` = 1 x 2<sup>0</sup> + 0 x 2<sup>-1</sup> + 1 x 2<sup>-2</sup> = `1.25`
 > <!-- --- -->
 
@@ -227,7 +227,7 @@ The requirement that data types in memory must start at specific memory addresse
 - A 8-byte `double` should start at an address divisible by 8.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > A **`Memory Word`** is the basic unit of data a CPU can work with in a single operation. On a modern 64-bit system, typically 8 bytes.
 >
 > A **`Cache Line`** is a larger block of memory (e.g. 64 bytes) that the CPU's cache loads from the main RAM all at once to be ready for super-fast access.
@@ -347,7 +347,7 @@ hello.o (Object File) + libc.a (Library)
 ```
 
 > <!-- --- -->
-> \*\*NOTE** <br>The Python "Toolchain", by contrast, is a two-stage process.
+> **\*\*NOTE**** <br>The Python "Toolchain", by contrast, is a two-stage process.
 > 1. Compilation to ByteCode
 > 2. Interpretation by the Python Virtual Machine
 > 
@@ -378,7 +378,7 @@ This structure is divided into named **sections** (or **segments** when loaded i
 - **Contents**<br>
   Global and static variables that have an explicit initial value set in the source code.
   > <!-- --- -->
-  > \*\*NOTE** <br>Physically stored in the executable file on disk.
+  > **\*\*NOTE**** <br>Physically stored in the executable file on disk.
   > <!-- --- -->
 - **Permissions: Read-Write**<br>
   Because these variables are supposed to be changed during runtime.
@@ -387,7 +387,7 @@ This structure is divided into named **sections** (or **segments** when loaded i
 - **Contents**<br>
   Global and static variables that are initialized to zero or have no explicit initializer.
   > <!-- --- -->
-  > \*\*NOTE** <br>Occupies no physical space on the disk in the executable file. This section in the executable is more like a note saying "When you load this program, please allocate 10,000 bytes of memory and fill it all with zeros.
+  > **\*\*NOTE**** <br>Occupies no physical space on the disk in the executable file. This section in the executable is more like a note saying "When you load this program, please allocate 10,000 bytes of memory and fill it all with zeros.
   > <!-- --- -->
 - **Permissions: Read-Write**<br>
 
@@ -427,7 +427,7 @@ The kernel's "**loader**" is responsible for setting up a new process in memory.
 Creates (or reuses) a process structure. A key part of this is creating a brand new, empty **virtual address space**.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > The **process structure** or **Process Control Block (PCB)** is a data structure inside the kernel's memory that contains all the information the OS needs to manage and track a specific process.<br>
 > It consists of:
 > - **Process ID (PID)**
@@ -444,7 +444,7 @@ Creates (or reuses) a process structure. A key part of this is creating a brand 
 - Performs **memory mapping**: setting up the process's page tables so that a specific **virtual address** points to the corresponding **physical page**. The actual code is only loaded from disk into physical RAM by the kernel when the CPU tries to access it (a "**page fault**").
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > A **page fault** is when a program tries to access a portion of memory (a page) that is not currently in physical RAM.
 > <!-- --- -->
 
@@ -454,12 +454,12 @@ Creates (or reuses) a process structure. A key part of this is creating a brand 
 - **The Heap:** Kernel sets up a single page of memory for the "program break" and maps it. This is the start of the heap. Initially, it's mostly empty, but it will grow upwards later (when `malloc()` or `brk()` are called).
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > The **program break** is a kernel-maintained pointer that defines the current end of the process's data segment—the boundary between the heap's allocated memory and the unmapped memory beyond it.
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > ```
 > High Addresses  +----------------------+
 >                 |      Kernel Space    | (Memory reserved for the OS)
@@ -526,7 +526,7 @@ Code running in User Mode is "sandboxed and restricted to the **lowest level of 
 - Changing Privilege Levels
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > An **Interrupt** is a signal sent to the CPU that immediately grabs its attention, forcing it to temporarily stop what it's doing and execute a special piece of code called an **interrupt handler**.
 > <br>
 > Two types: **Hardware Interrupts** and **Software Interrupts**
@@ -565,7 +565,7 @@ Virtual memory is **mapped** to physical memory by the kernel loader after `exec
 - The top of the heap, the **program break**, is moved using `brk()`, `sbrk()`, and `mmap()`  system calls. `malloc()` uses these implicitly.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > `mmap()` for very large allocations.
 > `mmap()` creates an independent mapping that is not connected to the main heap.
 > <!-- --- -->
@@ -591,7 +591,7 @@ Once the stack and heap meet, the program is out of memory.
 Memory bugs crash because they violate the contracts and assumptions made by the OS and the **memory allocator**.
 
 > <!-- -- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > The **Memory Allocator** is a software library (e.g., part of the C standard library `glibc`) that manages a pool of memory within a process's virtual address space.
 > 
 > It acts as an intermediary between a program and the OS.
@@ -631,7 +631,7 @@ Calling `free()` on the same pointer twice without an intervening `malloc()`.
 This corrupts the allocator's internal metadata.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > The allocator stores metadata in the heap, consisting of (at least) two lists:
 > 1. A list of **allocated** blocks.
 > 2. A list of **free** blocks
@@ -698,7 +698,7 @@ When one function calls another, they need a strict agreement on:
 3. **Which registers can be freely used** and which must be saved and restored.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **Registers** are a very small number of ultra-fast, super-efficient storage locations built directly into the CPU chip itself; they are the fastest form of storage in a computer.
 > <br>
 > Accessing a register is much faster than accessing RAM, because they're on the CPU, which uses registers for all its immediate tasks:
@@ -822,7 +822,7 @@ sub   rsp, N
   | `0x7fffffffe0f0` | ? | **Local Variable 2** | `rsp` |
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > The compiler may automatically **spill** the register-based arguments (`a` in `edi`, `b` in `esi`) onto the stack between the **Prologue** and **Body steps**.
 >
 > **In modern, optimized code, the body just directly uses registers to access arguments.**
@@ -858,7 +858,7 @@ The final state of the stack:
 | `0x7fffffffe0f0` | ? | (Unused space) | `rsp` |
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > `DWORD PTR` is a **size directive** for the assembler.
 > 
 > **`PTR`**: Signifies the following expression is a memory address to be dereferenced.<br>
@@ -917,7 +917,7 @@ Recursion work seamlessly because of this stack mechanism. Every time a function
 <br>
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **x86-64 CPU Registers: A Comprehensive Reference**
 > 
 > | Category | Register | 64-bit | 32-bit | Primary Purpose |
@@ -1079,7 +1079,7 @@ A **library call** is a function that lives in a shared library (e.g., `libc.so`
 3. **System Call**:<br>
    The buffer has a limited size. When it's full, or when the program ends, `printf` will finally make a `write` **system call** to ask the kernel to actually send the buffered data to the screen.
    > <!-- --- -->
-   > \*\*NOTE** <br>
+   > **\*\*NOTE**** <br>
    > By buffering data, `printf` can make one `write` system call for 100 chars instead of 100 `write` system calls for 1 char each.
    > <!-- --- -->
 
@@ -1110,7 +1110,7 @@ A **library call** is a function that lives in a shared library (e.g., `libc.so`
 When a program opens something (like a file, a network connection, etc.), the OS gives it a **file descriptor** as a handle for that resource. A **file descriptor** is a small, non-negative integer index into the **file descriptor table**.
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **File descriptor table** is a kernel-managed data structure that exists for each process. Each slot in the table can contain a pointer to a kernel object.
 > <!-- --- -->
 
@@ -1120,7 +1120,7 @@ When a program opens something (like a file, a network connection, etc.), the OS
 - **2 = stderr (Standard Error)**: The destination where the program writes its error messages (terminal by default)
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **FD is OPEN** &rarr; The slot for that FD index contains a valid, non-NULL pointer to a kernel object. The resource (file, socket, etc.) is active and can be used.
 > <!-- --- -->
 
@@ -1316,12 +1316,12 @@ Program: "Okay, I'll read from just those three and ignore the others"
 | Wastes CPU cycles (sleeping threads) | Efficient CPU usage (no sleeping threads) |
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **Readiness APIs** (`select`, `poll`, `epoll`) are mechanisms that let you ask the OS: *"which of my file descriptors are ready for I/O right now?"*
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > ### Processes vs Threads
 > #### **What is a Process?**
 > A **process** is a running program with its own complete, isolated environment:
@@ -1352,7 +1352,7 @@ Program: "Okay, I'll read from just those three and ignore the others"
 **Exceptions** are synchronous events produced by the CPU as a direct result of executing a specific problematic instruction (e.g., divide-by-zero, page fault).
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE**** <br>
 > **Synchronous** as in they happen at a predictable point in your code execution.
 > <!-- --- -->
 
@@ -1371,7 +1371,7 @@ Program: "Okay, I'll read from just those three and ignore the others"
 4. Kernel turns the exception into a **signal** or terminates the process.
 
 <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Exception table** is a table that maps exception numbers to handler function addresses.<br>
 > Its `x86` implementation is the **IDT (Interrupt Descriptor Table)**, which handles both exceptions AND interrupts.
 <!-- --- -->
@@ -1393,7 +1393,7 @@ An **Interrupt** is a signal sent to the CPU that immediately grabs its attentio
 **Hardware interrupts** are **asynchronous** events generated by external hardware devices that pause the CPU's execution at unpredictable times to handle urgent external events.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > "**External** events" as in unrelated to the currently executing instruction.
 > <!-- --- -->
 
@@ -1413,7 +1413,7 @@ Typical sources:
 5. Kernel restores context (privilege level and saved state) and returns to the preempted task.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Top-Half vs Bottom-Half**<br>
 > ISRs must complete quickly (to minimize latency and allow other interrupts), thus the top-half / bottom-half split.<br>
 > **Top-half** (what runs in ISR):<br>
@@ -1448,7 +1448,7 @@ Typical sources:
 **Signals** are a POSIX-level **asynchronous** notification mechanism used to inform processes that some event occured. Signals are delivered *by the kernel to processes*; a process can set a handler for many signals.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **POSIX (Portable Operating Systen Interface)** is a family of standards that define how Unix-like operating systems should behave. It ensures:
 > - Programs written for one Unix-like OS can run on another
 > - System APIs (functions) are consistent across systems
@@ -1471,10 +1471,12 @@ Typical sources:
 1. Kernel decides to send a signal to a processs
 2. Kernel adds the signal to the process's **pending signals** list and records any associated data (for real-time signals)
 3. When the process is about to return to User Mode (after a system call, interrupt, exception, etc.) or at certain safe points, kernel checks pending signals excluding any signals currently blocked by the **signal mask**
+
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Signal Mask** is the "to-do" list of signals currently blocked by the process.
 > <!-- --- -->
+
 4. For each unblocked pending signal:
    - If a custom handler exists: The kernel sets up a fake function call on the user stack so that when returning to user mode, the signal handler runs first, then automatically returns to the original code
    - If default action is to terminate / dump core / ignore / stop / continue, kernel performs that action
@@ -1482,14 +1484,14 @@ Typical sources:
 6. When handler returns, it restores saved context (from  trap frame) and resumes interrupted execution.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Real-Time/Queued Signals vs Standard Signals**
 > - **Standard signals** are not queued, thus multiple rapid signals may get **coalesced**. They also carry little data (only the signal number), and do not guarantee delivery ordering.
 > - **Real-time signals** are queued, meaning every instance is delivered separately (no possibility of coalescence). They can carry extra data (integers or pointers), and guarantee FIFO delivery order.
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Default actions of signals**
 > - **Terminate** the process (e.g., `SIGTERM`)
 > - **Terminate and dump core** (e.g., `SIGSEGV`)
@@ -1544,7 +1546,7 @@ CPU accesses physical address 0x123000 in RAM
 ```
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **TLB (Translation Lookaside Buffer)** is a small, extremely fast cache inside the CPU that remembers recent virtual-to-physical address translations. Specifically, it stores **Virtual Page Number &rarr; Physical Frame Number** (no offsets):
 > ```
 > TLB Contents:
@@ -1563,7 +1565,7 @@ A virtual address is divided into two parts:
 | **Offset** | Location within that page | `0x4000` % `0x1000` = `0` |
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > `4 KiB` (**kibibytes**) = `4096 bytes` = `0x1000` in hexadecimal
 > <!-- --- -->
 
@@ -1583,7 +1585,7 @@ Virtual Address
 ```
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > Above illustration uses `0x4000` to avoid hanging zeros, but 16-bit memory addresses aren't accurate to reality.
 >
 > For example, in a 32-bit system, it would actually be `0x00004000`.<br>
@@ -1609,7 +1611,7 @@ A **PTE** is usually a 4&ndash;8 bytes and has **bitfields**, where some bits st
 | **Other OS bits** | Custom flags | Reserved for the kernel (**e.g.**, copy-on-write, swapped-out, etc.) |
 
 > <!-- --- -->
-> \*\*NOTE** <br>
+> **\*\*NOTE****<br>
 > **Bitfields** are a way to pack multiple pieces of data into a **single integer** by using specific bits for specific purposes.
 > <!-- --- -->
 
@@ -1623,7 +1625,7 @@ A **PTE** is usually a 4&ndash;8 bytes and has **bitfields**, where some bits st
 | 3 | `0x3000`&ndash;`0x3FFF` | &mdash; | 0 | &mdash; | &mdash; | &mdash; | Unmapped (page fault) |
 
 > <!-- --- -->
-> \*\*NOTE**
+> **\*\*NOTE****
 > #### **Actual Bitfield Representation (Virtual Page 2)**
 > Assuming x86-64 with 4 KiB pages
 > ##### **Bit positions (typical)**
@@ -1704,7 +1706,7 @@ Once in the kernel, the OS decides *why* the page is missing and what to do:
    - The process is usually terminated
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Swap**: Anonymous memory (heap, stack) that was pushed to disk when RAM was full.
 > <br>
 > **File**: Memory-mapped files or executable code that lives on disk.
@@ -1728,7 +1730,7 @@ Virtual Address
 Each level indexes into a smaller table until the final PTE is reached. This makes page tables **sparse** (memory is only used for regions that are actually mapped).
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **PML4** = Page Map Level 4 (Top Level)<br>
 > **PDPT** = Page Directory Pointer Table (Level 2)<br>
 > **PD** = Page Directory (Level 3)<br>
@@ -1757,7 +1759,7 @@ Kernel addresses are either:
 If user code tries to access them, MMU raises a page fault.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > The **128TB** comes from the x86-64 architecture's **canonical addressing**, where despite 64-bit pointers, x86-64 CPUs actually use 48-bit virtual addresses.
 >
 > **48 bits = 256TB**, thus the 128TB-128TB user-kernel space split.
@@ -1771,7 +1773,7 @@ If user code tries to access them, MMU raises a page fault.
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **48 bits = 256TB** because:
 > - n address bits can encode 2^n unique addresses
 > - Each address points to 1 byte of memory
@@ -1851,7 +1853,7 @@ Some minimal pages *are* loaded immediately:
 - **Key data structures**: Process control block, minimal runtime info
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > VMA List is implementing a conceptual table called the **Virtual Memory Map**:
 > ``` yaml
 > Virtual Memory Map (Conceptual):
@@ -1864,7 +1866,7 @@ Some minimal pages *are* loaded immediately:
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > When **page fault handler** checks whether the faulting address is "valid," it's actually checking the **VMA List**.
 > <!-- --- -->
 
@@ -1903,7 +1905,7 @@ Kernel actions:
 ```
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Frame Allocation Tables/System**: the kernel's physical memory management system, separate from page tables.
 >
 > Tracks which frames are free/allocated, and which process owns each frame.
@@ -1962,7 +1964,7 @@ Kernel actions:
 COW is an optimization that delays actual copying until absolutely necessary, making operations like `fork()` extremely efficient.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > `fork()` is a system call that creates a new process by duplicating the calling process. Parent and child run separately after fork.
 > <!-- --- -->
 
@@ -1993,7 +1995,7 @@ Frame 0x2000: [Shared data] ← Reference count = 2
 ```
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Reference Count** is a counter tracking how many processes are sharing a physical frame. It's stored in the `struct page` (from the **frame allocation table**) for each frame.
 > <!-- --- -->
 
@@ -2047,7 +2049,7 @@ Process B Page Tables:
 VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
 ```
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > As opposed to
 > ##### **Traditional (Static Linking) Approach:**
 > ``` txt
@@ -2067,7 +2069,7 @@ VA 0x7f... → PFN 0x1000 (libc code, Read-Only) ← Same physical frame!
 `mmap()` is a system call that lets user programs explicitly map files or memory regions into their virtual address space.
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > ``` txt
 > BEFORE mmap():
 > Virtual Memory: [Code][Data][Heap] → [Free Space] ← [Stack]
@@ -2094,7 +2096,7 @@ void *addr = mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
   - Loading executables and libraries efficiently
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > "**Depending on flags**" refers to the flag passed to `mmap()` as argument. Two possibilities:
 > - **`MAP_SHARED`** &mdash; Changes write back to file
 > - **`MAP_PRIVATE`** &mdash; Changes are private (Copy-on-Write)
@@ -2113,8 +2115,8 @@ void *addr= mmap(NULL, 1 * GB, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, 
   - Temporary buffers
 
 > <!-- --- -->
-> \*\*NOTE**<br>
-> Anonymous Mapping is "Used for heap" in the sense that modern `malloc()` internally uses `mmap()` for large allocations.
+> **\*\*NOTE****<br>
+> Anonymous Mapping is "**Used for heap**" in the sense that modern `malloc()` internally uses `mmap()` for large allocations.
 > While the `mmap()`-allocated regions are independent VMAs, separate from the traditional heap, in this case, we just treat them as heap memory.
 > <!-- --- -->
 
@@ -2129,7 +2131,7 @@ void *addr = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1
   - Key Use Case: Parent-Child Process Communication
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **Inter-Process Communication (IPC)** refers to the mechanisms that allow processes to exchange data and synchronize their activities. Since processes are isolated by virtual memory, they need special methods to communicate.
 > #### **Major IPC Methods**
 > 1. Pipes (Unnamed Pipes, Named Pipes)
@@ -2215,12 +2217,12 @@ Modern CPUs have multiple specialized TLBs organized in a hierarchy to optimize 
 - ITLB miss can stall the entire CPU pipeline
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > "**Code pages**" refers to the virtual memory pages that correspond to the `.text` section mapped in process's VMA list/virtual memory map.
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > The **CPU Pipeline** is like an assembly line where instructions are processed in stages rather than all at once.
 > 
 > **Basic 5-Stage RISC Pipeline**
@@ -2241,7 +2243,7 @@ Modern CPUs have multiple specialized TLBs organized in a hierarchy to optimize 
 - DTLB miss stalls only the specific memory operation
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > "**Data pages**" refer to the virtual memory pages that correspond to the `.data` section mapped in process's VMA list/virtual memory map.
 > <!-- --- -->
 
@@ -2304,7 +2306,7 @@ Bits 11-0:  Offset     (Level 5) — 12 bits
 - Covers 256TB of address space (48-bit)
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > The **PML4 table** is essentially an array of 512 entries, where each entry is 8 bytes.
 > ``` txt
 > PML4 Table (starting at physical address 0x1000)
@@ -2347,7 +2349,7 @@ Physical Frame
 ```
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **CR3** register holds the physical base address of the current process's PML4 table
 > <!-- --- -->
 
@@ -2426,7 +2428,7 @@ Physical Address = Physical Frame + Offset
 **Result:** Virtual address `0x123456789ABC` &rarr; Physical address `0x5ABC`
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **What Each Table Entry Actually Contains**
 > ``` txt
 > 63                      52 51                               12 11   0
@@ -2438,7 +2440,7 @@ Physical Address = Physical Frame + Offset
 > <!-- --- -->
 
 > <!-- --- -->
-> \*\*NOTE**<br>
+> **\*\*NOTE****<br>
 > **4KB Alignment**
 >
 > 4KB = 4096 bytes = 2^12 bytes<br>
@@ -2499,6 +2501,129 @@ Physical Frame
 <br>
 
 ### Page replacement, swap, and thrashing
+
+**The Fundamental Problem:** Finite Physical RAM
+
+**Page replacement**, **swap**, and **thrashing** come in when physical memory becomes scarce and the system must make difficult decisions about what to keep in RAM and what to relegate to slower storage.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **The Memory Hierarchy:**
+> ``` txt
+> Fast: CPU Registers (1 cycle)
+>       CPU Caches    (1-10 cycles)
+>       Physical RAM  (100 cycles)
+> Slow: SSD Swap      (10,000 cycles)
+>       HDD Swap      (1,000,000 cycles)
+> ```
+> <!-- --- -->
+
+#### **Page Replacement &mdash; The Eviction Algorithm**
+
+The kernel can't just randomly kick out pages. **Page replacement** is the intelligent algorithm used to choose which page to remove from RAM.
+
+**Common Replacement Algorithms**
+##### **LRU (Least Recently Used)**
+Evict the page that hasn't been accessed for the longest time.
+###### **How it works:**
+- Track when each page was last accessed
+- When memory is needed, remove the "oldest" page
+- **Rationale:** Pages not used recently are least likely to be needed soon.
+- **Implementation challenge:** Require tracking exact access order, which is expensive.
+
+##### **CLOCK Algorithm (Second Chance)**
+A practical approximation of LRU that's efficient to implement.<br>
+Pages that were recently used (reference bit=1) get a second chance, while unused pages (reference bit=0) get evicted.
+###### **How it works:**
+Each page has a "reference bit" (0 or 1)<br>
+Maintain a circular list of pages (the "clock hand")
+
+Algorithm:
+1. Check page at clock hand position
+2. If reference bit = 0: Evict this page
+3. If reference bit = 1:
+  - Set bit to 0 (give it a "second chance)
+  - Move clock hand to next page
+4. Repeat until finding a page with reference bit = 0
+
+##### **FIFO (First-In-First-Out)**
+Evict the page that has been in memory the longest, regardless of usage.
+###### **How it works:**
+- Maintain a queue of pages in the order they were loaded
+- When memory is needed, remove the page at the front of the queue
+- Add new pages to the back of the queue
+- **Implementation challenge:** Simple to implement, but has poor performance (Belady's Anomaly)
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Belady's Anomaly** is the phenomenon where increasing the number of page frames can actually increase page faults instead of decreasing them.
+> <!-- --- -->
+
+##### **MRU (Most Recently Used)**
+Evict the page that was accessed most recently.
+###### **How it works:**
+- Track the most recent access time for each page
+- When memory is needed, remove the page with the latest access timestamp
+- **Rationale:** In some patterns, recently used pages are less likely to be needed again soon.
+- **Use Case:** Good for sequential access patterns, where once a page is used, it won't be needed again
+
+##### **Working Set**
+Track the set of pages actively being used by a process during a time window.
+###### **How it works:**
+- Define a working set window (most recent N memory references)
+- Maintain which pages were accessed during that window
+- When memory is needed, evict pages not in the current working set
+- **Rationale:** Processes have locality; they use a small set of pages intensively for periods.
+
+#### **Swap &mdash; The Memory Safety Net**
+
+**Swap** is disk space used a extension of physical RAM. It's where evicted pages get stored when there's no room in physical memory.
+
+**Swap Operations**
+##### **Swapping Out (Page Eviction)**
+``` txt
+1. Kernel selects victim page using replacement algorithm
+2. If page is dirty (modified), write it to swap space on disk
+3. Update page table: Mark as "not present," store swap location
+4. Physical frame is now free for reuse
+```
+
+##### **Swapping In (Major Page Fault)**
+``` txt
+1. Process accesses swapped-out page → Page fault
+2. Kernel: "This page is in swap space"
+3. Kernel allocates physical frame
+4. Read page data from swap into physical frame
+5. Update page table: Mark present, map to physical frame
+6. Resume process
+```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Swap location information is stored in the PTE itself. The entry is marked as non-present (P=0), and used to store swap information (swap type, swap offset) instead of physical frame address.
+> 
+> **Swapping is a software (OS) concept, not a hardware concept.**<br> 
+> When that P = 0, hardware STOPS interpreting the PTE, and the OS is free to use the rest of the bits however it wants.
+> <!-- --- -->
+
+#### **Thrashing &mdash; The Performance Collapse**
+
+**Thrashing** is when the computer becomes completely unusable because the system's spending more time swapping pages than doing actual work.
+``` txt
+1. Memory pressure causes page eviction
+2. Processes need evicted pages → page faults
+3. Page faults require disk I/O → processes stall
+4. While processes are stalled, other processes run
+5. Other processes cause more page evictions
+6. Cycle repeats endlessly
+```
+
+##### **Kernel's Anti-Thrashing Measures**
+1. **Admission Control**
+2. **Reclaiming Strategies**
+3. **Working Set Protection**
+4. **Swapiness Tuning**
+5. **Out-of-Memory (OOM) Killer**
 
 
 <br>
