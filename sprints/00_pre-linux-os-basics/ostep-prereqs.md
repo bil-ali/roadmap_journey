@@ -2151,10 +2151,10 @@ The **TLB (Translation Lookalike Buffer)** is&mdash;once again&mdash;a small, ex
 #### **TLB Structure**
 ``` txt
 TLB (typically 64-512 entries):
-[Virtual Page #] → [Physical Frame #] [Permissions] [ASID]
-[VPN 4] → PFN 0x123 [RWX] [ASID 1]
-[VPN 8] → PFN 0x456 [RX] [ASID 1]
-[VPN 2] → PFN 0x789 [RWX] [ASID 2]
+[Virtual Page #] → [Physical Frame #] [PCID] [Permissions]
+[VPN 4] → PFN 0x123 [PCID=1] [RWX]
+[VPN 8] → PFN 0x456 [PCID=1] [RX]
+[VPN 2] → PFN 0x789 [PCID=2] [RWX]
 ```
 
 #### **TLB Management Challenges**
@@ -2178,10 +2178,10 @@ This comes at a **performance cost**: new process has a 100% TLB miss rate initi
 ###### **Solution 2: ASID/PCID**
 ``` txt
 Address Space ID (ASID) or Process Context ID (PCID):
-TLB Entry: [VPN][ASID] → [PFN]
+TLB Entry: [VPN][PCID] → [PFN]
 
-Process A: ASID 1, VPN 4 → PFN 0x1000
-Process B: ASID 2, VPN 4 → PFN 0x2000
+Process A (PCID=1): VPN 4 → PFN 0x1000
+Process B (PCID=2): VPN 4 → PFN 0x2000
 
 Both translations can coexist in TLB!
 CPU uses current ASID to select correct translation.
@@ -2522,7 +2522,7 @@ Physical Frame
 
 The kernel can't just randomly kick out pages. **Page replacement** is the intelligent algorithm used to choose which page to remove from RAM.
 
-**Common Replacement Algorithms**
+**Common Replacement Algorithms:**
 ##### **LRU (Least Recently Used)**
 Evict the page that hasn't been accessed for the longest time.
 ###### **How it works:**
@@ -2542,8 +2542,8 @@ Algorithm:
 1. Check page at clock hand position
 2. If reference bit = 0: Evict this page
 3. If reference bit = 1:
-  - Set bit to 0 (give it a "second chance)
-  - Move clock hand to next page
+     - Set bit to 0 (give it a "second chance)
+     - Move clock hand to next page
 4. Repeat until finding a page with reference bit = 0
 
 ##### **FIFO (First-In-First-Out)**
@@ -2552,7 +2552,7 @@ Evict the page that has been in memory the longest, regardless of usage.
 - Maintain a queue of pages in the order they were loaded
 - When memory is needed, remove the page at the front of the queue
 - Add new pages to the back of the queue
-- **Implementation challenge:** Simple to implement, but has poor performance (Belady's Anomaly)
+- **Implementation challenge:** Simple to implement, but has poor performance (Belady's Anomaly).
 
 > <!-- --- -->
 > **\*\*NOTE****<br>
@@ -2565,7 +2565,7 @@ Evict the page that was accessed most recently.
 - Track the most recent access time for each page
 - When memory is needed, remove the page with the latest access timestamp
 - **Rationale:** In some patterns, recently used pages are less likely to be needed again soon.
-- **Use Case:** Good for sequential access patterns, where once a page is used, it won't be needed again
+- **Use Case:** Good for sequential access patterns, where once a page is used, it won't be needed again.
 
 ##### **Working Set**
 Track the set of pages actively being used by a process during a time window.
@@ -2577,7 +2577,7 @@ Track the set of pages actively being used by a process during a time window.
 
 #### **Swap &mdash; The Memory Safety Net**
 
-**Swap** is disk space used a extension of physical RAM. It's where evicted pages get stored when there's no room in physical memory.
+**Swap** is disk space used as an extension of physical RAM. It's where evicted pages get stored when there's no room in physical memory.
 
 **Swap Operations**
 ##### **Swapping Out (Page Eviction)**
@@ -2619,11 +2619,270 @@ Track the set of pages actively being used by a process during a time window.
 ```
 
 ##### **Kernel's Anti-Thrashing Measures**
-1. **Admission Control**
+1. **Admission Control**<br>
+   The kernel limits how much memory it promises to processes.
 2. **Reclaiming Strategies**
-3. **Working Set Protection**
-4. **Swapiness Tuning**
-5. **Out-of-Memory (OOM) Killer**
+   - **kswapd**<br>
+     - Background process that proactively frees memory
+     - Runs before memory is critically low
+     - Tries to maintain free memory pool
+   - **Memory Pressure Response**
+     ``` txt
+     - Low Pressure:    kswapd runs occasionally
+     - Medium Pressure: kswapd runs frequently, light reclaim
+     - High Pressure:   Direct reclaim - processes stall during allocation
+     - Critical:        OOM killer invoke
+3. **Working Set Protection**<br>
+   The kernel tries to identify and protect each process's "working set."
+4. **Swapiness Tuning**<br>
+   Control how aggresively to swap (1-100)
+   - Low: Prefer to keep pages in RAM
+   - High: More willing to swap out pages
+5. Out-Of-Memory (OOM) Killer<br>
+   When thrashing becomes unbearable, the kernel selectively kills processes to free memory.
+   - Scores processes based on memory usage, importance, runtime
+   - Kills highest-scoring victim process
+   - Frees all its memory instantly
+
+<br>
+
+### Address Space Layout Randomization (ASLR)
+
+**ASLR** is a security defense mechanism that randomizes the virtual memory layout of processes, making it harder for attackers to predict memory addresses.
+
+ASLR randomizes the base addresses of key memory regions:
+``` yaml
+# Without ASLR
+Process Memory Map (fixed addresses):
+0x08048000: Program Code (.text)
+0x08049000: Program Data (.data)
+0x40000000: Heap start
+0xbffff000: Stack top
+0xb7e00000: libc library
+
+# With ASLR
+Process Memory Map (changes each run):
+0x55a1b2c3d000: Program Code (.text)
+0x55a1b2c3e000: Program Data (.data)
+0x7f4c5d6e7000: Heap start
+0x7ffd8e9fa000: Stack top
+0x7f4c5d2c8000: libc library  # Each library gets a random load address
+```
+
+#### ASLR Strength Levels (Linux)
+- **0** = No ASLR
+- **1** = Conservative (Stack, libraries, vDSO)
+- **2** = Full ASLR (stack, libraries, vDSO, heap, program code)
+
+#### **Requirements for ASLR to Work**
+1. **Position Independent Executable (PIE)**<br>
+   The main program must be compiled to work at any address.
+2. **Position Independent Code (PIC)**<br>
+   Libraries must use relative addressing instead of absolute addresses.
+3. **No Hard-Coded Address Assumptions**
+
+<br>
+
+### Performance knobs & hardware features
+
+#### **The TLB Coverage Problem**
+Standard 4KB pages create TLB pressure:
+``` txt
+TLB size: 64 entries
+Coverage: 64 x 4KB = 256KB
+Many applications need: 1GB+ working sets
+Result: Constant TLB misses despite plenty of RAM
+```
+
+#### **The Solution: Huge Pages**
+**Huge Pages** are larger page sizes that dramatically increase TLB coverage:
+``` txt
+Page Size      | TLB Coverage (64-entry TLB) |
+---------------|-----------------------------|
+4KB (standard) | 256KB                       |
+2MB (huge)     | 128MB                       |
+1GB (huge)     | 64GB                        |
+```
+##### **How Huge Pages Reduce Overhead**
+Page Table Walk Comparison:
+``` txt
+4KB pages (4-level walk):
+CR3 → PML4 → PDPT → PD → PT → Physical Frame (5 memory accesses)
+
+2MB pages (3-level walk):
+CR3 → PML4 → PDPT → PD → Physical Frame (4 memory accesses)
+
+1GB pages (2-level walk):
+CR3 → PML4 → PDPT → Physical Frame (3 memory accesses)
+```
+
+TLB Efficiency:
+``` txt
+Database scabbubg 1GB table:
+
+With 4KB pages: Needs 262,144 TLB entries (impossible)
+With 2MB pages: Needs 512 TLB entries
+With 1GB pages: Needs 1 TLB entry
+```
+
+**Implementing Huge Pages:**
+#### **Transparent Huge Pages (THP) &mdash; Automatic**
+
+**Transparent Huge Pages** is a Linux kernel feature that automatically converts regular 4KB pages into 2MB huge pages in the background, without any application changes.
+
+##### **How THP Works:**
+``` txt
+1. Process allocates memory normally (4KB pages)
+2. Kernel background thread (khugepaged) scans memory
+3. When it finds 2MB of contiguous 4KB pages, it:
+    - Allocates 2MB huge page
+    - Copies data from 4KB pages to huge page
+    - Updates page tables to use huge page mapping
+    - Frees the 4KB pages
+```
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Just finding "**2MB of contiguous 4KB pages**" is a simplification.
+> <br>
+> **Actual THP Conditions:**
+> 1. **Virtual Address Contiguituity**<br>
+> Process virtual address space must have 2MB aligned region
+> 2. **Page Table Entry Contiguity**<br>
+> The 512 PTES in the page tables must:
+>     - Be consecutive entries in the same page table
+>     - All be present (not swapped out)
+>     - Have identical permissions (all read/write, all read-only, etc.)
+>  
+> 3. **Backing Store Compatibility**
+>     - All pages must be backed the same way (all anonymous, all file-backed)
+>     - If file-backed, must be same file and offset alignment
+> <!-- --- -->
+
+
+#### **Explicit Huge Pages &mdash; Manual Control**
+
+**Explicit Huge Pages** require manual configuration by administrators and explicit requests by applications. Explicit huge pages give you full control but rquire more work.
+
+##### **How It Works**
+
+###### **Step 1: System Administrator Reserves Huge Pages**
+``` txt
+System Physical Memory (e.g., 32GM RAM):
+[4KB Pages............................] ← Normal memory pool
+[2MB/1GB Huge Pages Pool]               ← SEPARATE reserved area
+```
+###### **Step 2: Application Requests Huge Page Explicitly**
+``` c
+// Must use MAP_HUGETLB flag
+void *ptr = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_HUGETLB, -1, 0);
+// This specifically says: "Give me a 2MB huge page"
+```
+
+##### **2MB Huge Pages**
+
+``` bash
+# Configure at boot or runtime
+# Reserve 1000x2MB = 2GB for huge pages
+echo 1000 > /proc/sys/vm/nr_hugepages
+
+# Use in application
+#include <sys/mman.h>
+void *huge = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_HUGETLB, -1, 0);
+```
+
+###### Physical Memory Layout:
+``` txt
+AFTER reservation (1000 x 2MB):
+[2MB][2MB][2MB][2MB]... (1000 of these) [4KB][4KB][4KB]...
+        ↑                                   ↑
+  Reserved pool                         Normal 4KB pool
+```
+
+##### **1BG Huge Pages**
+1GB huge pages require physically contiguoys 1GB blocks, which is a big ask. That's why they must be configured at boot-time.
+
+``` bash
+# Boot time reservation
+hugepagesz=1G hugepages=4 # Reserve 4x1GB pages
+
+# Use in application
+void *huge = mmap(NULL, 2*1024*1024*1024, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_HUGETLB, -1, 0);
+```
+###### Physical Memory Layout:
+``` txt
+Physical RAM after boot with 32GB total:
+[1GB][1GB][1GB][1GB][28GB of normal memory]
+  ↑    ↑    ↑    ↑
+Reserved for 1GB huge pages
+```
+
+##### **Filesystem Huge Pages (hugetlbfs)**
+**hugetlbfs** is a special-purpose virtual filesystem where every file is automatically backed up by huge pages, providing a file-based interface for allocating and sharing huge page memory between processes. 
+
+###### Setup Process:
+``` bash
+# 1. Create mount point
+mkdir /hugepages
+
+# 2. Mount hugetlbfs
+mount -t hugetlbfs nodev /hugepages
+
+# What happens:
+# - /hugepages now acts like a normal directory
+# - But files created here automatically use huge pages
+# - File size must be multiple huge page size
+```
+###### Application Usage:
+``` c
+// Create file in hugetlbfs
+int fd = open("/hugepages/my_data", O_CREAT|O_RDWR, 0644);
+
+// Set file size to 2MB (must be huge page multiple)
+ftruncate(fd, 2*1024*1024);
+
+// Map it into memory - automatically uses huge page
+void *ptr = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+// No MAP_HUGETLB needed - hugetlbds handles it
+```
+
+##### **Huge Pages Tradeoffs**
+###### **Advantages:**
+- Reduced TLB misses
+- Fewer page table levels
+- Larger contiguous mappings (better for some workloads)
+###### **Disadvantages**
+- Memory waste (internal fragmentation)
+- Allocation difficulty (need contiguous physical memory)
+- Coarse granularity (can't protect small regions individually)
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Granularity** refers to the smallest unit of memory that can be independently managed. As opposed to 4KB pages' **fine granularity**, huge pages have **coarse granularity** because the the entire large block is treated as one block. The entire 2MB/1GB must have SAME permissions.
+>
+> This makes swapping and sharing inefficient and imprecise, as well as increasing security risk.
+> 
+> An example of why this is bad for security:
+> ``` c
+> // with 4KB pages - good security:
+> // Small executable code section:
+> mprotect(code_region, 4096, PROT_READ|PROT_EXEC);
+> // Data section (non-executable):
+> mprotect(data_region, 1048576, PROT_READ|PROT_WRITE);
+>
+> // With 2MB huge page - security risk:
+> // If your code is 4KB but needs 2MB huge page:
+> // You must mark ENTIRE 2MB as executable!
+> mprotect(huge_page, 2*1024*1024, PROT_READ|PROT_WRITE|PROT_EXEC);
+> // Now attackers can execute shellcode ANYWHERE in those 2MB
+> ```
+> <!-- --- -->
+
+#### **Prefetching**
+
+
+
+
+
 
 
 <br>
