@@ -2506,18 +2506,6 @@ Physical Frame
 
 **Page replacement**, **swap**, and **thrashing** come in when physical memory becomes scarce and the system must make difficult decisions about what to keep in RAM and what to relegate to slower storage.
 
-> <!-- --- -->
-> **\*\*NOTE****<br>
-> **The Memory Hierarchy:**
-> ``` txt
-> Fast: CPU Registers (1 cycle)
->       CPU Caches    (1-10 cycles)
->       Physical RAM  (100 cycles)
-> Slow: SSD Swap      (10,000 cycles)
->       HDD Swap      (1,000,000 cycles)
-> ```
-> <!-- --- -->
-
 #### **Page Replacement &mdash; The Eviction Algorithm**
 
 The kernel can't just randomly kick out pages. **Page replacement** is the intelligent algorithm used to choose which page to remove from RAM.
@@ -2683,7 +2671,7 @@ Process Memory Map (changes each run):
 
 <br>
 
-### Performance knobs & hardware features
+### Huge Pages
 
 #### **The TLB Coverage Problem**
 Standard 4KB pages create TLB pressure:
@@ -2845,7 +2833,7 @@ void *ptr = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 // No MAP_HUGETLB needed - hugetlbds handles it
 ```
 
-##### **Huge Pages Tradeoffs**
+#### **Huge Pages Tradeoffs**
 ###### **Advantages:**
 - Reduced TLB misses
 - Fewer page table levels
@@ -2877,13 +2865,41 @@ void *ptr = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 > ```
 > <!-- --- -->
 
-#### **Prefetching**
+### **Prefetching**
+
+**Prefetching** is a collection of optimization techniques that try to anticipate future memory accesses and load data into faster memory before it's actually needed by the processor.
+
+#### **The Core Problem: Memory Hierarchy Latency**
+``` txt
+CPU Registers:  0.3 ns (1 cycle)      - Instant
+L1 Cache:       1 ns (3-4 cycles)     - Very fast
+L2 Cache:       4 ns (10-12 cycles)   - Fast
+L3 Cache:       20 ns (40-50 cycles)  - Noticeable
+Main Memory:    100 ns (200+ cycles)  - Slow
+SSD Storage:    100,000 ns (0.1 ms)   - Very slow
+HDD Storage:    8,000,000 ns (8 ms)   - Extremely slow
+```
+When program needs data that's not in cache, the CPU must wait for hundreds to millions of cycles. Prefetching tries to eliminate this latency by loading data in advance.
+
+#### **Hardware Prefetching**
+
+Modern CPUs have built-in hardware prefetches that automatically detect access patterns and prefetch data.
+
+**Types of Hardware Prefetchers:**
+##### **1. Sequential Prefetches**
+
+###### **How it works:**
+
+##### **2. Stride Prefetcher**
+
+###### **How it works:**
+
+##### **3. Adjacent Line Prefetcher**
+
+###### **How it works:**
 
 
-
-
-
-
+#### **Software Prefetching**
 
 <br>
 <br>
