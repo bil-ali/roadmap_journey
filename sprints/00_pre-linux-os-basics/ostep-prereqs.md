@@ -2706,7 +2706,7 @@ CR3 → PML4 → PDPT → Physical Frame (3 memory accesses)
 
 TLB Efficiency:
 ``` txt
-Database scabbubg 1GB table:
+Database scanning 1GB table:
 
 With 4KB pages: Needs 262,144 TLB entries (impossible)
 With 2MB pages: Needs 512 TLB entries
@@ -2736,7 +2736,7 @@ With 1GB pages: Needs 1 TLB entry
 > 1. **Virtual Address Contiguituity**<br>
 > Process virtual address space must have 2MB aligned region
 > 2. **Page Table Entry Contiguity**<br>
-> The 512 PTES in the page tables must:
+> The 512 PTEs in the page tables must:
 >     - Be consecutive entries in the same page table
 >     - All be present (not swapped out)
 >     - Have identical permissions (all read/write, all read-only, etc.)
@@ -2787,7 +2787,7 @@ AFTER reservation (1000 x 2MB):
 ```
 
 ##### **1BG Huge Pages**
-1GB huge pages require physically contiguoys 1GB blocks, which is a big ask. That's why they must be configured at boot-time.
+1GB huge pages require physically contiguous 1GB blocks, which is a big ask. That's why they must be configured at boot-time.
 
 ``` bash
 # Boot time reservation
@@ -2867,7 +2867,7 @@ void *ptr = mmap(NULL, 2*1024*1024, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
 ### **Prefetching**
 
-**Prefetching** is a collection of optimization techniques that try to anticipate future memory accesses and load data into faster memory before it's actually needed by the processor.
+**Prefetching** is an optimization technique that tries to anticipate future memory accesses and load data into faster memory before it's actually needed by the processor.
 
 #### **The Core Problem: Memory Hierarchy Latency**
 ``` txt
@@ -2883,25 +2883,242 @@ When program needs data that's not in cache, the CPU must wait for hundreds to m
 
 #### **Hardware Prefetching**
 
-Modern CPUs have built-in hardware prefetches that automatically detect access patterns and prefetch data.
+Modern CPUs have built-in hardware prefetchers that automatically detect access patterns and prefetch data.
 
 **Types of Hardware Prefetchers:**
+
 ##### **1. Sequential Prefetches**
-
+Detects when you're accessing memory addresses in order.
 ###### **How it works:**
-
+``` txt
+Program accesses: 0x1000, then 0x1004, then 0x1008...
+CPU notices: "Ah, sequential access with stride 4!"
+CPU action: Prefetch 0x100C, 0x1010, 0x1014
+```
 ##### **2. Stride Prefetcher**
-
+Detects regular patterns with consistent spacing.
 ###### **How it works:**
-
+``` txt
+Program accesses: 0x1000, then 0x2000, then 0x3000...
+CPU notices: "Stride of 0x1000 bytes!"
+CPU action: Prefetch 0x4000, 0x50000...
+```
 ##### **3. Adjacent Line Prefetcher**
-
+When you access one cache line, it prefetches the next cache line.
 ###### **How it works:**
-
+``` txt
+Cache line size: 64 bytes
+Program accesses byte at address 0x1000
+CPU action: Also fetch bytes 0x1040-0x107F (next cache line)
+```
+##### **Hardware Prefetcher Limitations**
+1. Pattern detection takes time
+2. Memory bandwidth waste (if predictions are wrong)
+3. Cache pollution (Prefetched data might evict useful data)
+4. Power consumption
 
 #### **Software Prefetching**
+When hardware prefetchers can't predict the pattern, software can explicitly request prefetching.
+
+##### **Compiler Prefetch Intrinsics**
+Intrinsics are special compiler instructions that map to CPU instructions to directly communicate with the CPU's memory subsystem.<br>
+Example:
+``` c
+#include <xmmintrin.h>
+
+// Tell Cpu: "I'll need this data soon, please fetch it"
+void process_data(int *data, int size) {
+  for (int i = 0; i < size; i++) {
+    // Prefetch data 16 elements ahead
+    _mm_prefetch(&data[i+16], _MM_HINT_T0); // Fetch into L1 cache
+ 
+    // Process current element
+    data[i] = process(data[i]);
+  }
+}
+```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Different hint levels:**
+> - **`__MM_HINT_T0`**: Fetch into L1 cache
+> - **`__MM_HINT_T1`**: Fetch into L2 cache
+> - **`__MM_HINT_T2`**: Fetch into L3 cahce
+> - **`__MM_HINT_NTA`**: Fetch with non-temporal hint (data used once then discarded)
+> <!-- --- -->
+
+##### **Operating System Read-Ahead**
+When you read a file, the OS doesn't just read what you asked for, it reads more and caches it.
+``` txt
+When you call: read(fd, buffer, 4096);
+
+Kernel's actions:
+1. Check page cache: Is requested page already in memory?
+2. If not, read 4KB from disk into page cache
+3. BUT ALSO: Read next N KB (read-ahead window)
+4. Mark (in struct page) read-ahead pages as "cached but not yet accessed"
+
+When you call read() again for next 4KB:
+1. Data already in page cache (hit!)
+2. Kernel extends read-ahead window further
+3. Creates seamless streaming effect
+```
+###### Configuring read-ahead
+``` bash
+# Check current read-ahead size
+cat /sys/block/sda/queue/read_ahead_kb
+# Output: 256 (means 256KB read-ahead)
+
+# Increase for sequential workloads (video processing, databases)
+echo 1024 > /sys/block/sda/queue/read_ahead_kb  # 1MB read-ahead
+
+# Decrease for random access (databases with random seeks)
+echo 16 > /sys/block/sda/queue/read_ahead_kb  # 16KB read-ahead
+```
+##### **Memory Access Pattern Hints**
+You can tell the kernel about your access patterns using `madvise()` or `posix_madvise()`:
+``` c
+#include <sys/mman.h>
+
+void *memory = mmap(NULL, 1*GB, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+
+// Tell kernel: "I'll access this sequentially"
+madvise(memory, 1*GB, MADV_SEQUENTIAL);
+// Kernel: Will use aggressive read-ahead, may free pages sooner
+
+// Or: "I'll access this randomly"
+madvise(memory, 1*GB, MADV_RANDOM);
+// Kernel: Will use minimal read-ahead, keep pages longer
+
+// Or: "I'll need these pages soon"
+madvise(memory, 100*MB, MADV_WILLNEED);
+// Kernel: Preload these pages into RAM immediately
+```
+
+#### **The Prefetching Timeline**
+##### **Without Prefetching**
+``` txt
+Time 0ms:    Program needs page A → Page fault
+Time 0-8ms:  Stalled waiting for disk I/O (8ms for HDD)
+Time 8ms:    Process page A
+Time 8ms:    Program needs page B → Page fault
+Time 8-16ms: Stalled waiting for disk I/O (another 8ms)
+Time 16ms:   Process page B
+Total: 16ms for 2 pages
+```
+##### **With Prefetching**
+``` txt
+Time 0ms:   Program needs page A → Page fault
+            OS: "Sequential access detected" → Also fetch page, B, C, D
+Time 0-8ms: Stalled waiting for page A (and B, C, D loaded too)
+Time 8ms:   Process page A (B, C, D already in RAM)
+Time 8.1ms: Program needs page B → Already in RAM!
+Time 8.1ms: Process page B (no stall)
+Time 8.2ms: Program needs page C → Already in RAM!
+Time 8.2ms: Process page C (no stall)
+Total: Total ~8ms for 3 pages
+```
+
+#### **Prefetching Tradeoffs and Challenges**
+##### **When Prefetching Helps:**
+1. Sequential access patterns (files, arrays)
+2. Predictable access patterns (stride, loops)
+3. Large working sets that don't fit in cache
+4. High-latency storage (HDDs, network storage)
+##### **When Prefetching Hurts:**
+1. Random access patterns (prefetches are usually wrong)
+2. Memory-bound systems
+3. Cache pollution
+4. Power-sensitive devices
+
+#### **Speculative Execution + Prefetching**
+**Speculative execution** is when a CPU guesses what the program will do next and starts working on it before it knnows for sure.
+``` txt
+Normal execution: Wait to see what happens → Then do the work
+Speculative execution: Guess what will happen → Start work now → Fix later if wrong
+```
+
+Modern CPUs combine prefetching with speculative execution:
+``` txt
+1. CPU encounters branch: "if {x > 0}"
+2. CPU predicts branch will be taken
+3. CPU speculatively executes "then" branch (but keeping everything in temporary buffers)
+4. CPU prefetches data needed by speculative path
+5. If prediction correct: Data already loaded!
+6. If prediction wrong: Discard prefetched data from temp buffers
+```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> ### Temporary Buffers
+> **Temporary buffers** are hardware structures inside the CPU that hold speculative results before they're proven correct.
+>
+> #### **The Main Temporary Buffers:**<br>
+> ##### **1. Reorder Buffer (ROB) &mdash; The Master Queue**
+> The **ROB** is a circular buffer *(big queue with fixed max size and wrap-around behavior)* holding an entry for every instruction currently "in-flight" in the CPU pipeline, in strict program order.
+> 
+> Its job is to preserve the illusion of in-order execution for a CPU that is executing everything out-of-order. It does this by making it so, at commit time, the permanent world is updated *in order*, regardless of if, e.g., I3 finished execution long before l2 committed.
+> ``` txt
+> ROB Entry Structure
+> [Instruction #][Destination][Result Value][Status][...]
+> e.g.:
+> [Instruction 1: x=10, dest=P2, status=COMMITTED]
+> [Instruction 2: x=20, dest=P3, status=SPECULATIVE]
+> ```
+> - Holds all in-flight instructions in program order
+> - Keeps results temporary until they can commit
+> - Capacity: Typically 100-300 entries
+> - Acts as a timeline of what's been done but not yet made official
+>
+> ##### **2. Physical Register File &mdash; Temporary Register Storage**
+> Modern CPUs use **register renaming**:
+> ``` txt
+> Architectural Registers (what program sees):
+> RAX, RBX, RCX, RDX...
+> 
+> Physical Registers (actual hardware, 2-3x more):
+> P0, P1, P2, P3, ... , P200
+> 
+> Mapping Table (tracks which physical holds which architectural):
+> RAX → P5 (current value)
+> RBX → P12
+> RCX → P8
+> ```
+> Speculative writes go to new physical registers, not overwriting old ones:
+> ``` asm
+> ; Suppose RAX currently maps to P5 (value = 10)
+> mov RAX, 20 ; Speculatively executed
+> 
+> ; What happens:
+> 1. Allocate new physical register P42
+> 2. Write 20 to P42
+> 3. Update mapping: RAX → P42 (temporarily)
+> 4. Original value (P5 = 10) preserved in case we need to roll back
+> ```
+>
+> ##### **3. Load Store Queue (LSQ) &mdashl; Memory Operation Buffer**
+> The **LSQ's** job is to manage speculative memory operations, ensuring that loads and stores appear to happen in program order, even if they are executed out-of-order, and to detect memory hazards.
+> ``` txt
+> LSQ Entry:
+> [Address][Data][Instruction #][Status]
+> ```
+> - Holds speculative memory reads/writes
+> - Prevents speculative stores from updating real memory
+> - Check for memory ordering violations
+>
+> ##### **4. Reservation Stations &mdash; Instruction Waiting Area**
+> **Reservation Stations** are a set of associative buffers attached to each execution port (ALU, Load Unit, etc.).
+> - Where instructions wait for the operands
+> - Once all operands ready, instruction can execute
+> - Speculative instructions can execute here
+> <!-- --- -->
 
 <br>
+
+### W ^ X / NX bit: The "Immutable Code" Principle
+
+
+
 <br>
 <br>
 <br>
