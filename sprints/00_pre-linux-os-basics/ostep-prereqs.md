@@ -1720,6 +1720,27 @@ The key difference is where the needed data comes from.
 - **Minor Page Fault:** The data is already in physical RAM, but not currently mapped to process's page table.
 - **Major Page Fault:** The data is not in physical RAM and must be loaded from disk.
 
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Quick timeline of a page fault:
+> 
+> ``` txt
+> User instruction -> access virtual addr V
+> MMU checks TLB -> miss
+> MMU consults page tables -> PTE says "not present"
+> MMU raises page fault exception -> CPU -> kernel
+> Kernel page fault handler:
+>   determine mapping/backing
+>   if permissible:
+>     allocate frame
+>     if file-backed: read from disk
+>     update PTE (present, perms)
+>   else:
+>     send SIGSEGV to process
+> Return to user, retry instruction -> now succeeds
+> ```
+> <!-- --- -->
+
 #### **Multi-Level Page Tables**
 
 For large virtual spaces (like 64-bit), a single flat page table would be impossibly large. So, CPUs use **multi-level page tables** (**e.g.**, 4 levels on x86-64):
@@ -1911,7 +1932,7 @@ Kernel actions:
 > Tracks which frames are free/allocated, and which process owns each frame.
 >
 > Data structures:
-> - **`struct page` Array (Linux)**: Track frame metadata and ownership
+> - **`struct page` Array (`mem_map`)**: Track frame metadata and ownership
 > - **Zone Allocators**: Enforce hardware constrainsts (DMA, etc.)
 > - **Buddy Allocator**: Efficiently find free frames of desired sizes
 > - **Per-CPU Caches**: Performance optimization
@@ -2956,13 +2977,21 @@ Kernel's actions:
 1. Check page cache: Is requested page already in memory?
 2. If not, read 4KB from disk into page cache
 3. BUT ALSO: Read next N KB (read-ahead window)
-4. Mark (in struct page) read-ahead pages as "cached but not yet accessed"
+4. Mark read-ahead pages as "cached but not yet accessed"
 
 When you call read() again for next 4KB:
 1. Data already in page cache (hit!)
 2. Kernel extends read-ahead window further
 3. Creates seamless streaming effect
 ```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Page Cache** is a kernel-level data structure that tracks which pages are caching file or block device data in RAM to avoid expensive disk I/O on subsequent accesses. It is basically a subset of the `mem_map` array, but in xarray *(previously radix tree)* form.
+>
+> The kernel "**mark(s) read-ahead pages as 'cached but not yet accessed'**" by: 1. Adding them to Page Cache; 2. Setting `struct page` flags (`PG_uptodate=1` (valid data); `PG_referenced=0` (not accessed yet)); 3. Placing these pages on the inactive LRU list.
+> <!-- --- -->
+
 ###### Configuring read-ahead
 ``` bash
 # Check current read-ahead size
@@ -3032,7 +3061,7 @@ Total: Total ~8ms for 3 pages
 4. Power-sensitive devices
 
 #### **Speculative Execution + Prefetching**
-**Speculative execution** is when a CPU guesses what the program will do next and starts working on it before it knnows for sure.
+**Speculative execution** is when a CPU guesses what the program will do next and starts working on it before it knows for sure.
 ``` txt
 Normal execution: Wait to see what happens → Then do the work
 Speculative execution: Guess what will happen → Start work now → Fix later if wrong
@@ -3115,9 +3144,51 @@ Modern CPUs combine prefetching with speculative execution:
 
 <br>
 
-### W ^ X / NX bit: The "Immutable Code" Principle
+### W^X / NX bit
+
+The "Immutable Code" Principle. **W^X** (Write XOR Execute) means a memory page can be either Writable or Executable, but never both simultaneously. The **NX** but (No-Execute) is the hardware implementation that enforces this.
+
+#### **The Attack This Prevents: Code Injection**
+Consider a classic buffer overflow:
+``` c
+void vulnerable_function(char *input) {
+  char buffer[100]
+  strcpy(buffer, input);  // No bounds checking!
+
+  // Functions pointer that gets called later
+  void (*func_ptr)() = &legitimate_function;
+  // ... later: func_ptr();
+}
+
+// Attacker's input:
+// [100 bytes of garbage][overwrite func_ptr][malicious code]
+```
+##### **How attack work WITHOUT W^X:**
+1. Attacker sends input containing shellcode *(malicious machine instructions)*
+2. Buffer overflow overwrites the function pointer to point into the buffer
+3. When `func_ptr()` is called, it jumps to the attacker's shellcode in the buffer
+4. Since the stack is writable AND executable, the CPU happily executes the shellcode
+
+##### **How W^X stops it:**
+1. Attacker still injects shellcode into buffer
+2. Attacker still overwrites the function pointer
+3. When execution jumps to the buffer... CPU FAULTS!
+4. The buffer is on the stack, which is marked as `RW-` (Read-Write, No-Execute)
+5. Hardware exception "Tried to execute non-executable memory"
+6. Process gets terminated by the OS
+
+#### **Real-World Implementation**
+##### **Compiler/Linker Level:**
+- Code sections (`.text`, `.rodata`) marked as `R-X` (Read-Execute)
+- Data sections (`.data`, `.bss`, stack, heap) marked as `RW-` (Read-Write)
+- Explicit separation: "Things you can run" vs "Things you can modify"
 
 
+<hr>
+<br>
+
+
+## 11) Concurrency (threads and the problems they bring)
 
 <br>
 <br>
