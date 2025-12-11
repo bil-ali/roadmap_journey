@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## (1/9/25 - 14/10/25)
+## (1/9/25 - 11/12/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -1532,7 +1532,7 @@ This page table tells the MMU how to translate virtual addresses into physical a
 ``` txt
 Program executes instruction using virtual address 0x4000
         ↓
-MMU splits 0x4000 → (Virtual Page Number, Offset)
+MMU splits 0x4000 → (Virtual Page Number, Ovffset)
         ↓
 MMU checks TLB (Translation Lookaside Buffer)
         ↓
@@ -3190,6 +3190,125 @@ void vulnerable_function(char *input) {
 
 ## 11) Concurrency (threads and the problems they bring)
 
+### Threads
+
+**Threads** are multiple execution flows sharing one address space. Like separate "trains of thought" in the same brain (process).<br>
+Each thread has its own:
+- Stack (for local variables, function calls)
+- Registers (including program counter)
+- Thread-local storage (optional)
+But they share:
+- Code segment
+- Global/static data
+- Heap memory
+- File descriptors
+
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> "**Each thread has its own: Stack**": Despite each process having a singular, large stack space, threads each have separate stack regions within that (typically 8MB per thread). To prevent stack overflow, there are inaccessible memory regions (`PROT_NONE`) between each thread stack, called **Guard Pages** (typically 4KB).
+> ``` txt
+> HIGH ADDRESSES (near 0x7FFFFFFFFFFFFFFF)
+> ┌──────────────────────────────────┐
+> |           KERNEL SPACE           | ← Reserved for kernel (inaccessible)
+> ├──────────────────────────────────┤
+> |     MAIN THREAD STACK (8MB)      |
+> ├──────────────────────────────────┤
+> |         GUARD PAGE (4KB)         |
+> ├──────────────────────────────────┤
+> |       THREAD 1 STACK (8MB)       | ← Oldest after main thread
+> ├──────────────────────────────────┤
+> |         GUARD PAGE (4KB)         |
+> ├──────────────────────────────────┤
+> |       THREAD 2 STACK (8MB)       |
+> ├──────────────────────────────────┤
+> |         GUARD PAGE (4KB)         |
+> ├──────────────────────────────────┤ 
+> |       THREAD 3 STACK (8MB)       |
+> ├──────────────────────────────────┤ 
+> |       ... More threads ...       |
+> |                                  |
+> ├──────────────────────────────────┤ 
+> |         SHARED LIBRARUES         |
+> ├──────────────────────────────────┤
+> |                 .                |
+> |                 .                |
+> |                 .                |
+> |               HEAP               |
+> ├──────────────────────────────────┤
+> |      UNITIALIZED DATA (BSS)      |
+> ├──────────────────────────────────┤
+> |     INITIALIZED DATA (.data)     |
+> ├──────────────────────────────────┤
+> |     READ-ONLY DATA (.rodata)     |
+> ├──────────────────────────────────┤
+> |       CODE / TEXT (.text)        |
+> └──────────────────────────────────┘
+> LOW ADDRESSES (near 0x0000000000400000)
+> ```
+>
+> "**Each thread has its own: Registers**": Threads don't "own" physical registers permanently, but each thread does have its own set of register values. These values are saved/restored when the OS switches between threads.
+>
+> The physical registers just hold whichever thread is currently running.
+> <!-- --- -->
+
+<br>
+
+### Race Conditions
+
+A **race condition** occurs when multiple threads/process access shared data simultaneously without proper synchronization, and the final outcome depends on the unpredictable timing of their execution. Basically, threads "racing" access/change data first, and result depends on who wins.
+
+#### **The Fundamental Issue: Non-Atomic Operations**
+
+##### **Why Simple Operations Aren't Atomic**
+``` c
+// What looks like one operation:
+counter++;
+
+// Is actually THREE machine instructions:
+1. LOAD counter value from memory → register
+2. INCREMENT the register
+3. STORE register value back to memory
+```
+##### **The Interleaving Danger**
+``` txt
+Two threads incrementing a shared counter (initial value = 0):
+
+THREAD 1                        THREAD 2
+LOAD R1, [counter]  (R1=0)  
+                                LOAD R1, [counter]  (R1=0)
+ADD R1, 1           (R1=1)
+                                ADD R1, 1           (R1=1)
+STORE [counter], R1 (counter=1)
+                                STORE [counter], R1 (counter=1)
+
+FINAL: counter = 1 (should be 2!)
+```
+
+#### **Data Race:**
+- An actual memory-level error
+- When multiple threads are accessing the same memory location
+- At least one access is a write
+- No synchronization controlling the accesses
+#### **Race Condition**
+- A logical error
+- Outcome depends on execution timing/interleaving
+- Data races cause race conditions
+
+<br>
+
+### Synchronization Primitives
+
+#### **Locks (Mutexes): Mutual Exclusion**
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 <br>
 <br>
 <br>
