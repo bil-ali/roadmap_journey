@@ -3197,12 +3197,12 @@ Each thread has its own:
 - Stack (for local variables, function calls)
 - Registers (including program counter)
 - Thread-local storage (optional)
+
 But they share:
 - Code segment
 - Global/static data
 - Heap memory
 - File descriptors
-
 
 > <!-- --- -->
 > **\*\*NOTE****<br>
@@ -3248,7 +3248,7 @@ But they share:
 > ```
 >
 > "**Each thread has its own: Registers**": Threads don't "own" physical registers permanently, but each thread does have its own set of register values. These values are saved/restored when the OS switches between threads.
->
+> 
 > The physical registers just hold whichever thread is currently running.
 > <!-- --- -->
 
@@ -3256,7 +3256,7 @@ But they share:
 
 ### Race Conditions
 
-A **race condition** occurs when multiple threads/process access shared data simultaneously without proper synchronization, and the final outcome depends on the unpredictable timing of their execution. Basically, threads "racing" access/change data first, and result depends on who wins.
+A **race condition** occurs when multiple threads/processes access shared data simultaneously without proper synchronization, and the final outcome depends on the unpredictable timing of their execution. Basically, threads "racing" to access/change data first, and result depends on who wins.
 
 #### **The Fundamental Issue: Non-Atomic Operations**
 
@@ -3300,6 +3300,152 @@ FINAL: counter = 1 (should be 2!)
 ### Synchronization Primitives
 
 #### **Locks (Mutexes): Mutual Exclusion**
+A **mutex** (mutual exclusion) ensures only one thread can execute a "critical section" of code at a time.
+##### **The Assembly Implementation:**
+``` asm
+lock_mutex:
+    mov eax, 1              ; Put value 1 (locked) in register
+    xchg eax, [mutex_addr]  ; ATOMIC: Swap eax with mutex value
+    test eax, eax           ; Check old mutex value (now in eax), sets ZF=1 if eax==0
+    jnz lock_mutex          ; If it was 1 (locked), try again (spin)
+    ; If it was 0 (unlocked), we now have the lock
+
+    ; CRITICAL SECTION
+    ; ...
+
+    mov [mutex_addr], 0     ; Release lock
+```
+##### **Key Properties:**
+- Mutual Exclusion: Only one thread in critical section
+- Progress: If no thread in CS, some thread will enter
+- Bounded waiting: Threads eventually get access
+
+#### **Atomics: Hardware-Guaranteed Atomicity**
+**Atomic operations** are indivisible &mdash; the CPU gurantees they complete without interruption.<br>
+In non-atomic operations, between any two steps, another thread can interfere. Atomic Operations fix this:
+``` c
+#include <stdatomic.h>
+atomic_int counter = ATOMIC_VAR_INTIT(0);
+
+// Atomic increment (no lock needed on x86):
+atomic_fetch_add(&counter, 1);
+
+// Equivalent to single machine instruction:
+// lock add1 $1, [counter_addr]
+```
+##### **Common Atomic Operations:**
+###### **Atomic Arithmetic**
+``` c
+atomic_fetch_add(&counter, 5);  // counter += 5 (atomic)
+atomic_fetch_sub(&counter, 3);  // counter -= 3 (atomic)
+```
+###### **Compare-And-Swap (CAS)**
+``` c
+// The fundamental building block of lock-free algorithms
+int expected = current_value;
+if (atomic_compare_exchange_strong(&var, &expected, new_value)) {
+  // Success: var was 'expected', now set to 'new_value'
+}
+```
+###### **Atomic Load/Store:**
+``` c
+// Guaranteed to read/write whole value at once
+atomic_int val = ATOMIC_VAR_INT(0);
+int x = atomic_load(&val);  // Atomic read
+atomic_stor(&val, 42);      // Atomic write
+```
+
+#### **Condition Variables: Synchronized Waiting**
+A **condition variable** is a waiting room where threads can sleep until something they're waiting for happens (as opposed to **busy-waiting**).
+``` c
+// **The Bad Way (Busy-Waiting)**
+// wastes 100% CPU while waiting
+while (data_is_not_ready) {
+  // just spins CPU
+}
+// when data is ready, continue
+
+// **The Good Way (Condition Variables)**
+// sleeps efficiently, wakes up only when needed
+while (data_is_not_ready) {
+  wait_on_condition();  // goes to sleep, frees CPU for other work
+}
+// woken up when data is ready
+```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Busy-waiting** is when a thread actively checks a condition instead of going to sleep while waiting for the condition to be met.
+>
+> **Condition Variables** free the CPU and hand over the task to kernel. The kernel sets up a signalling system, and only checks on changes.
+> <!-- --- -->
+
+**Three Parts Needed:**
+1. Condition: What we're waiting for
+2. Mutex: Protects the condition check
+3. Condition Variable: The actual "waiting room"
+
+##### **Basic Pattern (90% of Use Cases)**
+###### **The Waiter Thread (Consumer):**
+``` c
+pthread_mutex_lock(&lock);  // Lock to safely check condition
+
+while(!condition) {   // ALWAYS while(), not if
+  pthread_cond_wait(&cond, &lock);  // Sleep (releases mutex automatically), and when condition met, Wakes up (re-acquires the mutex)
+}
+
+// Condition is now true - do your work
+do_something();
+
+pthread_mutex_unlock(&lock);  // Release lock
+```
+##### **The Signaler Thread (Producer):**
+``` c
+pthread_mutex_lock(&lock);    // Lock to safely change condition
+
+make_condition_true();        // Change the shared state
+pthread_cond_signal(&cond);   // Wake up ONE waiting thread
+
+pthread_mutex_unlock(&lock);  // Release lock
+```
+
+#### **Deadlock: The Synchronization Trap**
+**Deadlock** occurs when a set of threads are blocked forever, each holding resources needed by others. For a deadlock to occur, four conditions (**Coffman conditions**) must be met simultaneously:
+1. **Mutual Exclusion**: Resources are non-sharable
+2. **Hold and Wait**: Threads hold resources while waiting for otherrs
+3. **No Preemption**: Resources cannot be forcibly taken
+4. **Circular Wait**: Circular chain of threads waiting for resources
+##### **Deadlock Example**
+``` c
+// Thread 1                 // Thread 2
+pthread_mutex_lock(&A);     pthread_mutex_lock(&B);
+pthread_mutex_lock(&B);     pthread_mutex_lock(&A);
+// Critical section         // Critical section
+pthread_mutex_unlock(&B);   pthread_mutex_unlock(&A);
+pthread_mutex_unlock(&A);   pthread_mutex_unlock(&B);
+
+// Possible execution:
+// T1 locks A, T2 lcoks B, T1 waits for B, T2 waits for A → DEADLOCK
+```
+##### **Deadlock Handling Strategies**
+1. **Prevention**: Design system to violate one Coffmn condition
+   - No hold & wait (Acquire all resources at once)
+   - Allow preemption (Force release of resources)
+   - Resource ordering (Always acquire in same order)
+2. **Avoidance**: Banker's algorithm (predict if allocation leads to deadlock)
+3. **Detection & Recovery**: Periodically check for deadlocks
+
+
+
+
+
+
+
+
+
+
+
+
 
 <br>
 <br>
