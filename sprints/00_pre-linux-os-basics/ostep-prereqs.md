@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## (1/9/25 - 11/12/25)
+## (1/9/25 - 18/12/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -3435,10 +3435,100 @@ pthread_mutex_unlock(&A);   pthread_mutex_unlock(&B);
 2. **Avoidance**: Banker's algorithm (predict if allocation leads to deadlock)
 3. **Detection & Recovery**: Periodically check for deadlocks
 
+#### **Memory Consistency & Visibility**
 
+##### **Memory Model Problem**
+Writing to memory ≠ instant visibility to other threads. Without synchronization, there's no guarantee about when (or if) writes from one thread become visible to another.
 
+Two threads communicating through shared variables. You expect:
+``` txt
+Thread 1 sets x=1, then flag=1
+Thread 2 waits for flag=1, then prints x (should be 1)
+```
+But sometimes, Thread 2 might print 0!<br>
+**Why This Happens:**
+###### **1. Compiler Reordering**
+The compiler might swap the two statements in Thread 1:
+``` c
+// Original:
+x = 1;
+flag = 1;
 
+// Compiler might reorder to:
+flag = 1;
+x = 1;
+```
 
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> "**The compiler might swap the two statements**" thinking they're independent operations, and reordering might be faster.
+> <!-- --- -->
+
+###### **2. CPU Out-of-Order Execution**
+Even with correct compiled code, the CPU might execute instructions out of order:
+``` txt
+Thread 1's CPU:
+1. Start storing flag=1 (takes time)
+2. While waiting, store xj=1 (completes faster)
+3. Result: flag=1 becomes visible BEFORE x=1 to other CPUs
+```
+###### **3. Cache Coherence Delay**
+Writes go to cache first, then to memory:
+``` txt
+CPU 1 (Thread 1):
+- Write x=1 to its cache
+- Write flag=1 to its cache
+
+CPU 2 (Thread 2):
+- Sees flag=1 in cache (propagated quickly)
+- Doesn't see x=1 yet (still in CPU 1's cache)
+- Prints old value of x=0
+```
+##### **The Solution: Memory Barriers**
+A **memory barrier** is a hardware or software instruction that forces all memory operations before it to complete and become visible to all other processors BEFORE any memory operations after it can start.
+``` c
+// Solution: Insert memory barriers
+x = 1;
+memory_barrier();   // Force everything before this to complete
+flag = 1;
+
+// Thread 2
+while (flag == 0) {}
+memory_barrier();   // Force refresh of all memory
+print(x);
+```
+
+#### **Cache Coherence & MESI Protocol**
+In a multi-core system, each CPU has its own cache. Consequently, multiple copies of the same data can exist in different caches. If one CPU modifies its copy, the others become stale. **Cache Coherence** is the property that ensures all CPUs see a consistent view of shared memory.
+
+**MESI** is the most common snooping-based cache coherence protocol. Each cache line is marked with one of four states, represented by two bits in the cache tag.
+1. **Modified (M) &mdash; Dirty & Unique**
+   - The cache line is modified *(different from main memory)*
+   - Only this cache holds this line
+   - Must write back to memory when evicted
+   - If another CPU requests it, this cache must supply the data and chage to **Shared**
+2. **Exclusive (E) &mdash; "Clean & Unique"**
+   - The cache line is unmodified
+   - Only this cache holds this line
+   - Can write to it silently *(Transitions to Modified without notifying others)*
+   - A "fast path" for writes
+3. **Shared (S) &mdash; "Clean & Possibly Shared"**
+   - The cache line is unmodified
+   - Other caches may also hold this line
+   - Read operations are fine, but a write requires **ivalidating** all other copies
+4. **Invalid (I) &mdash; "Stale / Empty"**
+   - The cache line is not valid (cannot be used)
+   - Must be fetched from memory or another cache on next access
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> "**Snooping-based**" cache coherence is a broadcast-based approach where all caches monitor ("snoop on") a shared bus to track other caches' memory transactions and maintain consistency without a central directory.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+
+##### **How MESI Works: State Transitions**
+CPUs communicate via a shared bus (for snooping). Key operations:
+1. **Read Hit**: 
 
 
 
