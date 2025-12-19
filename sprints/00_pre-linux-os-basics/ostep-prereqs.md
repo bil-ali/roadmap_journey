@@ -3381,9 +3381,9 @@ while (data_is_not_ready) {
 > <!-- --- -->
 
 **Three Parts Needed:**
-1. Condition: What we're waiting for
-2. Mutex: Protects the condition check
-3. Condition Variable: The actual "waiting room"
+1. **Condition**: What we're waiting for
+2. **Mutex**: Protects the condition check
+3. **Condition Variable**: The actual "waiting room"
 
 ##### **Basic Pattern (90% of Use Cases)**
 ###### **The Waiter Thread (Consumer):**
@@ -3441,9 +3441,13 @@ pthread_mutex_unlock(&A);   pthread_mutex_unlock(&B);
 Writing to memory ≠ instant visibility to other threads. Without synchronization, there's no guarantee about when (or if) writes from one thread become visible to another.
 
 Two threads communicating through shared variables. You expect:
-``` txt
-Thread 1 sets x=1, then flag=1
-Thread 2 waits for flag=1, then prints x (should be 1)
+``` c
+// Thread 1         // Thread 2
+x = 1;              while (flag == 0) {}
+flag = 1;           print(x);
+
+// Thread 1 sets x=1, then flag=1
+// Thread 2 waits for flag=1, then prints x (should be 1)
 ```
 But sometimes, Thread 2 might print 0!<br>
 **Why This Happens:**
@@ -3461,29 +3465,32 @@ x = 1;
 
 > <!-- --- -->
 > **\*\*NOTE****<br>
-> "**The compiler might swap the two statements**" thinking they're independent operations, and reordering might be faster.
+> "**The compiler might swap the two statements**" as part of optimization, thinking they're independent operations and reordering might be faster.
 > <!-- --- -->
 
 ###### **2. CPU Out-of-Order Execution**
 Even with correct compiled code, the CPU might execute instructions out of order:
 ``` txt
 Thread 1's CPU:
-1. Start storing flag=1 (takes time)
-2. While waiting, store xj=1 (completes faster)
+1. Start storing x=1 (takes time)
+2. While waiting, store flag=1 (completes faster)
 3. Result: flag=1 becomes visible BEFORE x=1 to other CPUs
 ```
 ###### **3. Cache Coherence Delay**
-Writes go to cache first, then to memory:
+Writes go to cache first, then to memory. **Cache Coherence Delay** is the time gap between when one CPU core writes data to its local cache and when that write becomes visible to other CPU cores:
 ``` txt
-CPU 1 (Thread 1):
-- Write x=1 to its cache
-- Write flag=1 to its cache
-
-CPU 2 (Thread 2):
-- Sees flag=1 in cache (propagated quickly)
-- Doesn't see x=1 yet (still in CPU 1's cache)
-- Prints old value of x=0
+CPU 1 (Thread 1):                 CPU 2 (Thread 2)"
+-------------------------         -------------------------
+1. Store x=1 to L1 cache          [x=0, flag=0 in its cache]
+2. Store flag=1 to L1 cache
+3. Cache coherency starts...      [Checking flag in loop]
+4. Flag's cache line propagates   [Sees flag=1! Breaks loop]
+   to CPU 2's cache quickly
+5. x's cache line takes longer    [Reads x from its cache - still 0!]
+6. x=1 finally reaches CPU 2      [Too late! Already printed 0]
 ```
+Even when writes happen in order, different cache lines can propagate to other CPUs at different speeds, making later writes visible before earlier ones.
+
 ##### **The Solution: Memory Barriers**
 A **memory barrier** is a hardware or software instruction that forces all memory operations before it to complete and become visible to all other processors BEFORE any memory operations after it can start.
 ``` c
@@ -3506,16 +3513,16 @@ In a multi-core system, each CPU has its own cache. Consequently, multiple copie
    - The cache line is modified *(different from main memory)*
    - Only this cache holds this line
    - Must write back to memory when evicted
-   - If another CPU requests it, this cache must supply the data and chage to **Shared**
+   - If another CPU requests it, this cache must supply the data to the requester and write it back to memory, then both caches transition to **Shared**
 2. **Exclusive (E) &mdash; "Clean & Unique"**
    - The cache line is unmodified
    - Only this cache holds this line
-   - Can write to it silently *(Transitions to Modified without notifying others)*
+   - Can write to it silently *(Transitions to **Modified** without notifying others)*
    - A "fast path" for writes
 3. **Shared (S) &mdash; "Clean & Possibly Shared"**
    - The cache line is unmodified
    - Other caches may also hold this line
-   - Read operations are fine, but a write requires **ivalidating** all other copies
+   - Read operations are fine, but a write requires **invalidating** all other copies
 4. **Invalid (I) &mdash; "Stale / Empty"**
    - The cache line is not valid (cannot be used)
    - Must be fetched from memory or another cache on next access
@@ -3528,11 +3535,51 @@ In a multi-core system, each CPU has its own cache. Consequently, multiple copie
 
 ##### **How MESI Works: State Transitions**
 CPUs communicate via a shared bus (for snooping). Key operations:
-1. **Read Hit**: 
+1. **Read Hit**: Use local cached data (if state is `M`, `E`, or `S`).
+2. **Read Miss**: Place a **Bus Read (BR)** request on the bus.
+   - If another cache has it in `M`: It writes back to memory, supplies data, both become `S`.
+   - If another cache has it in `E` or `S`: They supply data, all becomes `S`.
+   - If no cache has it: Fetch from memory, become `E` (if alone) or `S` (if others also request).
+3. **Write Hit**:
+   - If state is `M`: Just write locally (already exclusive).
+   - If state is `E`: Change to `M` (no bus transaction needed).
+   - If state is `S`: Issue **Bus Read eXclusive (BRX)** or **Invalidate** to invalidate all other copies &rarr; change to `M`.
+4. **Write Miss**:
+   - Issue **Bus Read eXclusive (BRX)** to get the line and invalidate athers &rarr; state becomes `M`.
 
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Bus Read eXclusive (BRX)** is a bus transaction that does two things at once:
+> 1. Reads a cache line from memory or another cache
+> 2. Invalidates all other cached copies of that line
+> <!-- --- -->
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Cache is almost ALWAYS involved when the CPU reads/writes data. The CPU cannot read from RAM directly; it must go through cache first.
+> <!-- --- -->
 
+##### **Connection to Locks & Atomic Operations**
+Modern CPUs implement locks (like `mutex`, `spinlock`) and atomic operations like (`compare-and-swap`) using cache coherence:
+1. **Atomic Read-Modify-Write**
+   - 
+   - 
+   - 
+2. **Spinlocks**
+   - 
+   - 
+   - 
+   - 
 
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Spinlocks**
+> <!-- --- -->
 
+3. **Memory Barriers**
+   - 
+   - 
+
+#### **Common Concurrency Bugs**
 
 
 
