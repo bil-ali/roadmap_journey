@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## (1/9/25 - 18/12/25)
+## (1/9/25 - 20/12/25)
 **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
@@ -3517,8 +3517,7 @@ In a multi-core system, each CPU has its own cache. Consequently, multiple copie
 2. **Exclusive (E) &mdash; "Clean & Unique"**
    - The cache line is unmodified
    - Only this cache holds this line
-   - Can write to it silently *(Transitions to **Modified** without notifying others)*
-   - A "fast path" for writes
+   - Can write to it silently (Transitions to **Modified** without notifying others)
 3. **Shared (S) &mdash; "Clean & Possibly Shared"**
    - The cache line is unmodified
    - Other caches may also hold this line
@@ -3531,10 +3530,9 @@ In a multi-core system, each CPU has its own cache. Consequently, multiple copie
 > **\*\*NOTE****<br>
 > "**Snooping-based**" cache coherence is a broadcast-based approach where all caches monitor ("snoop on") a shared bus to track other caches' memory transactions and maintain consistency without a central directory.
 > <!-- --- -->
-> **\*\*NOTE****<br>
 
 ##### **How MESI Works: State Transitions**
-CPUs communicate via a shared bus (for snooping). Key operations:
+CPUs communicate via a shared bus. Key operations:
 1. **Read Hit**: Use local cached data (if state is `M`, `E`, or `S`).
 2. **Read Miss**: Place a **Bus Read (BR)** request on the bus.
    - If another cache has it in `M`: It writes back to memory, supplies data, both become `S`.
@@ -3542,72 +3540,78 @@ CPUs communicate via a shared bus (for snooping). Key operations:
    - If no cache has it: Fetch from memory, become `E` (if alone) or `S` (if others also request).
 3. **Write Hit**:
    - If state is `M`: Just write locally (already exclusive).
-   - If state is `E`: Change to `M` (no bus transaction needed).
-   - If state is `S`: Issue **Bus Read eXclusive (BRX)** or **Invalidate** to invalidate all other copies &rarr; change to `M`.
+   - If state is `E`: Write locally and change to `M` (no bus transaction needed).
+   - If state is `S`: **Invalidate** all other copies &rarr; Write locally and change to `M`.
 4. **Write Miss**:
    - Issue **Bus Read eXclusive (BRX)** to get the line and invalidate athers &rarr; state becomes `M`.
 
 > <!-- --- -->
 > **\*\*NOTE****<br>
+> **Bus Read (BR)** is a bus transaction that requests a read-only copy of a cache line.
+> 
 > **Bus Read eXclusive (BRX)** is a bus transaction that does two things at once:
-> 1. Reads a cache line from memory or another cache
-> 2. Invalidates all other cached copies of that line
+> 1. Reads a cache line from memory or another cache.
+> 2. Invalidates all other cached copies of that line.
 > <!-- --- -->
+
 > <!-- --- -->
 > **\*\*NOTE****<br>
 > Cache is almost ALWAYS involved when the CPU reads/writes data. The CPU cannot read from RAM directly; it must go through cache first.
 > <!-- --- -->
 
 ##### **Connection to Locks & Atomic Operations**
-Modern CPUs implement locks (like `mutex`, `spinlock`) and atomic operations like (`compare-and-swap`) using cache coherence:
-1. **Atomic Read-Modify-Write**
-   - 
-   - 
-   - 
-2. **Spinlocks**
-   - 
-   - 
-   - 
-   - 
-
+Modern CPUs implement locks (like `mutex`, `spinlock`) and atomic operations like (`compare-and-swap`) using cache coherence. MESI's exclusive ownership mechanism is the hardware foundation for locks. CPUs compete for cache line ownership; winner gets to perform atomic operations.
+1. **Atomic Operations (e.g. `LOCK INC [mem]`)**
+   - CPU wants to atomically modify memory (read + write as one operation)
+   - First, CPU gets exclusive control of that cache line (`E` or `M` state) via BRX
+   - While holding exclusive access, it performs both read and write
+   - No other CPU can touch that memory location during the operation
+   - Write completes &rarr; cache line becomes M
 > <!-- --- -->
 > **\*\*NOTE****<br>
-> **Spinlocks**
+> `LOCK INC [mem]`: "atomically increment the value at memory address `mem`"
 > <!-- --- -->
-
+2. **Spinlocks**
+   - A spinlock is just a memory location (**e.g.**, `lock_var=0` means unlocked, `=1` means locked)
+   - Acquiring lock:
+     1. CPU tries to atomically set `lock_var` from 0&rarr;1 using atomic operation (gets exclusive access)
+     2. If successful: CPU now has the lock
+     3. If fails (already 1): CPU repeatedly reads `lock_var` waiting for it to become 0
+   - Releasing lock:
+     1. Lock holder writes 0 to `lock_var`
+     2. This write invalidates all other CPUs' cached copies (`S`&rarr;`I`)
+     3. Waiting CPUs see the change on their next read attempt
+   - Waiting CPUs spin on their cached copy (fast), not by constantly accessing memory (slow). When the lock is released, MESI forces them to fetch the fresh value.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Spinlock** = A lock where waiting threads constantly check ("spin") instead of sleeping.
+> <!-- --- -->
 3. **Memory Barriers**
-   - 
-   - 
+   - CPU can reorder memory operations for performance, and barriers prevent specific reorderings
+   - Often work by causing cache flushes or waiting for invalidations to complete
 
 #### **Common Concurrency Bugs**
 
+##### **Beyond Deadlock**
+1. **Livelock:** Threads keep changing state but make no progress.<br>
+    ``` txt
+    Time  | Thread 1 State      | Thread 2 State
+    ------|---------------------|---------------------
+    0ms   | Locks A             | Locks B
+    1ms   | Tries B (fails)     | Tries A (fails)
+    2ms   | Releases A          | Releases B
+    3ms   | Waits 10ms          | Waits 10ms
+    13ms  | Locks A             | Locks B
+    14ms  | Tries B (fails)     | Tries A (fails)
+    ...   | Same patterns repeats FOREVER
+    ```
+2. **Starvation:** Thread never gets CPU resources.
+3. **Priority Inversion:** Low-priority thread holds lock needed by high-priority thread.
+4. **ABA Problem:** In lock-free programming, when a value changes A&rarr;B&rarr;A between a read and a CAS (Compare-And-Swap) operation. The CAS incorrectly succeeds because it finds the expected value A, but the underlying state thas changed, potentially causing data corruption.
 
 
-
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 <br>
 <br>
 
-NEVER KILL YOURSELF
+
+*fin*
