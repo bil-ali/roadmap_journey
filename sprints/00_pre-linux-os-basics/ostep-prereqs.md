@@ -1,14 +1,15 @@
 # [Pre-Linux OS Basics Sprint / OSTEP Prereq Knowledge]
-## (1/9/25 - 20/12/25)
-**Task:**
+## (1/9/25 - 26/12/25)
+## **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). However, the book starts with the following warning:
 
 > If you are taking an undergraduate operating systems course, you should already have some idea of what a computer program does when it runs. If not, this book (and the corresponding course) is going to be difficult — so you should probably stop reading this book, or run to the nearest bookstore and quickly consume the necessary background material before continuing (both Patt & Patel [[PP03]](https://icourse.club/uploads/files/96a2b94d4be48285f2605d843a1e6db37da9a944.pdf "Introduction to Computing Systems: From Bits and Gates to C and Beyond") and Bryant & O’Hallaron
 [BOH10](https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/books/CSAPP_2016.pdf "Computer Systems: A Programmer’s Perspective") are pretty great books).
 
-Since I don't have the time to read these books, this file contains all prereq topics I need knowledge of before OSTEP (with notes).
+Since I don't have the time to read these books, this file contains all prerequisite topics I need knowledge of before OSTEP (with notes).
 
+## **Proof:**
 ## 1) Data and representation
 ### Integers (two's complement)
 Two's complement (as opposed to Sign-Magnitude) is a way to reprsent both positive and negative integers in binary so that the computer's arithmetic logic unit (ALU) can work with them.
@@ -638,9 +639,9 @@ This corrupts the allocator's internal metadata.
 > 
 > When you call `malloc`, it searches the **free list** for a block that's big enough.
 > <br>
-> When you call `free`, it takes the block and adds it to the **free list**.
+> When you call `free()`, it takes the block and adds it to the **free list**.
 > 
-> Right before every single piece of memory that `malloc` gives you, it secretly stores a small header&mdash;a piece of metadata that describes the block that follows.
+> Right before every single piece of memory that `malloc()` gives you, it secretly stores a small header&mdash;a piece of metadata that describes the block that follows.
 > ```
 > +-----------------------------------------------------------------------+
 > |  |              |  |              |  |                               | |
@@ -1126,7 +1127,7 @@ When a program opens something (like a file, a network connection, etc.), the OS
 
 #### **Redirection**
 
-**Redirection** is the process where the shell creates a new child process and modifies its file descriptor table before executing the target program.
+**Redirection** is the shell feature that, before executing a program, changes where standard streams (stdin, stdout, stderr) read from or write to, allowing programs to work with files/pipes instead of the terminal.
 
 ##### **Example:**
 ``` bash
@@ -1495,8 +1496,8 @@ Typical sources:
 > **Default actions of signals**
 > - **Terminate** the process (e.g., `SIGTERM`)
 > - **Terminate and dump core** (e.g., `SIGSEGV`)
-> - **Ignore** (e.g., `SIGCHILD`)
-> - **Stop** or **Continue** a proces (`SIGSTROP`, `SIGCONT`)
+> - **Ignore** (e.g., `SIGCHLD`)
+> - **Stop** or **Continue** a proces (`SIGSTOP`, `SIGCONT`)
 > <!-- --- -->
 
 
@@ -3610,8 +3611,8 @@ Modern CPUs implement locks (like `mutex`, `spinlock`) and atomic operations lik
 4. **ABA Problem:** In lock-free programming, when a value changes A&rarr;B&rarr;A between a read and a CAS (Compare-And-Swap) operation. The CAS incorrectly succeeds because it finds the expected value A, but the underlying state thas changed, potentially causing data corruption.
 
 
-<br>
+<hr>
 <br>
 
 
-*fin*
+## **Takeaways:**
