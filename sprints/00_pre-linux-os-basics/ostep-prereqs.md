@@ -2206,7 +2206,7 @@ Process A (PCID=1): VPN 4 → PFN 0x1000
 Process B (PCID=2): VPN 4 → PFN 0x2000
 
 Both translations can coexist in TLB!
-CPU uses current ASID to select correct translation.
+CPU uses current PCID to select correct translation.
 ```
 
 ##### **2. Multi-Core TLBs**
@@ -2223,7 +2223,7 @@ Core 2 TLB: [empty for Process P] ← COLD START!
 The solution: **CPU Affinity** (Telling the OS: "Keep this process on specific CPU cores").
 
 ##### **3. TLB Shootdowns**
-**Problem:** when CPU modifies a page table, it must invalidate that translation in all other CPU cores' TLBS.
+**Problem:** when CPU modifies a page table, it must invalidate that translation in all other CPU cores' TLBs.
 
 TLB shootdowns are expensive and scale poorly with many cores.
 
@@ -2359,20 +2359,22 @@ Bits 11-0:  Offset     (Level 5) — 12 bits
 
 ##### **The Translation Walk:**
 ``` txt
-CR3 Register → PML4 Table (512 entries)
+CR3 Register
     ↓ (Index from bits 47-39)
-PDPT Table (512 entries)
+PML4 Table (512 entries)
     ↓ (Index from bits 38-30)
-PD Table (512 entries)
+PDPT Table (512 entries)
     ↓ (Index from bits 29-21)
-PT Table (512 entries)
+PD Table (512 entries)
     ↓ (Index from bits 20-12)
+PT Table (512 entries)
+    ↓ (Index from bits 11-0)
 Physical Frame
 ```
 
 > <!-- --- -->
 > **\*\*NOTE****<br>
-> **CR3** register holds the physical base address of the current process's PML4 table
+> **CR3** register holds the physical base address of the current process's PML4 table (the starting point of the PML4, not the exact index that we need right now)
 > <!-- --- -->
 
 ##### **Example**
@@ -2507,16 +2509,18 @@ Bits 11-0:  Offset     (12 bits)
 
 ##### **New Translation Walk:**
 ``` txt
-CR3 Register → PML5 Table (512 entries)
+CR3 Register
     ↓ (Index from bits 56-48)
-PML4 Table (512 entries)
+PML5 Table (512 entries)
     ↓ (Index from bits 47-39)
-PDPT Table (512 entries)
+PML4 Table (512 entries)
     ↓ (Index from bits 38-30)
-PD Table (512 entries)
+PDPT Table (512 entries)
     ↓ (Index from bits 29-21)
-PT Table (512 entries)
+PD Table (512 entries)
     ↓ (Index from bits 20-12)
+PT Table (512 entries)
+    ↓ (Index from bits 11-0)
 Physical Frame
 ```
 
@@ -2543,7 +2547,7 @@ Evict the page that hasn't been accessed for the longest time.
 
 ##### **CLOCK Algorithm (Second Chance)**
 A practical approximation of LRU that's efficient to implement.<br>
-Pages that were recently used (reference bit=1) get a second chance, while unused pages (reference bit=0) get evicted.
+Pages that were recently used (reference bit=1) get a second chance, while unused pages (reference bit=0) get evicted (the first one it finds, that is&mdash;not all of them).
 ###### **How it works:**
 Each page has a "reference bit" (0 or 1)<br>
 Maintain a circular list of pages (the "clock hand")
@@ -2575,7 +2579,7 @@ Evict the page that was accessed most recently.
 - Track the most recent access time for each page
 - When memory is needed, remove the page with the latest access timestamp
 - **Rationale:** In some patterns, recently used pages are less likely to be needed again soon.
-- **Use Case:** Good for sequential access patterns, where once a page is used, it won't be needed again.
+- **Use Case:** Sequential access patterns, where once a page is used, it won't be needed again.
 
 ##### **Working Set**
 Track the set of pages actively being used by a process during a time window.
@@ -2648,7 +2652,7 @@ Track the set of pages actively being used by a process during a time window.
    Control how aggresively to swap (1-100)
    - Low: Prefer to keep pages in RAM
    - High: More willing to swap out pages
-5. Out-Of-Memory (OOM) Killer<br>
+5. **Out-Of-Memory (OOM) Killer**<br>
    When thrashing becomes unbearable, the kernel selectively kills processes to free memory.
    - Scores processes based on memory usage, importance, runtime
    - Kills highest-scoring victim process
@@ -2707,11 +2711,11 @@ Result: Constant TLB misses despite plenty of RAM
 #### **The Solution: Huge Pages**
 **Huge Pages** are larger page sizes that dramatically increase TLB coverage:
 ``` txt
-Page Size      | TLB Coverage (64-entry TLB) |
----------------|-----------------------------|
-4KB (standard) | 256KB                       |
-2MB (huge)     | 128MB                       |
-1GB (huge)     | 64GB                        |
+Page Size      | TLB Coverage (64-entry TLB)
+---------------|-----------------------------
+4KB (standard) | 256KB
+2MB (huge)     | 128MB
+1GB (huge)     | 64GB
 ```
 ##### **How Huge Pages Reduce Overhead**
 Page Table Walk Comparison:
@@ -2990,7 +2994,7 @@ When you call read() again for next 4KB:
 > **\*\*NOTE****<br>
 > **Page Cache** is a kernel-level data structure that tracks which pages are caching file or block device data in RAM to avoid expensive disk I/O on subsequent accesses. It is basically a subset of the `mem_map` array, but in xarray *(previously radix tree)* form.
 >
-> The kernel "**mark(s) read-ahead pages as 'cached but not yet accessed'**" by: 1. Adding them to Page Cache; 2. Setting `struct page` flags (`PG_uptodate=1` (valid data); `PG_referenced=0` (not accessed yet)); 3. Placing these pages on the inactive LRU list.
+> The kernel "**mark(s) read-ahead pages as 'cached but not yet accessed'**" by: 1. Adding them to Page Cache; 2. Setting `struct page` flags (`PG_uptodate=1` (valid data); `PG_referenced=0` (not accessed yet)); 3. Placing these pages on the `inactive LRU list`.
 > <!-- --- -->
 
 ###### Configuring read-ahead
@@ -3126,7 +3130,7 @@ Modern CPUs combine prefetching with speculative execution:
 > 4. Original value (P5 = 10) preserved in case we need to roll back
 > ```
 >
-> ##### **3. Load Store Queue (LSQ) &mdashl; Memory Operation Buffer**
+> ##### **3. Load Store Queue (LSQ) &mdash; Memory Operation Buffer**
 > The **LSQ's** job is to manage speculative memory operations, ensuring that loads and stores appear to happen in program order, even if they are executed out-of-order, and to detect memory hazards.
 > ``` txt
 > LSQ Entry:
@@ -3147,7 +3151,7 @@ Modern CPUs combine prefetching with speculative execution:
 
 ### W^X / NX bit
 
-The "Immutable Code" Principle. **W^X** (Write XOR Execute) means a memory page can be either Writable or Executable, but never both simultaneously. The **NX** but (No-Execute) is the hardware implementation that enforces this.
+The "Immutable Code" Principle. **W^X (Write XOR Execute)** means a memory page can be either Writable or Executable, but never both simultaneously. The **NX** bit (No-Execute) is the hardware implementation that enforces this.
 
 #### **The Attack This Prevents: Code Injection**
 Consider a classic buffer overflow:
@@ -3616,3 +3620,6 @@ Modern CPUs implement locks (like `mutex`, `spinlock`) and atomic operations lik
 
 
 ## **Takeaways:**
+Through this exercise, I familiarized myself with various CS fundamentals such as data representation (binary representation, hexadecimal, IEE-754 floating-point representation) as well as some hardware knowledge (ALU, MMU, CPU registers, temporary buffers, caches).
+
+I also gained valuable intuition into how computers work and how a process actually runs by diving deep into OS internals (kernel, virtual memory, paging, concurrency, etc.). I did this purely from a Unix-like system's perspective so as to partly prepare myself for the Linux sprint, introducing myself to fundamental Linux concepts like "Everything is a file."
