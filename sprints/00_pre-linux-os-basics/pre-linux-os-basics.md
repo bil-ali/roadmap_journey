@@ -14,7 +14,7 @@ The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems
 ### Ch. 2 Intro to Operating Systems<br>(27/12/25&ndash;29/12/25)
 
 OSTEP's three major themes:
-- **Virualization**
+- **Virtualization**
 - **Concurrency**
 - **Persistence**
 
@@ -53,12 +53,12 @@ The abstraction provided by the OS of a running program is called a **Process**.
 
 **Space Sharing:** Where a resource is divided (in space) among those who wish to use it. For example, with disk space.
 
-Virtualization of the CPU is implemented using both some low-level machinery (**mechanisms**) and some high-level intelligence (**policies**),
+Virtualization of the CPU is implemented using both some low-level machinery (**mechanisms**) and some high-level intelligence (**policies**).
 
 **Mechanisms:** The low-level methods or protocols that implement a needed piece of functionality (system calls, context switches, memory allocation).
 > <!-- --- -->
 > **\*\*NOTE**** <br>
-**Context Switch:** Gives the OS ability to stop running one program and start running another on a give CPU.
+**Context Switch:** Gives the OS ability to stop running one program and start running another on a given CPU.
 > <!-- --- -->
 
 **Policies:** Algorithms for making some kind of decision within the OS (**e.g.**, scheduling policy).
@@ -113,12 +113,43 @@ Being moved from running to ready means the process has been **descheduled**.<br
 
 **Zombie state:** Process has exited, but not yet been cleaned up.
 
-> A **Process List** contains information about all processes i the system. Each entry is found in what is sometimes called a **process control block (PCB)**, which is really just a structure that contains information about a specific process.
+> A **Process List** contains information about all processes in the system. Each entry is found in what is sometimes called a **process control block (PCB)**, which is really just a structure that contains information about a specific process.
 
 
 <hr>
 <br>
 
 
-### Ch. 5 Interlude: Process API<br>(31/12/25&ndash;)
+### Ch. 5 Interlude: Process API<br>(09/02/26&ndash;)
+
+The UNIX process-creation API: `fork()`, `exec()`, `wait()`.
+
+#### **The `fork()` System Call**
+The **`fork()`** system call is used to create a new process. The **child** process is a nearly identical copy of the **parent**.
+<br>
+`fork()` duplicates the process at that point, and both copies (**parent** and **child**) keep running the same code afterward.
+<br>
+The CPU **scheduler** determines which process runs first.
+
+#### **The `wait()` System Call**
+The **`wait()`** system call delays the calling **parent process's** execution until (one of) its child process(es) finishes executing.
+
+
+#### **The `exec()` System Call**
+The **`exec()`** family of system calls replace the current process image with a new, different program. (PID is preserved)
+<br>
+This allows child to break from its similarity to its parent and execute new programs.
+
+
+The **`kill()`** system call is used to send **signals** to a process, including directives to pause, die, etc.
+
+A **superuser** (administrator) can controll all processes.
+
+
+<hr>
+<br>
+
+
+### Ch. 6 Mechanism: Limited Direct Execution<br>(10/02/26&ndash;)
+
 ## **Takeaway:**
