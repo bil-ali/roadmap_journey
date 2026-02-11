@@ -150,6 +150,25 @@ A **superuser** (administrator) can controll all processes.
 <br>
 
 
-### Ch. 6 Mechanism: Limited Direct Execution<br>(10/02/26&ndash;)
+### Ch. 6 Mechanism: Limited Direct Execution<br>(11/02/26&ndash;)
+
+The CPU is  virtualized via **time sharing**.<br>
+The OS must virtualize the CPU in an **efficient** manner while retaining **control** over the system.
+
+This is done through **Limited Direct Execution:** program is run directly on CPU while control is maintained through *restricted privilege modes* and *timer interrupts*.
+
+**User Mode:** Execution mode where process can't perform restricted operations (e.g., issuing I/O requests).
+
+**Kernel Mode:** Mode that OS kernel runs in. Code can do whatever it likes, including restricted operations.
+
+How OS allows user processes to perform privileged operations: **system call**.
+
+To execute a system call, a program must execute a special **Trap** instruction (***Trap:** special instruction to jump into kernel and execute the privileged system call operation*).
+
+When finished, OS calls a special **return-from-trap** instruction (***Return-from-trap:** returns into calling user program and reduces privilege back to user mode*).
+
+How does trap know what code to run inside the OS? It looks up relevant **trap handler** in the **trap table**, set up at boot time.
+
+**System-call number:**
 
 ## **Takeaway:**
