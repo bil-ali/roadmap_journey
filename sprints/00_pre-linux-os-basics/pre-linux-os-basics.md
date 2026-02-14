@@ -150,12 +150,12 @@ A **superuser** (administrator) can controll all processes.
 <br>
 
 
-### Ch. 6 Mechanism: Limited Direct Execution<br>(11/02/26&ndash;)
+### Ch. 6 Mechanism: Limited Direct Execution<br>(11/02/26&ndash;14/02/26)
 
 The CPU is  virtualized via **time sharing**.<br>
 The OS must virtualize the CPU in an **efficient** manner while retaining **control** over the system.
 
-This is done through **Limited Direct Execution:** program is run directly on CPU while control is maintained through *restricted privilege modes* and *timer interrupts*.
+This is done through **Limited Direct Execution (LDE):** program is run directly on CPU while control is maintained through *restricted privilege modes* and *timer interrupts*.
 
 **User Mode:** Execution mode where process can't perform restricted operations (e.g., issuing I/O requests).
 
@@ -169,6 +169,37 @@ When finished, OS calls a special **return-from-trap** instruction (***Return-fr
 
 How does trap know what code to run inside the OS? It looks up relevant **trap handler** in the **trap table**, set up at boot time.
 
-**System-call number:**
+Each system call has a an assigned **system-call number**.<br>
+The trap handler checks registers for this number, and if valid, executes the system call code.
+
+**Timer Interrupt:** An interrupt that is raised every few miliseconds. The currently running process is halted, and an **interrupt handler** in the OS runs.<br>
+This ensures OS can take control of the CPU from processes, whether they cooperate or not.
+
+> <!-- --- -->
+> Every time **timer interrupt** occurs, the user registers of the running process are implicitly saved by the hardware.
+>
+> This is different from the kernel registers saved by OS upon **context switch**.
+> <!-- --- -->
+
+Every time OS regains control, the **Scheduler** determines whether to execute a **Context Switch**.
+
+**Context Switch:** OS saves a few register values for the currently-executing process (*onto kernel stack*) and restores a few for the soon-to-be-executing process (*from kernel stack*). Now, after return-from-trap, instead of returning to the running process, system switches to executing another process.
+
+
+<hr>
+<br>
+
+
+### Ch. 39 Interlude: Files and Directories<br>(15/02/26&ndash;)
+
+Meow
+
+
+<hr>
+<br>
+
+
+### Ch. 45 Data Integrity and Protection<br>(&ndash;)
+
 
 ## **Takeaway:**
