@@ -192,8 +192,23 @@ Every time OS regains control, the **Scheduler** determines whether to execute a
 
 ### Ch. 39 Interlude: Files and Directories<br>(15/02/26&ndash;)
 
-Meow
+**Process** is a virtualization of the CPU.<br>
+**Address space** is a virtualization of memory.<br>
+**Files** and **Directories** virtualize persistent storage.
 
+Each file has some kind of low-level name: **inode number (i-number)**. (This is separate from file descriptors)
+
+Directories also have a low-level name. Rather than just an inode number, this is a data structure that maps user-readable names to low-level names.<br>
+For example, the directory that a file with low-level name "10" and user-readable name "foo" resides in would have an entry ("foo", "10").
+
+Each entry in a directory refers to either files or other directories, making a **directory tree**/**directory hierarchy**.
+
+The directory hierarchy starts at a **root directory** and uses a **separator** (/) to name subsequent **sub-directories**.
+
+**File Descriptor:** An integer, private per process, used in UNIX to access files.
+
+**Open File Table:** System-level data structure, tracking which files, the current offset, whether the file is readable or writable, and other metadeta.<br>
+Each process maintains an FD array, each entry of which is a pointer to an entry in the system-wide open file table.
 
 <hr>
 <br>
