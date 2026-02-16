@@ -205,10 +205,49 @@ Each entry in a directory refers to either files or other directories, making a 
 
 The directory hierarchy starts at a **root directory** and uses a **separator** (/) to name subsequent **sub-directories**.
 
+
 **File Descriptor:** An integer, private per process, used in UNIX to access files.
 
 **Open File Table:** System-level data structure, tracking which files, the current offset, whether the file is readable or writable, and other metadeta.<br>
 Each process maintains an FD array, each entry of which is a pointer to an entry in the system-wide open file table.
+
+For each file a process opens, the OS tracks a "current" **offset**, which determines where the next read or write will begin reading from/writing to.
+<br>
+System call `lseek()` can be used to move this offset. It's also incremented after regular `read()` and `write()` system calls.
+
+Different processes have separate, independent entries on the **open file table**, even for the same file. Entries are only *shared* in the case of `fork()` (*child process*) and `dup()` (*new FD, same underlying open file*).
+
+**Reference Count:** Counter tracking how many processes are sharing a given open file table entry.
+
+`write()` doesn't immediately write to persistent storage; it saves to buffer first for some time.
+
+**`fsync(int fd)`:** Forces dirty data to disk.
+
+`rename(char *old, char *new)` is **atomic**.
+
+To view file metadata: `stat()` or `fstat()`.
+
+Metadata info is kept as a data structure called an **inode**.<br> Inodes reside on disk, active ones are cached in memory.
+
+To delete a file: `rm` on terminal, which uses `unlink()` system call in the background.
+
+
+**`mkdir()`:** System call to create a directory.<br>
+Just `mkdir` on terminal.
+
+An empty directory has two entries: one entry that refers to itself (`./`), and one entry that refers to its parent (`../`). 
+
+To read a directory: `ls` on the terminal, which uses `opendir()`, `readdir()`, and `closedir()` system calls.
+
+To delete a directory: `rmdir` on terminal, which uses `rmdir()` system call.<br>
+Will only delete empty directories.
+
+**`link()`:** System call to create a new directory entry (a "**hard link**") for an existing file (*same inode number, so not a copy*). Takes two arguments: old pathname and new pathname.<br>
+`ln` on terminal.
+
+**Reference Count/Link Count:** Allows file system to track how many different names have been linked to a given inode number.<br>
+When link count reaches zero, the file system frees the inode and related data blocks (i.e., actually deletes the file).
+
 
 <hr>
 <br>
