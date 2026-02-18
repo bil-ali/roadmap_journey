@@ -190,7 +190,7 @@ Every time OS regains control, the **Scheduler** determines whether to execute a
 <br>
 
 
-### Ch. 39 Interlude: Files and Directories<br>(15/02/26&ndash;)
+### Ch. 39 Interlude: Files and Directories<br>(15/02/26&ndash;18/02/26)
 
 **Process** is a virtualization of the CPU.<br>
 **Address space** is a virtualization of memory.<br>
@@ -198,49 +198,53 @@ Every time OS regains control, the **Scheduler** determines whether to execute a
 
 Each file has some kind of low-level name: **inode number (i-number)**. (This is separate from file descriptors)
 
-Directories also have a low-level name. Rather than just an inode number, this is a data structure that maps user-readable names to low-level names.<br>
-For example, the directory that a file with low-level name "10" and user-readable name "foo" resides in would have an entry ("foo", "10").
-
+A directory is a collection of tuples, each of which maps a human-readable name to a low-level name.<br>
 Each entry in a directory refers to either files or other directories, making a **directory tree**/**directory hierarchy**.
 
 The directory hierarchy starts at a **root directory** and uses a **separator** (/) to name subsequent **sub-directories**.
 
+<br>
 
 **File Descriptor:** An integer, private per process, used in UNIX to access files.
 
-**Open File Table:** System-level data structure, tracking which files, the current offset, whether the file is readable or writable, and other metadeta.<br>
+**Open File Table:** System-level data structure, tracking files, the current offset, whether the file is readable or writable, and other metadeta.<br>
 Each process maintains an FD array, each entry of which is a pointer to an entry in the system-wide open file table.
 
 For each file a process opens, the OS tracks a "current" **offset**, which determines where the next read or write will begin reading from/writing to.
 <br>
-System call `lseek()` can be used to move this offset. It's also incremented after regular `read()` and `write()` system calls.
+System call `lseek()` can be used to move this offset. The offset is also incremented after regular `read()` and `write()` system calls.
 
-Different processes have separate, independent entries on the **open file table**, even for the same file. Entries are only *shared* in the case of `fork()` (*child process*) and `dup()` (*new FD, same underlying open file*).
+Different processes have separate, independent entries on the **open file table**, even for the same file.<br>
+Entries are only ***shared*** in two cases: **`fork()`** (*child process*) and **`dup()`** (*new FD, same underlying open file*).
 
 **Reference Count:** Counter tracking how many processes are sharing a given open file table entry.
 
 `write()` doesn't immediately write to persistent storage; it saves to buffer first for some time.
-
-**`fsync(int fd)`:** Forces dirty data to disk.
+<br>
+**`fsync(int fd)`:** Forces dirty data to disk immediately.
 
 `rename(char *old, char *new)` is **atomic**.
 
-To view file metadata: `stat()` or `fstat()`.
-
+To view file metadata: `stat()` or `fstat()`.<br>
 Metadata info is kept as a data structure called an **inode**.<br> Inodes reside on disk, active ones are cached in memory.
 
-To delete a file: `rm` on terminal, which uses `unlink()` system call in the background.
+**To delete a file**: `rm` on terminal, which uses `unlink()` system call in the background.
 
 
-**`mkdir()`:** System call to create a directory.<br>
+**`mkdir()`:** System call to **create a directory**.<br>
 Just `mkdir` on terminal.
 
 An empty directory has two entries: one entry that refers to itself (`./`), and one entry that refers to its parent (`../`). 
 
-To read a directory: `ls` on the terminal, which uses `opendir()`, `readdir()`, and `closedir()` system calls.
+**To read a directory**: `ls` on the terminal, which uses `opendir()`, `readdir()`, and `closedir()` system calls.
 
-To delete a directory: `rmdir` on terminal, which uses `rmdir()` system call.<br>
+**To delete a directory**: `rmdir` on terminal, which uses `rmdir()` system call.<br>
 Will only delete empty directories.
+
+> <!-- --- -->
+> **\*\*NOTE**** <br>
+> Each directory&mdash;even an empty&mdash;contains two special entries: `.`, which refers to itself, and `..`, which refers to its parent.
+> <!-- --- -->
 
 **`link()`:** System call to create a new directory entry (a "**hard link**") for an existing file (*same inode number, so not a copy*). Takes two arguments: old pathname and new pathname.<br>
 `ln` on terminal.
@@ -248,12 +252,63 @@ Will only delete empty directories.
 **Reference Count/Link Count:** Allows file system to track how many different names have been linked to a given inode number.<br>
 When link count reaches zero, the file system frees the inode and related data blocks (i.e., actually deletes the file).
 
+You can't hard link to a directory or to files in other disk partitions.
+
+> <!-- --- -->
+> **\*\*NOTE**** <br>
+> inode numbers are only unique within a particular file system, and a file system is self-contained within each partition.
+> <!-- --- -->
+
+**Symbolic Link / Soft Link:** Same as hard link in function except a symbolic link is actually a file itself, of type 'symbolic link'.<br>
+The link file holds the pathname of the linked-to file (*like a pointer*).
+Possibility of **dangling reference** if linked-to file is deleted.
+`ln -s` on terminal.
+
+> <!-- --- -->
+> **\*\*NOTE**** <br>
+> A 'symbolic link' is a separate third type of file, like 'regular file' or 'directory'.<br>
+> On the ouput of `ls -al`, the first character in the left-most column is `-` for regular files, `d` gor directories, and `l` for soft links:<br>
+> ```
+> prompt> ls -al
+> drwxr-x---  2 remzi remzi   29 May  3 19:10 ./
+> drwxr-x--- 27 remzi remzi 4096 May  3 15:14 ../
+> -rw-r-----  1 remzi remzi    6 May  3 19:10 file
+> lrwxrwxrwx  1 remzi remzi    4 May  3 19:10 file2 -> file
+> ```
+> <!-- --- -->
+
+Virtualizations of CPU and memory provide the illusion of a *private* CPU and *private* meomry for each process/user. Virtualized disk does not (and should not) have this as files are often *shared* between processes.<br>
+Mechanisms to facilitate this: **Permission Bits** and **Access Control Bits (ACL)**.
+
+**Permission bits:** Determine for each regular file, directory, or other, exactly who can access it and how.<br>
+The permissions consist of three groupings: what the **owner** of the file can do to it, what someone in a **group** can do, and what anyone (or "**other**") can do.<br>
+The abilities these groups can have are to *read*, *write*, or *execute*.
+
+```
+prompt> ls -l foo.txt
+-rw-r--r--  1 remzi wheel  0 Aug 24 16:29 foo.txt
+```
+The first `-` just shows that `foo.txt` is a regular file. The permission bits are the next nine characters (`rw-r--r--`), showing that the file is both readable and writable by owner (`rw-`), only readable by members of the group `wheel` (`r--`), and only readable by anyone else (`r--`).
+
+Owner of the file can change permission bits using **`chmod`** command.
+
+Execute bit for regular files determine whether you can run a file.<br>
+For directories, execute bit determines whether you can `cd` into the directory.
+
+Some file systems like AFS (Andrew File System) have more sophisticated controls like **access control list (ACL)**.
+
+**Access Control List:** More general and powerful way to represent exactly who can access a given resource.<br>
+Rather than owner/group/other model, ACL enables user to create a specific list of who can and can't read a set of files.
+
+**`mount()`:** Takes an existing directory as a target mount point and essentially pastes a new file system onto the directory tree at that point.<br>
+`mount` on terminal.
+
 
 <hr>
 <br>
 
 
-### Ch. 45 Data Integrity and Protection<br>(&ndash;)
+### Ch. 45 Data Integrity and Protection<br>(18/02/26&ndash;)
 
 
 ## **Takeaway:**
