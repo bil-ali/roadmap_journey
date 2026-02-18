@@ -308,7 +308,70 @@ Rather than owner/group/other model, ACL enables user to create a specific list 
 <br>
 
 
-### Ch. 45 Data Integrity and Protection<br>(18/02/26&ndash;)
+### Ch. 45 Data Integrity and Protection<br>(18/02/26&ndash;19/02/26)
+
+**Data Integrity / Protection:** How should a file system or storage system ensure that data is safe, given the unreliable nature of modern storage devices.
+
+Modern disks will occasionally seem to be mostly working but have trouble successfully accessing one or more blocks. Main two types of single-block failure: **Latent Sector Errors (LSEs)** and **Block Corruption:** 
+
+**LSE** occurs when a disk sector (or group of sectors) has been damaged in some way.<br>
+Identifiable by in-disk **error correcing codes (ECC)**.
+
+**Block corruption** is when a disk block becomes *corrupt* in a way not detectable by disk itself.
+
+Dealing with LSEs: Standard redundancy mechanism (RAID).
+
+Dealing with block corruption: *Recovery* is same as for LSEs;the main problem is *detection*.
+
+Primary data integrity mechanism in modern storage systems: **checksum**.
+
+**Checksum:** Simply the result of a function that takes a chunk of data as input and computes a function over it, producing a small summary of the contents of the data. This summary is referred to as the checksum.<br>
+Used for detecting corruption as the checksum is stored with data.<br>
+When reading a block of data, the file system also reads its **stored checksum** from disk. It then computes the block's **computed checksum**, and compares the two. If they aren't equal, the data has been corrupted.
+
+Checksum functions face a trade-off between strength and speed.
+
+Common Checksum Functions: XOR-based checksums, Addition, Fletcher checksum, Cyclic Redundancy Check (CRC).
+
+No one checksum function is perfect. Non-identical data blocks can have identical checksums.
+
+<br>
+
+**Misdirected Write:** Another failure mode. When data is written to disk correctly, but in the wrong location.<br>
+This wrong location block is now considered corrupt.
+
+How to detect misdirected writes: Add **physical ID** (like disk and block numbers) to checksum. If checksum physical ID doesn't match actual location, a misdirected write has taken place.
+
+**Lost Write:** When the device informs the upper layer that a write has completed but it's never actually persisted.
+
+Can't detect **lost writes** with checksumming strategies.
+
+One solution is **Write Verify / Read-After-Write:** 
+Reading back the data after a wite to confirm it reached disk.<br>
+This is slow as it doubles the I/Os.
+
+Another soluion is in **Zettabye File System (ZFS)**, where a there's a checksum for each file system inode and indirect block for every block included within a file.
+
+Checksums are checked upon data access. But most data is rarely accessed, so **disk scrubbing** is necessary.
+
+**Disk Scrubbing:** Periodically reading through every block of the system, and checking whether checksums are still valid.
+
+<br>
+
+**Checksumming overheads**: space and time.
+
+Space overhead: 1) on the disk, 2) in the memory (*upon access*). Overall, pretty small.
+
+Time overhead is the real problem. CPU must compute the checksum over each block, both when data is stored and whe it is accessed.
+
+I/O overhead: When checksums are stored distinctly from data. Also during disk scrubbing.
+
+
+<hr>
+<br>
 
 
 ## **Takeaway:**
+This exercise allowed me to get a low-level look into the inner workings of an OS from a designer's perspective building one from the ground-up.
+
+It also allowed me to familiarize myself with various system calls and Unix console commands. All to prepare for the upcoming switch to Linux.
