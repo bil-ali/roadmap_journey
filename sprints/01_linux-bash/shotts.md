@@ -1,0 +1,336 @@
+# ["The Linux Command Line" by William Shotts]
+## (24/2/26 &ndash; 02/03/26)
+## **Task:**
+
+The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
+
+## **Proof:**
+### Ch. 1 WHAT IS THE SHELL?<br>(24/02/26)
+
+`date`<br>
+Displays current time and date.
+
+`cal`<br>
+Displays calender for current month.
+
+`df`<br>
+Displays current amount of free space on disk drives.
+
+`free`<br>
+Displays amount of free memory.
+
+`exit` or `CTRL+D`<br>
+End terminal session.
+
+
+<hr>
+<br>
+
+
+### Ch. 2 NAVIGATION<br>(24/02/26&ndash;25/02/26)
+
+`pwd`<br>
+Print name of current working directory.
+
+`ls`<br>
+List directory contents.
+
+`cd`<br>
+Change working directory.
+
+`.` refers to the working directory.<br>
+`..` refers to the working directory's parent directory.
+
+On Linux, filenames that begin with . are hidden, i.e, not listed by `ls`. (`ls -a` does list them though).
+
+Filenames and commands in Linux are case sensitive.
+
+`cd` Changes working directory to home directory.<br>
+`cd -` Changes working directory to previous working directory.<br>
+`cd ~user_name` Changes working directory to home directory of *user_name*.
+
+
+<hr>
+<br>
+
+
+### Ch. 3 EXPLORING THE SYSTEM<br>(25/02/26&ndash;27/02/26)
+
+`ls -l`<br>
+Lists directory contents, but in long format output.
+
+**Basic Command Structure:**
+``` bash
+command -options arguments
+```
+
+**Options:** e.g., `-l`<br>
+**Long Options:** e.g., `--reverse`
+
+`ls -lt --reverse`<br>
+Lists directory contents, in long format, sorted by modification date, with the order of the sort reversed.
+
+**Common `ls` Options**
+| **Option** | **Long option** | **Description** |
+| --- | --- | --- |
+| `-a` | `--all` | List all files, even hidden ones |
+| `-A` | `--almost-all` | Like -a except doesn't list . and .. |
+| `-d` | `--directory` | In conjunction with `-l`, shows details about the directory istelf rather than its contents |
+| `-F` | `--classify` | Append an indicator character to the end of each listed name (like / for directories) |
+| `-h` | `--human-readable` | In long format listings, displat file sizes in human-readable format (rather than in bytes) |
+| `-l` | | Display in long format |
+| `-r` | `--reverse` | Display in reverse order |
+| `-S` | | Sort by file size |
+| `-t` | | Sort by modification time |
+
+`file`<br>
+Determine file type.
+
+In Linux a file with filename *picture.jpg* doesn't necessarily have to be a JPEG file.
+
+`less`<br>
+View text file contents.<br>
+
+| **Command** | **Action** |
+| --- | --- |
+| `PAGE UP` or `b` | Scroll back one page |
+| `PAGE DOWN` or space | Scroll forward one page |
+| Up arrow | Scroll up one line |
+| Down arrow | Scroll down one line |
+| `G` | Move to the end of the text file |
+| `1G` or `g` | Move to the beginning of the text file |
+| `/characters` | Search forward to the next occurence of `characters` |
+| `n` | Search for the next occurence of the previous search |
+| `h` | Display  help screen |
+| `q` | Quit `less` |
+
+`clear`<br>
+Clears screen content.
+
+`reset`<br>
+Re-initializes terminal into default state.
+
+
+<hr>
+<br>
+
+
+### Ch. 4 MANIPULATING FILES AND DIRECTORIES<br>(27/02/26)
+
+`cp`<br>
+Copy files and directories.
+
+`mv`<br>
+Move/rename files and directories.
+
+`mkdir`<br>
+Create directories.
+
+`rm`<br>
+Remove files and directories.
+
+`ln`<br>
+Create hard (`ln`) and symbolic (`ln -s`) links
+
+#### **Wildcards and Character Classes**
+
+| **Wildcard** | **Meaning** |
+| --- | --- |
+| * | Matches any character |
+| ? | Matches any single character |
+| [*characters*] | Matches any character that is a memeber of the set *characters* |
+| [!*characters*] | Matches any character that is not a member of the set *characters* |
+| [[:*class*:]] | Matches any character that is a member of the specified *class* |
+
+| **Character class** | **Meaning** |
+| --- | --- |
+| [:alnum:] | Matches any alphanumeric character |
+| [:alpha:] | Matches any alphabetical character |
+| [:digit:] | Matches any numeral |
+| [:lower:] | Matches any lowercase letter |
+| [:upper:] | Matches any uppercase letter |
+
+<br>
+
+Hard links can't reference directories. Symbolic links can.
+
+If you write to a symbolic link, the referenced file is written to.<br>
+If you delete a symbolic link, only the link is deleted, not the file. If the file is deleted before the link, the link continues to exist but point to nothing (*broken link*).
+
+Only way to identify a hard link is by checking the inode is identical using `ls -li`.<br>
+Symbolic links identified by leading `l` in the first field in `ls -l`.
+
+
+<hr>
+<br>
+
+
+### Ch. 5 WORKING WITH COMMANDS<br>(1/03/26)
+
+A command can be one of four things:
+- An executable program
+- A command built into the shell itself (*shell builtins*)
+- A shell function
+- An alias
+
+`type`<br>
+Tells us what type the command is (of the above 4).
+
+`which`<br>
+Display exact location of executable program which will be executed.
+
+`help`<br>
+Get help for shell builtins.<br>
+OR `<command> --help` (e.g., `mkdir --help`)
+
+`man`<br>
+Display an executable program command's manual page.
+
+Manual pages generally contain:
+- A title (the page's name)
+- A synopsis of the command's syntax
+- A description of the command's purpose
+- A listing and description of each of the command's options
+
+Man Page Organization:
+| **Section** | **Contents** |
+| --- | --- |
+| 1 | User Commands |
+| 2 | Programming interfaces for kernel system calls |
+| 3 | Programming interfaces to the C library |
+| 4 | Special files such as device nodes and drivers |
+| 5 | File formats |
+| 6 | Games and amusements such as screen savers |
+| 7 | Miscellaneous |
+| 8 | System administration commands |
+
+`apropos`<br>
+Display a list of appropriate commands by searching the list of man pages.
+
+`whatis`<br>
+Display one-line manual page descriptions.
+
+`info`<br>
+Display a command's info entry.
+
+Info manual is basically man, but structured like a tree where nodes are accessed via hyperlinks.
+
+`alias`<br>
+Create an alias for a command.<br>
+(`alias *name*='*string*'`)
+
+Aliases vanish when your shell session ends.
+
+
+<hr>
+<br>
+
+
+### Ch. 6 REDIRECTION<br>(1/03/26&ndash;2/03/26)
+
+**Redirecting Standard Output**<br>
+`ls -l /usr/bin > ls-output.txt`<br>
+To append, not overwrite:
+`ls -l /usr/bin >> ls-output.txt`
+
+**Redirecting Standard Error**<br>
+`ls -l /usr/bin 2> ls-output.txt`
+
+**Redirecting Standard Output and Standard Error At Once**<br>
+`ls -l /usr/bin > ls-output.txt 2>&1`<br>
+`ls -l /usr/bin &> ls-output.txt`<br>
+`ls -l /usr/bin &>> ls-output.txt`<br>
+
+If we want to throw away output, we redirect (`>` or `2>`) to `/dev/null`.
+
+`cat`<br>
+Reads one or more files and copies them to standard output.
+
+`cat` with no argument reads from standard input (ended with `CTRL+d`).
+
+**Redirecting Standard Input**<br>
+`cat < lazy_dog.txt`
+
+<br>
+
+**Pipelines:** A shell feature that allows the standard output of one command to be piped into the standard input of another.
+<br>
+Pipe operator: `|`.
+
+**Filters:** Commands used with pipelines to perform complex operations, somehow changing input before outputing them.<br>
+e.g., `ls /bin /usr/bin | sort | less`
+
+`sort`<br>
+Sort lines of text.
+
+`uniq`<br>
+Omit or report (`uniq -d) repeated lines.
+
+`wc`<br>
+Print newline, word, and byte counts for each file.<br>
+`wc -l` for only line count.
+
+`grep`<br>
+Print lines matching a pattern:<br>`grep pattern filename`<br>
+`grep -i` to make grep not case sensitive.<br>
+`grep -v` to print only those lines that don't match the pattern.
+
+`head`<br>
+Output the first part of a file.
+
+`tail`<br>
+Output the last part of a file.
+
+`tee`<br>
+Read from standard input and write to both standard output and file(s).
+
+
+<hr>
+<br>
+
+
+### Ch. 7 SEEING THE WORLD AS THE SHELL SEES IT<br>(2/03/26)
+
+`echo`<br>
+Display a line of text.
+
+**Pathname Expansion**<br>
+`echo /usr/*/share`
+
+**Tilde Expansion**<br>
+`echo ~`
+
+**Arithmetic Expansion**<br>
+`echo $((2+2))`
+
+**Brace Expansion**
+`echo Number_{1..5}`<br>
+`mkdir {2007..2009}-{01..12}`
+
+**Parameter Expansion**<br>
+Expansion of variables.<br>
+`echo $USER`
+
+More useful in shell scripts than command line.
+
+**Command Substitution**<br>
+Using the output of a command as an expansion.<br>
+`echo $(ls)`
+
+For text in **double quotes**, all special characters used by shell (`$`,`\`, etc.) are treated literally.<br>
+Pathname/tilde/brace expansions and word splitting suppressed, but not parameter/arithmetic expansions and command substitution.
+
+**Single quotes** suppress *all* expansions.
+
+If we want to quote a single character, instead, escape it with `\`.
+
+**Control Codes** are also notated with `\`:
+| **Escape sequence** | **Meaning** |
+| --- | --- |
+| \a | Bell (alert that causes the computer to beep) |
+| \b | Backspace |
+| \n | Newline; line feed on Unix-like systems |
+| \r | Carriage return |
+| \t | Tab |
+`echo -e "\a"`<br>
+`echo $'\a'`

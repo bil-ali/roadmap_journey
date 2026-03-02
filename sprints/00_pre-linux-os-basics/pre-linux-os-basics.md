@@ -1,5 +1,5 @@
 # [Pre-Linux OS Basics Sprint]
-## (27/12/25&ndash;28/12/25)
+## (27/12/25&ndash;19/02/26)
 ## **Task:**
 
 The Pre-Linux OS Basics Sprint requires me to read the book [*"Operating Systems: Three Easy Pieces"*](https://pages.cs.wisc.edu/~remzi/OSTEP/ "Operating Systems: Three Easy Pieces"). Specifically, the following chapters in particular:
