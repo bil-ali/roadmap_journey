@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 02/03/26)
+## (24/2/26 &ndash; 06/03/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -264,7 +264,7 @@ e.g., `ls /bin /usr/bin | sort | less`
 Sort lines of text.
 
 `uniq`<br>
-Omit or report (`uniq -d) repeated lines.
+Omit or report (`uniq -d) consecutive repeated lines.
 
 `wc`<br>
 Print newline, word, and byte counts for each file.<br>
@@ -272,7 +272,7 @@ Print newline, word, and byte counts for each file.<br>
 
 `grep`<br>
 Print lines matching a pattern:<br>`grep pattern filename`<br>
-`grep -i` to make grep not case sensitive.<br>
+`grep -i` to make grep case insensitive.<br>
 `grep -v` to print only those lines that don't match the pattern.
 
 `head`<br>
@@ -334,3 +334,147 @@ If we want to quote a single character, instead, escape it with `\`.
 | \t | Tab |
 `echo -e "\a"`<br>
 `echo $'\a'`
+
+
+<hr>
+<br>
+
+
+### Ch. 9 REDIRECTION<br>(05/03/26&ndash;06/03/26)
+
+Unix-like OS are multi-user systems.
+
+Three possible states of ownership:
+- User
+- Group
+- Other
+
+`id`<br>
+Display user identity.
+
+User accounts are defined in `/etc/passwd`, groups are defined in `/etc/group`.
+
+| **Attribute** | **File type** (in `ls -l`) |
+| --- | --- |
+| - | A regular file |
+| d | A directory |
+| l | A symbolic link |
+| d | A character special file |
+| b | A block special file |
+
+`chmod`<br>
+Change a file's mode (permissions).
+
+`chmod` supports two distinct ways of specifying mode changes:
+- octal (base-8) representation<br>
+    `chmod 600 foo.txt`<br>
+    where 6 *(octal)* = 110 *(binary)* = rw-<br>
+    0 *(octal)* = 000 *(binary)* = ---
+- symbolic representation.<br>
+    `chmod u+x,go=rx foo.txt`
+
+`umask`<br>
+Set the default file permissions.<br>
+*(Uses octal notation)*
+
+`su`<br>
+Start a shell as another user.<br>
+`su [-[l]] [user]`<br>
+`su -c 'command'` for a single command.
+
+`sudo`<br>
+Execute a command as another user.
+
+Unlike `su`, `sudo` doesn't require other user's password. Nor does it load up a whole new shell or environment.
+
+`sudo` "trusts" you for several minutes unitl its timer runs out.
+
+`chown`<br>
+Change the owner and group owner of a file or directory.<br>
+`chown [owner][:[group]] file...`
+
+`chgrp`<br>
+Change a file's group ownership. **(Obsolete)**
+
+`passwd`<br>
+Change a user's password.
+
+
+<hr>
+<br>
+
+
+### Ch. 10 PROCESSES<br>(06/03/26)
+
+Modern OS are multitasking, which is achieved via **processes**.
+
+Like files, processes also have owners and user IDs, effective user IDs, etc.
+
+`ps`<br>
+Report a snapshot of current processes.<br>
+`ps x`: Shows all processes, with process state, regardless of controlling terminal.<ps>
+`ps aux`: Shows all processes belonging to every user.
+
+`pstree`<br>
+Outputs a tree-like process list, showing parent-child relationships between processes.
+
+`top`<br>
+Display dynamic view of tasks.
+
+`jobs`<br>
+List active jobs.
+
+`bg`<br>
+Place a job in the background.
+
+To automatically place program in background at launch, run it as `program &`
+
+`fg`<br>
+Place a job in the foreground.<br>
+
+To terminate a foreground process: `CTRL+C`<br>
+To stop a foreground process without terminating: `CTRL+Z`
+
+`kill`<br>
+Send a signal to a process.<br>
+`kill -signal PID...`<br>
+*(signal is TERM by default)*
+
+**Common Signals:**
+| **Number** | **Name** | **Meaning** |
+| --- | --- | --- |
+| 1 | `HUP` | Hang up. |
+| 2 | `INT` | Interrupt.<br> Same as `Ctrl+C` on terminal. |
+| 9 | `KILL` | Kill.<br> Sent to kernel immediately, not to target process. Last resort after `TERM`. |
+| 15 | `TERM` | Terminate.<br> Default of `kill` command. |
+| 18 | `CONT` | Continue.<br> Restore process after a `STOP` or `TSTP`.<br> Sent by `bg` and `fg` commands. |
+| 19 | `STOP` | Stop.<br> Not sent to target process, thus can't be ignored. |
+| 20 | `TSTP` | Terminal stop.<br> Sent by `CTRL+Z` on terminal.<br> Is sent to target program, unlike `STOP`, thus may be ignored. |
+| 3 | `QUIT` | Quit. |
+| 11 | `SEGV` | Segmentation violation. (page fault) |
+| 28 | `WINCH` | Window change. |
+
+`killall`<br>
+Sending signals to multiple processes matching a specified program or username.<br>
+`killall [-u user] [-signal] name...
+
+**Shutting down the system:**
+- `halt` or `shutdown -h`
+- `poweroff`
+- `reboot` or `shutdown -r`
+- `shutdown`
+
+`vmstat`<br>
+Outputs a snapshot of system resource usage (memory, swap, disk I/O)
+
+`xload`<br>
+Graphical program showing system load over time.
+
+`tload`<br>
+
+
+<hr>
+<br>
+
+
+### Ch. 11 THE ENVIRONMENT<br>(06/03/26&ndash;)
