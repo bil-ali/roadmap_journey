@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 06/03/26)
+## (24/2/26 &ndash; 09/03/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -477,4 +477,149 @@ Graphical program showing system load over time.
 <br>
 
 
-### Ch. 11 THE ENVIRONMENT<br>(06/03/26&ndash;)
+### Ch. 11 THE ENVIRONMENT<br>(07/03/26)
+
+**The Environment:** Body of information maintained during by shell during the shell session.
+
+Environment stores:
+- Environment Variables
+- Shell Variables
+- Aliases
+- Shell Functions
+
+`printenv`<br>
+Print part or all of the environment variables.
+
+`set`<br>
+Shows both shell and environment variables.
+
+`alias`<br>
+Create an alias for a command.<br>
+`alias` without any arguments lists all aliases in shell session.
+
+`export`<br>
+Export environment to subsequently executed programs.
+
+
+
+<hr>
+<br>
+
+
+### Ch. 12 A GENTLE INTRODUCTION TO VI<br>(07/03/26&ndash;09/03/26)
+
+Assuming `vi` to be aliased `vim`.
+
+`vi` to start.
+`:q` to quit. `:wq` to save and quit. `:q!` to force quit.
+
+`vi` starts in **command mode**.<br>
+`i` to enter **insert mode**.<br>
+`ESC` to return from **insert mode** to **command mode**.
+
+`:w` to save changes.
+
+#### Cursor Movement Keys
+| **Key** | **Moves the cursor** |
+| --- | --- |
+| `l` or `→` | Right one character |
+| `h` or `←` | Left one character |
+| `j` or `↓` | Down one line |
+| `k` or `↑` | Up one line |
+| `0` | To the beginning of the current line |
+| `^` | To the first non-whitespace character on the current line |
+| `$` | To the end of the current line |
+| `w` | To the beginning of the next word or punctuation character |
+| `W` | To the beginning of the next word, ignoring punctuation characters |
+| `b` | To the beginning of the previous word or punctuation character |
+| `B` | To the beginning of the previous word, ignoring punctuation characters |
+| `CTRL+F` or `PAGE DOWN` | Down one page |
+| `CTRL+B` or `PAGE UP` | Up one page |
+| `numberG` | To line *number* |
+| `G` | To the last line of the line |
+| `a` | To the end of current word or punctuation character, then enter **insert mode** |
+| `A` | To the end of current line, then enter **insert mode** |
+
+Most of these commands can be prefixed with numbers.<br>
+**e.g.**, `5j` moves cursor down five lines.
+
+#### Line Opening Keys
+| **Command** | **Opens** |
+| --- | --- |
+| `o` | **Open** the line below the current line |
+| `O` | **Open** the line above the current line |
+
+`u` to undo a change.
+
+Two types of deletion commands:
+- `x`: Delete a character at cursor location.
+- `d`: Always followed by a movement command to control size of deletion.
+
+| **Command** | **Deletes** |
+| --- | --- |
+| `x` | The current character |
+| `3x` | The current character and the next two characters |
+| `dd` | The current line |
+| `5dd` | The current line and the next four lines |
+| `dW` | From the current cursor to the beginning of the next word |
+| `d$` | From the current cursor location to the end of the current line |
+| `d0` | From the current cursor location to the beginning of the line |
+| `d^` | From the current cursor location to the first non-whitespace character in the line |
+| `dG` | From the currenrt line to the end of the file  |
+| `d20G` | From the current line to the twentieth line of the file |
+
+`d` command doesn't just delete, it cuts. Every `d` deletion is copied into paste buffer.
+
+`p` to paste (below the current line).<br>
+`P` to paste above the current line.
+
+`y` to "yank" (copy) text.
+
+#### Yanking Commands
+| **Command** | **Copies** |
+| --- | --- |
+| `yy` | The current line |
+| `5yy` | The current line and the next four lines |
+| `yW` | From the current cursor position to the beginning of the next word |
+| `y$` | From the current cursor location to the end of the current line |
+| `y0` | From the current cursor location to the beginning of the line |
+| `y^` | From the current cursor location to the first non-whitespace character in the line |
+| `yG` | From the current line to the end of the line |
+| `y20G` | From the current line to the twentieth line of the file |
+
+`J` to join the line below to current line.
+
+`f` to search within a line and moves cursor to the next instance of specified character (**e.g.**, `fa`).<br> Iterated by `;`.
+
+`/` to search for a word or phrase or regular expression.<br>
+Iterated by `n`.
+
+#### Global Search-and-Replace
+
+To change the word *Line* to *line* for the entire file:<br>
+`:%s/Line/line/g`
+
+**(`%` defines range, meaning from first line to last line. We could also have specified an exact range like `1,5`)**
+
+`:%s/Line/line/gc`: Substitution with user confirmation every time.
+
+#### Editing Multiple Files
+
+`vi file1 file2 file3...`
+
+`:bn`<br>
+Switch to next file.
+
+`:bp`<br>
+Switch to previous file.
+
+Can't switch if current file has unsaved changes. *(Can force with `:bn!`, `:bp!`)*
+
+`:buffers`<br>
+List files being edited.
+
+`:buffer number`
+Switch to file *number* from `:buffers`.
+
+`:e file4`<br>
+Add *file4* to current editing session.
