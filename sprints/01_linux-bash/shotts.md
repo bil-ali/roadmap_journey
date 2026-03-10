@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 09/03/26)
+## (24/2/26 &ndash; 10/03/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -511,7 +511,7 @@ Export environment to subsequently executed programs.
 Assuming `vi` to be aliased `vim`.
 
 `vi` to start.
-`:q` to quit. `:wq` to save and quit. `:q!` to force quit.
+`:q` to quit. `:wq` *(or `ZZ`)* to save and quit. `:q!` to force quit.
 
 `vi` starts in **command mode**.<br>
 `i` to enter **insert mode**.<br>
@@ -536,7 +536,7 @@ Assuming `vi` to be aliased `vim`.
 | `CTRL+F` or `PAGE DOWN` | Down one page |
 | `CTRL+B` or `PAGE UP` | Up one page |
 | `numberG` | To line *number* |
-| `G` | To the last line of the line |
+| `G` | To the last line of the file |
 | `a` | To the end of current word or punctuation character, then enter **insert mode** |
 | `A` | To the end of current line, then enter **insert mode** |
 
@@ -565,7 +565,7 @@ Two types of deletion commands:
 | `d$` | From the current cursor location to the end of the current line |
 | `d0` | From the current cursor location to the beginning of the line |
 | `d^` | From the current cursor location to the first non-whitespace character in the line |
-| `dG` | From the currenrt line to the end of the file  |
+| `dG` | From the current line to the end of the file  |
 | `d20G` | From the current line to the twentieth line of the file |
 
 `d` command doesn't just delete, it cuts. Every `d` deletion is copied into paste buffer.
@@ -584,15 +584,14 @@ Two types of deletion commands:
 | `y$` | From the current cursor location to the end of the current line |
 | `y0` | From the current cursor location to the beginning of the line |
 | `y^` | From the current cursor location to the first non-whitespace character in the line |
-| `yG` | From the current line to the end of the line |
+| `yG` | From the current line to the end of the file |
 | `y20G` | From the current line to the twentieth line of the file |
 
 `J` to join the line below to current line.
 
-`f` to search within a line and moves cursor to the next instance of specified character (**e.g.**, `fa`).<br> Iterated by `;`.
+`f` to search within a line and move cursor to the next instance of specified character (**e.g.**, `fa`).<br>Iterated by `;`.
 
-`/` to search for a word or phrase or regular expression.<br>
-Iterated by `n`.
+`/` to search for a word or phrase or regular expression.<br>Iterated by `n`.
 
 #### Global Search-and-Replace
 
@@ -623,3 +622,5 @@ Switch to file *number* from `:buffers`.
 
 `:e file4`<br>
 Add *file4* to current editing session.
+
+`:r filename` inserts *filename* into current file below the current cursor position.
