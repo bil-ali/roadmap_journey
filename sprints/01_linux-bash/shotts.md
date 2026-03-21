@@ -624,3 +624,25 @@ Switch to file *number* from `:buffers`.
 Add *file4* to current editing session.
 
 `:r filename` inserts *filename* into current file below the current cursor position.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Test new device
