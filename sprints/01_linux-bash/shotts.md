@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 10/03/26)
+## (24/2/26 &ndash; 29/03/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -94,9 +94,9 @@ View text file contents.<br>
 | **Command** | **Action** |
 | --- | --- |
 | `PAGE UP` or `b` | Scroll back one page |
-| `PAGE DOWN` or space | Scroll forward one page |
-| Up arrow | Scroll up one line |
-| Down arrow | Scroll down one line |
+| `PAGE DOWN` or `Space` | Scroll forward one page |
+| `↑` | Scroll up one line |
+| `↓` | Scroll down one line |
 | `G` | Move to the end of the text file |
 | `1G` or `g` | Move to the beginning of the text file |
 | `/characters` | Search forward to the next occurence of `characters` |
@@ -332,6 +332,7 @@ If we want to quote a single character, instead, escape it with `\`.
 | \n | Newline; line feed on Unix-like systems |
 | \r | Carriage return |
 | \t | Tab |
+
 `echo -e "\a"`<br>
 `echo $'\a'`
 
@@ -359,7 +360,7 @@ User accounts are defined in `/etc/passwd`, groups are defined in `/etc/group`.
 | - | A regular file |
 | d | A directory |
 | l | A symbolic link |
-| d | A character special file |
+| c | A character special file |
 | b | A block special file |
 
 `chmod`<br>
@@ -456,7 +457,7 @@ Send a signal to a process.<br>
 
 `killall`<br>
 Sending signals to multiple processes matching a specified program or username.<br>
-`killall [-u user] [-signal] name...
+`killall [-u user] [-signal] name...`
 
 **Shutting down the system:**
 - `halt` or `shutdown -h`
@@ -479,7 +480,7 @@ Graphical program showing system load over time.
 
 ### Ch. 11 THE ENVIRONMENT<br>(07/03/26)
 
-**The Environment:** Body of information maintained during by shell during the shell session.
+**The Environment:** Body of information maintained by shell during the shell session.
 
 Environment stores:
 - Environment Variables
@@ -499,7 +500,6 @@ Create an alias for a command.<br>
 
 `export`<br>
 Export environment to subsequently executed programs.
-
 
 
 <hr>
@@ -626,23 +626,63 @@ Add *file4* to current editing session.
 `:r filename` inserts *filename* into current file below the current cursor position.
 
 
+<hr>
+<br>
 
 
+### Ch. 14 PACKAGE MANAGEMENT<br>(28/03/26&ndash;29/03/26)
+
+Packages are not compatible across distros.
+
+| Packaging system | Distributions (partial listing) |
+| --- | --- |
+| Debian-style (`.deb`) | Debian, Ubuntu, Linux Mint, Raspbian |
+| Red Hat-style (`.rpm`) | Fedora, CentOS, Red Hat Enterprise Linux, OpenSUSE |
+
+Package management systems consist of:
+- **Low-level tools** that handle tasks such as installing and removing package files.
+- **High-level tools** that perform metadata searching and dependency resolution.
+
+| Distributions | Low-level tools | High-level tools |
+| --- | --- | --- |
+| Debian-style | dpkg | apt-get, apt, aptitude |
+| Fedora, Red Hat enterprise Linux, CentOS | rpm | yum, dnf |
+
+**Finding a Package in a Repository:**<br>
+`apt-get update; apt-cache search search_string`
+
+**Installing a Package from a Repository:**<br>
+`apt-get update; apt-get install package_name`
+
+**Installing a Package from a Package File:**<br>
+`dpkg -i package_file`<br>
+*(no dependency resolution since this is using low-level tool)*
+
+**Removing a Package:**<br>
+`apt-get remove package_name`
+
+**Updating Packages from a Repository:**<br>
+`apt-get update; apt-get upgrade`
+
+**Upgrading a Package from a Package File:**<br>
+`dpkg -i package_file`<br>
+*(same as installation)*
+
+**Listing Installed Packages:**<br>
+`dpkg -l`
+
+**Determining Whether a Package Is Installed:**<br>
+`dpkg -s package_name`
+
+**Displaying Information About an Installed Package:**<br>
+`apt-cache show package_name`
+
+**Finding Which Package Installed a File:**<br>
+`dpkg -S file_name`
 
 
+<hr>
+<br>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Test new device
+### Ch. 16 NETWORKING<br>()
