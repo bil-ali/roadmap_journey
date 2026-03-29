@@ -80,8 +80,8 @@ Lists directory contents, in long format, sorted by modification date, with the 
 | `-h` | `--human-readable` | In long format listings, displat file sizes in human-readable format (rather than in bytes) |
 | `-l` | | Display in long format |
 | `-r` | `--reverse` | Display in reverse order |
-| `-S` | | Sort by file size |
-| `-t` | | Sort by modification time |
+| `-S` | | Sort by file size, largest first |
+| `-t` | | Sort by modification time, newest first |
 
 `file`<br>
 Determine file type.

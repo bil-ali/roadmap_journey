@@ -11,12 +11,14 @@ The primary resources I will employ for this exercise are
 The expected outputs here are the .md file documenting my notes for [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf), and a certificate file showing completion of the Coursera course.
 - `ibm-linux.md`
 - `shotts.md`
+- `coursera.md`
 
 ## Structure
 ```
 [01_linux-bash]/
 ├── README.md
 ├── shotts.md
+├── coursera.md
 ├── certificate.pdf
 └── images/     # Screenshots
 ```
