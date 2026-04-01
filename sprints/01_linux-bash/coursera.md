@@ -69,3 +69,14 @@
 | `r`, `w`, `x` | **Permissions**: read, write, and execute |
 | `u`, `g`, `o` | **User categories**: user, group, and all others |
 | `+`, `-` | **Operations**: grant and revoke |
+
+### Hands-on Lab: Wrangling Text Files at the Command Line
+
+`cat` prints entire file contents to standard output.
+`more` and `less` print file contents page-by-page.
+`head` prints the first N lines of a file.
+`tail` prints the last N lines of a file.
+`wc` finds the number of lines, words, and characters in a file.
+`sort` and `uniq` sort lines and drop duplicates.
+`grep` and `cut` extract lines and fields from a file.
+`paste` merges text files.
