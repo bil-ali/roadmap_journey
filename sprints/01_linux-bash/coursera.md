@@ -80,3 +80,7 @@
 `sort` and `uniq` sort lines and drop duplicates.
 `grep` and `cut` extract lines and fields from a file.
 `paste` merges text files.
+
+### Reading (Optional): A Brief Introduction to Networking
+
+`ping` command sends special 'echo request' packets to a host and waiting for a response from the host.
