@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 29/03/26)
+## (24/2/26 &ndash; 04/04/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -685,4 +685,43 @@ Package management systems consist of:
 <br>
 
 
-### Ch. 16 NETWORKING<br>()
+### Ch. 16 NETWORKING<br>(04/04/26)
+
+`ping`<br>
+Send an ICMP ECHO_REQUEST to network hosts.
+
+`traceroute`<br>
+Print the route packets trace to a network host.
+
+`ip`<br>
+Show/manipulate routing, devices, policy routing, and tunnels.
+
+`netstat`<br>
+Print network connections, routing tables, interface statistics, masquerade connections, and multicast memberships.
+
+`ftp`<br>
+Internet file transfer program.
+
+`lftp`<br>
+Basically `ftp` with more features.
+
+`wget`<br>
+Non-interactive network downloader.
+
+`ssh`<br>
+OpenSSH SSH client (remote login program).
+
+`scp`<br>
+Use an SSH-encrypted tunnel to (secure) copy files across the network.<br>
+`scp remote-sys:document.txt`
+
+`sftp`<br>
+A secure replacement for `ftp`, that&mdash;instead of transmitting everything in cleartext&mdash;uses an SSH encrypted tunnel.
+
+
+<hr>
+<br>
+
+
+### Ch. 17 SEARCHING FOR FILES<br>()
+

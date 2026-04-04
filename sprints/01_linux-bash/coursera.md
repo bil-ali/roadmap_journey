@@ -21,11 +21,11 @@
 `apt` system administration command to update and install packages.
 
 `vim` commands starts vim.<br>
-`:help` to get help in Vim.
-`:q` to quit Vim.
-`i` to enter **Insert** mode.
-`Esc` to exit **Insert** mode into **Command** mode.
-`:w` to save your work.
+`:help` to get help in Vim.<br>
+`:q` to quit Vim.<br>
+`i` to enter **Insert** mode.<br>
+`Esc` to exit **Insert** mode into **Command** mode.<br>
+`:w` to save your work.<br>
 
 ## **Module 2**
 
@@ -52,13 +52,13 @@
 
 ### Hands-on Lab: Navigating and Managing Files and Directories
 
-`mkdir` to create a new directory.
-`touch` to create a new file.
-`date -r` to displat the last modification timestamp of a specified file.
-`find` to search for and locate files.
-`rm` to remove a file.
-`rm -r` to remove a directory.
-`mv` to rename or move a file.
+`mkdir` to create a new directory.<br>
+`touch` to create a new file.<br>
+`date -r` to displat the last modification timestamp of a specified file.<br>
+`find` to search for and locate files.<br>
+`rm` to remove a file.<br>
+`rm -r` to remove a directory.<br>
+`mv` to rename or move a file.<br>
 `cp` to copy a file.
 
 ### Hands-on Lab: Access Control Commands
@@ -72,15 +72,24 @@
 
 ### Hands-on Lab: Wrangling Text Files at the Command Line
 
-`cat` prints entire file contents to standard output.
-`more` and `less` print file contents page-by-page.
-`head` prints the first N lines of a file.
-`tail` prints the last N lines of a file.
-`wc` finds the number of lines, words, and characters in a file.
-`sort` and `uniq` sort lines and drop duplicates.
-`grep` and `cut` extract lines and fields from a file.
+`cat` prints entire file contents to standard output.<br>
+`more` and `less` print file contents page-by-page.<br>
+`head` prints the first N lines of a file.<br>
+`tail` prints the last N lines of a file.<br>
+`wc` finds the number of lines, words, and characters in a file.<br>
+`sort` and `uniq` sort lines and drop duplicates.<br>
+`grep` and `cut` extract lines and fields from a file.<br>
 `paste` merges text files.
 
 ### Reading (Optional): A Brief Introduction to Networking
 
 `ping` command sends special 'echo request' packets to a host and waiting for a response from the host.
+
+### Hands-on Lab: Working with Networking Commands
+
+`hostname` command prints host name.<br>
+`hostname -i` prints host IP address.<br>
+`ip a` displays system network interfaces.
+`ping` command tests network connection.<br>
+`curl` and `wget` commands transfer data from URL(s).<br>
+*(`wget` supports recursive file download)*
