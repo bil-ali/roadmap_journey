@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 04/04/26)
+## (24/2/26 &ndash; 27/04/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -723,5 +723,95 @@ A secure replacement for `ftp`, that&mdash;instead of transmitting everything in
 <br>
 
 
-### Ch. 17 SEARCHING FOR FILES<br>()
+### Ch. 17 SEARCHING FOR FILES<br>(25/04/26&ndash;27/04/26)
+
+`locate`<br>
+Find files by name.
+
+`find`<br>
+Search for files in a directory hierarchy.<br>
+`find ~ -type f -name "*.JPG" -size +1M | wc -l`
+
+**`-type` Test:**
+| File type | Description |
+| --- | --- |
+| `b` | Block special device file |
+| `c` | Character special device file |
+| `d` | Directory |
+| `f` | Regular file |
+| `l` | Symbolic link |
+
+**`-size` Test:**
+| Character | Unit |
+| --- | --- |
+| `b` | 512-byte blocks<br>*(This is the default)* |
+| `c` | Bytes |
+| `w` | 2-byte words |
+| `k` | Kilobytes |
+| `M` | Megabytes |
+| `G` | Gigabytes |
+
+**`find` Tests:**
+| Test | Description |
+| --- | --- |
+| `-cmin n` | Match files or directories whose content/attributes were last modified `n` minutes ago. |
+| `-cnewer file` | Match files or directories whose contents/attributes were last modified more recently than those of `file` |
+| `-ctime n` | Match files/directories whose contents were last modified m*24 hours ago. |
+| `-empty` | Match empty files and directories. |
+| `-group name` | Match files/directories belonging to group/group ID `name` |
+| `-iname pattern` | Same as `-name` test, but case-insenetive |
+| `-inum n` | Match files with inode number `n` |
+| `-mmin n` | Match files/directories whose contents were last modified |
+| `-mtime n` | Match files/directories with inode number `d.` |
+| `-name pattern` | Match files/directories with the specified wildcard `pattern`. |
+| `-newer file` | Match files/directories whose contents were modified more recently than `file`. |
+| `-nouser` | Match files/directories that don't belong to a valid user. |
+| `-nogroup` | Match files/directoriies that don't belong to a valid group.|
+| `-perm mode` | Match files or directories that have permissions set to the specified `mode` |
+| `-samefile name` | Match files that share the same inode number as file `name` |
+| `-size n` | Match files of size `n` |
+| `-type c` | Match files of type `c` |
+| `-user name` | Match files/directories belonging to user `name` |
+
+Along with **Tests**, `find` also supports **Operators**.<br>*e.g.*:<br>
+`find ~ \( -type f -not -perm 0600 \) -or \( -type d -not -perm 0700\)`
+
+**`find` Logical Operators:**
+| Operator | Description |
+| --- | --- |
+| `-and` | Match if the test on both sides of the operator are true.<br>*(Can be shortened to `-a`)*<br>*(Can also be left out as `-and` is implied by default)* |
+| `-or` | Match if a test on either side of the operator is true.<br>*(Can be shortened to `-o`)* |
+| `-not` | Match of the test following the operator is false.<br>*(Can be abbreviated with `!`)* |
+| `()` | Group tests and operators together to form larger expressions |
+
+`find` also allows **Actions** to be performed based on the search results.
+
+**Predefined `find` Actions:**
+| Action | Description |
+| --- | --- |
+| `delete` | Delete the currently matching file |
+| `-ls` | Perform the equivalent of `ls -dils` on the matching file |
+| `-print` | Output the full pathname of the matching file to standard output<br>*(This is the default* |
+| `-quit` | Quit once a match has been made |
+
+`find` also supports **User-Defined Actions**. This can be done using `-exec` or `-ok` actions.<br>
+`find ~ -type f -name 'foo*' -exec rm '{}' +`<br>
+`find ~ -type f -name 'foo*' -ok ls -l '{}' ';'`<br>
+*(`-ok` prompts before every action)*
+
+**Common `find` Options:**
+| Option | Description |
+| --- | --- |
+| `-depth` | Direct `find` to process a directory's files before the directory itself. |
+| `-maxdepth levels` | Set the max number of `levels` that `find` will descend intp a directory tree when performing tests and actions |
+| `-mindepth levels` | Set the minimum number of `levels` that `find` will descend intp a directory tree when performing tests and actions |
+| `-mount` | Direct `find` not to traverse directories that are mounted on other file systems |
+| `-noleaf` | Direct `find` not to optimize its search based on the assumption that it's searching a Unix-like file system |
+
+
+<hr>
+<br>
+
+
+### Ch. 18 ARCHIVING AND BACKUP<br>(27/04/26)
 
