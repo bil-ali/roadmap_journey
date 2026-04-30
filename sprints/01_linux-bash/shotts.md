@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 27/04/26)
+## (24/2/26 &ndash; 30/04/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -795,7 +795,7 @@ Along with **Tests**, `find` also supports **Operators**.<br>*e.g.*:<br>
 | `-quit` | Quit once a match has been made |
 
 `find` also supports **User-Defined Actions**. This can be done using `-exec` or `-ok` actions.<br>
-`find ~ -type f -name 'foo*' -exec rm '{}' +`<br>
+`find ~ -type f -name 'foo*' -exec rm '{}' '+'`<br>
 `find ~ -type f -name 'foo*' -ok ls -l '{}' ';'`<br>
 *(`-ok` prompts before every action)*
 
@@ -813,5 +813,83 @@ Along with **Tests**, `find` also supports **Operators**.<br>*e.g.*:<br>
 <br>
 
 
-### Ch. 18 ARCHIVING AND BACKUP<br>(27/04/26)
+### Ch. 18 ARCHIVING AND BACKUP<br>(28/04/26&ndas;30/04/26)
 
+**Run-length Encoding:**
+- `AAAAA` &rarr; `5A`
+- `WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWBWWWWWWWWWWWWWW` &rarr; `12W1B12W3B24W1B14W`
+
+Two types of Compression Algorithms:
+- Lossless
+- Lossy
+
+`gzip`<br>
+Replaces original file with a compressed version of the original.
+
+`gunzip`<br>
+Uncompresses file.
+
+`gzip` Options:
+| Option | Long option | Description |
+| --- | --- | --- |
+| `-c` | `--stdout`<br>`--to-stdout` | Write output to standard output and keep the original files |
+| `-d` | `--decompress`<br>`--uncompress` | Decompress. Causese `gzip` to act like `gunzip` |
+| `-f` | `--force` | Force compression even if a compressed version of the original file already exists |
+| `-h` | `--help` | Display usage information |
+| `-l` | `--list` | List compression stats for each file compressed |
+| `-r` | `--recursive` | If one or more arguments is a directory, recursively compress files contained in them |
+| `-t` | `--test` | Test the integrity of a compressed file |
+| `-v` | `--verbose` | Display verbose messages while compressing |
+| `-number` | | Set amount of compression. *`number`* is an integer from 1 (fastest, least compression) to 9 (slowest, most compression)<br>*(The default is 6)* |
+
+`zcat`<br>
+Equivalent to `gunzip -c`
+
+`bzip2`<br>
+`gzip` with a stronger *(but slower)* compression algorithm.<br>
+Has all the same options as `gzip`, except `-r`.
+
+`bunzip2`<br>
+Uncompresses *.bz2* files.
+
+**`bziprecover`**: Program to recover damaged *.bz2* files.
+
+<br>
+
+`tar`<br>
+Archives files.<br>
+`tar mode[options] pathname...`
+
+`tar` Modes:
+| Mode | Description |
+| --- | --- |
+| `c` | Create an archive |
+| `x` | Extract an archive |
+| `r` | Append specified pathnames to the end of an archive |
+| `t` | List archive contents |
+
+`tar cf playground.tar playground`<br>
+`tar tf playground.tar`<br>
+`cd foo && tar xf ../playground.tar`
+
+Files/directories extracted from *.tar* take on the ownership of the user extracting, rather than the original owner.
+
+`tar` often used in conjunction with `find`.<br>
+`find playground -name 'file-A' -exec tar rf playground.tar '{}' +`<br>
+`find playground -name 'file-A' | tar cf - --files-from=- | gzip > playground.tgz`<br>
+*(First `-` is stdout, second `-` is stdin)*
+
+<br>
+
+`zip`<br>
+Both compresses and archives files/directories.<br>
+`zip options zipfile file...`
+
+`unzip`<br>
+Uncompresses and extracts files.
+
+`zip` and `unzip` are mainly for Windows compatibility. On Linux, `tar` and `gzip` are preferred for archiving and compression.
+
+`rsync`<br>
+Remote file and directory synchronization.<br>
+`rsync options source destination`
