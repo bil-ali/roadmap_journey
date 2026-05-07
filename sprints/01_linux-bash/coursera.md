@@ -27,6 +27,11 @@
 `Esc` to exit **Insert** mode into **Command** mode.<br>
 `:w` to save your work.<br>
 
+
+<hr>
+<br>
+
+
 ## **Module 2**
 
 ### Hands-on Lab: Informational Commands
@@ -77,7 +82,8 @@
 `head` prints the first N lines of a file.<br>
 `tail` prints the last N lines of a file.<br>
 `wc` finds the number of lines, words, and characters in a file.<br>
-`sort` and `uniq` sort lines and drop duplicates.<br>
+`sort` sorts the lines of text in a file and displays the result.<br>
+`uniq` prints a text file with any consecutive, repeated lines collapsed to a single line.<br>
 `grep` and `cut` extract lines and fields from a file.<br>
 `paste` merges text files.
 
@@ -93,3 +99,73 @@
 `ping` command tests network connection.<br>
 `curl` and `wget` commands transfer data from URL(s).<br>
 *(`wget` supports recursive file download)*
+
+### Hands-on Lab: Archiving and Compressing Files
+
+`tar` allows you to pack multiple files and directories into a single archive file.<br>
+`zip` allows you to compress files.<br>
+`unzip` allows you to extract files.<br>
+
+
+<hr>
+<br>
+
+
+## **Module 3**
+
+### Shell Scripting Basics
+
+By convention, use `.sh` file extension for shell scripts.<br>
+Shebang directive: `#!interpreter [optional-arg]
+
+### A Brief Introduction to Shell Variables
+
+`read` command takes input from standard input and assigns it to shell variable.
+
+### Filters, Pipes, and Variables
+
+**Filters**: Shell commands that take input from standard input, transform input data, and output to standard output.<br>
+**Pipe (`command1 | command2`)** pipes the output of command1 to the input of command2.<br>
+`set` command lists all shell variables.<br>
+`unset var_name` deletes shell variable, *`var_name`*.<br>
+`export var_name` extends shell variable *`var_name`* to an environment variable.<br>
+`env` command lists all environment variables.<br>
+
+###  Examples of Pipes
+
+`tr` command replaces characters in input text.<br>
+`tr [OPTIONS] [target characters] [replacement characters]`
+
+### Useful Features of the Bash Shell
+
+#### Metacharacters
+`#`: precedes a comment.<br>
+`;`: command separator.<br>
+`*`: filename expansion wildcard.<br>
+`?`: single character wildcard in filename expansion.
+
+#### Quoting
+`\`: escape metacharacter interpretation.<br>
+`" "`: interpret literally, but evaluate metacharacter.<br>
+`' '`: interpret literally.
+
+#### I/O Redirection
+`>`: Redirect output to file.<br>
+`>>`: Append output to file.<br>
+`2>`: Redirect standard error to file.<br>
+`2>>`: Append standard error to file<br>
+`<`: Redirect file contents to standard input.
+
+#### Command Substitution
+`$(command)`: replace the command with its output.<br>
+``command``: replace the command with its output.
+
+#### Batch Versus Concurrent Modes
+`command1; command2`: Batch Mode &mdash; commands run sequentially.<br>
+`command1 & command2`: Concurrent Mode &mdash; commands run in parallel.
+
+#### Command Line Arguments
+`./MyBashScript.sh arg1 arg2`
+
+### Introduction to Advanced Bash Scripting
+
