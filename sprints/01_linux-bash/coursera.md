@@ -169,3 +169,89 @@ Shebang directive: `#!interpreter [optional-arg]
 
 ### Introduction to Advanced Bash Scripting
 
+Basic `if-then-else` syntax:
+```
+if [ condition ]
+then
+    statement_block_1
+else
+    statement_block_2
+fi
+```
+
+`$#` is a special variable that holds the number of command-line arguments read by a bash script.
+
+Arithmetic is done using the notation, `$(()).<br>
+`echo $((3+2))`
+
+#### Logical Operators
+
+`&&` is AND.<br>
+`||` is OR.
+
+`==` or `-eq`: is equal to.<br>
+`!=` or `ne`: is not equal to.<br>
+`>` or `-gt`: is greater than.<br>
+`<` or `-lt`: is less than.<br>
+`>=` or `-ge`: is greater than or equal to.<br>
+`<=` or `-le`: is lesser than or equal to.
+
+
+#### Arrays
+
+Empty array creation:<br>
+`declare -a empty_array`
+
+Populated Array definition:<br>
+`my_array=(1 2 "three" "four" 5)`
+
+Appending an element to array:<br>
+`my_array+=("six")`
+
+Indexing array:<br>
+`echo ${my_array[0]}`
+
+Print all array elements:<br>
+`echo ${my_array[@]}`
+
+#### For Loops
+
+```
+for item in ${my_array[@]}; do
+    echo $item
+done
+```
+**OR**
+```
+for i in ${!my_array[@]}; do
+    echo ${my_array[$i]}
+done
+```
+
+```
+for ((i=1; i<5; i++)); do
+    echo $i
+done
+```
+**OR**
+```
+for i in {1..4}; do
+    echo $i
+done
+```
+
+### Scheduling Jobs using Cron
+
+**Cron** is a tool that runs scheduled jobs consisting of shell commands/scripts.<br>
+Crontab files contain jobs and schedule data.<br>
+
+`crontab -e` opens text editor to enable editing Crontab file.<br>
+Job syntax: <br>`m h dom mon dow command`<br>
+*(Example job:<br>
+`30 15 * * 0 date >> sundays.txt`)*
+
+`crontab -l` returns a list of all cron jobs and their schedules.
+
+### Hands-on Lab: Scheduling Jobs using Crontab
+
+`crontab -r` removes current crontab.

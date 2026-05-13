@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 30/04/26)
+## (24/2/26 &ndash; 03/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -813,7 +813,7 @@ Along with **Tests**, `find` also supports **Operators**.<br>*e.g.*:<br>
 <br>
 
 
-### Ch. 18 ARCHIVING AND BACKUP<br>(28/04/26&ndas;30/04/26)
+### Ch. 18 ARCHIVING AND BACKUP<br>(28/04/26&ndash;30/04/26)
 
 **Run-length Encoding:**
 - `AAAAA` &rarr; `5A`
@@ -893,3 +893,128 @@ Uncompresses and extracts files.
 `rsync`<br>
 Remote file and directory synchronization.<br>
 `rsync options source destination`
+
+
+<hr>
+<br>
+
+
+### Ch. 24 WRITING YOUR FIRST SCRIPT<br>(03/05/26)
+
+To successfully create and run a shell script:
+1. Write a script (regular *.txt* file)
+2. Make the script executable
+3. Put the script where the shell can find it (`$PATH`)
+
+*e.g.*:
+```
+#!/bin/bash
+
+# This is our first script
+
+echo 'Hello World!'
+```
+
+**`#!`** is called a ***shebang***.<br>
+**Shebang** tells the kernel which interpreter should be used to execute a script.
+
+Good location for scripts intended for personal use: `/usr/local/bin`<br>
+Good location for scripts everyone on a system is allowed to use: `/usr/local/bin`<br>
+Good location for scripts intended for use by sysadmin: `/usr/local/sbin`
+
+#### **Formatting Tricks**
+
+Long options *(e.g. `ls --all --directory`)* instead of short options *(e.g. `ls -ad`)* when writing scripts.
+
+Indentation and Line Continuation:
+```
+find playground \
+    \( \
+        -type f \
+        -not -perm 0600 \
+        -exec chmod 0600 '{}' ';' \
+    \) \
+    -or \
+    \( \
+        -type d \
+        -not -perm 0700 \
+        -exec chmod 0700 '{}' ';' \
+    \)
+```
+
+Configurung `vim` for script writing:<br>
+- Turn on syntax highlighting (`:syntax on`)
+- Turn on highlight search results (`:set hlsearch`)
+- Set the number of columns occupied by a tab character (`set tabstop=4`)<br>
+  *(the default is 8)*
+- Turn on auto indent (`:set autoindent`)
+
+
+<hr>
+<br>
+
+
+### Ch. 25 STARTING A PROJECT<br>(12/05/26&ndash;13/05/26)
+
+Minimal HTML dicument format:
+```
+<html>
+    <head>
+        <title>Page Title</title>
+    </head>
+    <body>
+        Page body.
+    </body>
+</html>
+```
+
+Shell Variable declaration rules:
+- Variable names may consist of alphanumeric characters and underscore characters
+- The first character of a variable name must be either a letter or an underscore
+- Spaces and punctuation symbols are not allowed
+
+The shell makes no distinction between variables and constants.
+
+To create a distinction, we can use `declare` command:<br>
+`declare -r TITLE="Page Title"
+
+Another form of I/O redirection is the **here document**, which uses the `<<` operator.<br>
+**here document** format:
+```
+command << token
+text
+token
+```
+**Example:**
+```
+#!/bin/bash
+
+# Program to output a system information page
+
+TITLE="System Information Report For $HOSTNAME"
+CURRENT_TIME="$(date + "%x %r %Z")"
+TIMESTAMP="Generated $CURRENT_TIME, by $USER"
+
+cat << _EOF_
+<html>
+    <head>
+        <title>$TITLE</title>
+    </head>
+    <body>
+        <h1>$TITLE</h1>
+        <p>$TIMESTAMP</p>
+    <body>
+</html>
+_EOF_
+```
+In **here document**, quotes lose all special meaning and are treated as ordinary characters.<br>
+**Here documents** can be used with any command that accepts standard input.
+
+`<<-` instead of `<<` tells here document to ignore leading tabs, enabling indentation.
+
+
+<hr>
+<br>
+
+
+### Ch. 26 TOP-DOWN DESIGN<br>(13/05/26&ndash;)
