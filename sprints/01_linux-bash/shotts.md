@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 03/05/26)
+## (24/2/26 &ndash; 13/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1017,4 +1017,38 @@ In **here document**, quotes lose all special meaning and are treated as ordinar
 <br>
 
 
-### Ch. 26 TOP-DOWN DESIGN<br>(13/05/26&ndash;)
+### Ch. 26 TOP-DOWN DESIGN<br>(13/05/26)
+
+**Top-down design:** identifying top-level steps and developing increasingly detailed views of those steps. Breaking down large complex tasks into many small, simple tasks.
+
+**Shell function** format:
+```
+function name {
+    commands
+    return
+}
+
+OR (preferred):
+
+name () {
+    commands
+    return
+}
+```
+
+`local`<br>
+Defines local variables in shell functions.<br>
+Example:<br>
+```
+funct_1 () {
+    local foo
+    foo=1
+}
+```
+
+
+<hr>
+<br>
+
+
+### Ch. 27 FLOW CONTROL: BRANCHING WITH IF<br>()
