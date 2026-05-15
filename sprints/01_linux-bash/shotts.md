@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 13/05/26)
+## (24/2/26 &ndash; 15/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1051,4 +1051,96 @@ funct_1 () {
 <br>
 
 
-### Ch. 27 FLOW CONTROL: BRANCHING WITH IF<br>()
+### Ch. 27 FLOW CONTROL: BRANCHING WITH IF<br>(14/05/26&ndash;15/05/26)
+
+`if` statement syntax:<br>
+```
+if commands; then
+    commands
+[elif commands; then
+    commands...]
+[else
+    commands]
+fi
+```
+
+All commands issue an integer value to the system when they terminate, called an **exit status**. A value of 0 indicates success and any other value indicates failure.<br>
+`$?`<br>
+Special parameter holding the **exit status** value.
+
+`test`<br>
+Performs a variety of checks and comparisons for a `true` or `false` value.<br>
+Syntax:
+`test expression` OR `[ expression ]` OR `[[ expression ]]`
+
+**`test` File Expressions:**
+| Expression | Is true if: |
+| --- | --- |
+| `file1 -ef file2` | file1 and file2 have the same inode numbers (the two filenames refer to the same file by hard linking) |
+| `file1 -nt file2` | file1 is newer than file2 |
+| `file1 -ot file2` | file1 is older than file2 |
+| `-b file` | file exists and is a block-special (device) file |
+| `-c file` | file exists and is a character-special (device) file |
+| `-d file` | file exists and is a directory|
+| `-e file` | file exists |
+| `-f file` | file exists and is a regular file |
+| `-g file` | file exists and is set-group ID |
+| `-G file` | file exists and is owned bt the effective group ID |
+| `-k file` | file exists and has its "sticky bit" set |
+| `-L file` | file exists and is a symbolic link |
+| `-O file` | file exists and is owned by the effective user ID |
+| `-p file` | file exists and is a named pipe |
+| `-r file` | file exists and is readable (has readable permission for the effective user) |
+| `-s file` | file exists and has a length greater than zero |
+| `-S file` | file exists and is a network socket |
+| `-t fd` | fd is a file descriptor directed to/from the terminal (This can be used to determine whether standard input/output/error is being redirected) |
+| `-u file` | file exists and is setuid |
+| `-w file` | file exists and is writable (has write permission for the effective user) |
+| `-x file` | file exists and is executable (has execute/search permission for the effective user) |
+
+`exit [N]`<br>
+Terminate running shell/script and return an exit status of N.
+
+**`test` String Expressions**
+| Expression | Is true if: |
+| --- | --- |
+| `string` | string is not null |
+| `-n string` | The length of string is greater than zero |
+| `-z string` | The length of string is zero |
+| `string1 = string2`<br>OR<br>`string1 == string2` | string1 and string2 are equal |
+| `string1 != string2` | string1 and string2 are not equal |
+| `string1 > string2` | string1 sorts after string2 |
+| `string1 < string2` | string1 sorts before string2 |
+
+`<` and `>` must be quoted or escaped in `test`, so they aren't interpreted as redirection operators.
+
+**`test` Integer Expressions**
+| Expression | Is true if: |
+| --- | --- |
+| `integer1 -eq integer2` | integer1 is equal to integer2 |
+| `integer1 -ne integer2` | integer1 is not equal to integer2 |
+| `integer1 -le integer2` | integer1 is less than or equal to integer2 |
+| `integer1 -lt integer2` | integer1 is less than integer2 |
+| `integer1 -ge integer2` | integer1 is greater than or equal to integer2 |
+| `integer1 -gt integer2` | integer1 is greater than integer2 |
+
+The modern `[[ expression ]]` version of `test` supoorts also suports regex (`[[ string =~ regex ]]`).
+
+With `[[ ]]`, the `==` operator supports pattern matching the same ways pathname expansion does.<br>
+(e.g., `[[ $FILE == foo.* ]]`)
+
+`(())` compound command supports integer operations.<br>
+(e.g., `if ((INT == 0)); then echo "INT is zero."; fi`)
+
+**Logical Operators**:<br>
+| Operation | `test` | [[ ]] and (( )) |
+| --- | --- | --- |
+| AND | `-a` | `&&` |
+| OR | `-o` | `||` |
+| NOT | `!` | `!` |
+
+`command1 && command2`<br>
+command1 is executed, and command2 is executed iff command1 is successful.
+
+`command1 | command2`<br>
+command1 is executed, and command2 is executed iff command1 is unsuccessful.
