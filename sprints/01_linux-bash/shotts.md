@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 15/05/26)
+## (24/2/26 &ndash; 16/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1144,3 +1144,122 @@ command1 is executed, and command2 is executed iff command1 is successful.
 
 `command1 | command2`<br>
 command1 is executed, and command2 is executed iff command1 is unsuccessful.
+
+
+<hr>
+<br>
+
+
+### Ch. 28 READING KEYBOARD INPUT<br>(16/05/26)
+
+`read`<br>
+Reads a single line from standard input.<br>
+Syntax:<br>
+`read [-options] [variable...]`
+
+If no variable name is listed in `read`, the line of data is stored in shell variable `REPLY`.
+
+**`read` Options**:
+| Option | Description |
+| --- | --- |
+| `-a` | Assign th e input to array, starting with index zero |
+| `-d delimiter` | The fist character in the string, delimiter, is used to indicate the end of input *(rather than a newline character* |
+| `-e` | Use Readline to handle input |
+| `-i string` | Use string as a default reply if the user simply presses `ENTER`. Requires the `-e` option |
+| `-n num` | Read num characters of input, rather than an entire line |
+| `-p prompt` | Display a prompt for input using the string prompt |
+| `-r` | Raw mode. Do not interpret backslash characters as escapes |
+| `-s` | Silent mode. Do not echo characters to the display as they are typed |
+| `-t seconds` | Timout. Terminate input after seconds. `read` returns a non-zero exit status in case of timeout |
+| `-u fd` | Use input from file descriptor fd, rather than standard input |
+
+**IFS (Internal Field Separator)**: Shell variable holding the delimiter *(space, tab, newline, etc.)* used by shell when word-splitting `read` input.
+
+**`<<<`:** **Here string** operator.<br>
+A **here string** is like a here document, but consisting of a single string.
+
+**You can't pipe `read`.**<br>
+*(e.g., `echo "foo" | read` doesn't work)*<br>
+Pipelines create subshells, and a subshell can never alter the environment process. `read` alters the subshell's `REPLY` shell variable, but the main shell's `REPLY` remains unchanged.
+
+
+<hr>
+<br>
+
+
+### Ch. 29 FLOW CONTROL: LOOPING WITH WHILE/UNTIL<br>(16/05/26)
+
+`while`<br>
+Implements a while loop.<br>
+Syntax:<br>
+`while commands; do commands; done`
+
+`sleep N`<br>
+Pauses execution for N seconds.
+
+`break`<br>
+Immediately terminates a loop.
+
+`continue`<br>
+Skips the execution of the remainder of the current iteration of the loop.
+
+Endless loop: `while true; do commands; done`
+
+`until`<br>
+Executes a loop as long as a condition is false (i.e., until it receives a zero exit status).<br>
+*(basically opposite of `while` loop)*
+
+`while` and `until` can process standard input, and thus, process files.<br>
+Example 1:
+```
+#!/bin/bash
+
+# while-read: read lines from a file
+
+while read distro version release; do
+    printf "Distro: %s\tVersion: %s\tReleased: %s\n" \
+        "$distro" \
+        "$version" \
+        "$release"
+done < distros.txt
+```
+Example 2:
+```
+#!/bin/bash
+
+# while-read2: read lines from a file
+
+sort -k 1,1 -k 2n distros.txt | while read distro version release; do
+    printf "Distro: %s\tVersion: %s\tReleased: %s\n" \
+        "$distro" \
+        "$version" \
+        "$release"
+done < distros.txt
+```
+
+`printf`<br>
+Prints formatted text.<br>
+Format Specifiers:
+| Specifier | Meaning |
+| --- | --- |
+| `%s` | String |
+| `%d`<br>`%i` | Integer |
+| `%f` | Floating-point |
+| `%x`/`%X` | Hexadecimal (lower/upper) |
+| `%o` | Octal |
+| `%%` | Literal percent sign |
+
+Format Modifiers:
+| Modifier | Meaning |
+| --- | --- |
+| `%Ns` | Right-align string in width N |
+| `%-Ns` | Left-align string in width N |
+| `%.Nf` | N decimal places |
+| `%0Nd` | Pad with zeros to width N |
+
+
+<hr>
+<br>
+
+
+### Ch. 30<br>()
