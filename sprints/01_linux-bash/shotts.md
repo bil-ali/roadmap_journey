@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 16/05/26)
+## (24/2/26 &ndash; 17/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1262,4 +1262,133 @@ Format Modifiers:
 <br>
 
 
-### Ch. 30<br>()
+### Ch. 30 TROUBLESHOOTING<br>(17/05/26)
+
+ALWAYS enclose variables and command substitutions in double quotes. *(unless when word splitting is needed)*
+
+Commands in `if` test are fully executed.<br>
+Example:
+```
+if ! rm *; then
+    echo "File deletion failed. Check results" >&2
+    exit 1
+fi
+```
+actually carries out the `rm *` command!
+
+Always precede wildcards (such as `*` and `?`) with `./` to prevent filename misinterpretation by commands.
+
+**POSIX Portable Filename Character Set**<br>
+The only characters allowed in filenames are:
+- (A&ndash;Z)
+- a&ndash;z
+- 0&ndash;9
+- .
+- \- (but not at the start of filename)
+- _
+
+We can activate **Tracing** on bash script with `-x`<br>
+e.g., `#!/bin/bash -x`
+
+Leading `+` used to distinguish trace output is stored in **`PS4`** SHELL VARIABLE.
+
+`export`<br>
+Used to make shell variable available as an environnment variable to any child processes.
+
+Tracing only part of a script:
+```
+#!/bin/bash
+
+#trouble: script to demonstrate common errors
+
+number=1
+
+set-x # Turn on tracking
+if [ $number = 1 ]; then
+    echo "Number is equal to 1."
+else
+    echo "Number is not equal to 1."
+fi
+set +x # Turn off tracking
+```
+
+
+<hr>
+<br>
+
+
+### Ch. 31 FLOW CONTROL: BRANCHING WITH CASE<br>(17/05/26)
+
+`case`<br>
+Multiple-choice compound command.<br>
+Syntax:
+```
+case word in
+    [pattern [| pattern]...) commands ;;]...
+esac
+```
+
+**Example:**
+```
+#!/bin/bash
+
+#case-menu: a menu driven system information program
+
+clear
+echo "
+Please Select:
+
+1. Display System Information
+2. Display Disk Usage
+3. Display Home Spce Utilization
+0. Quit
+"
+read -p "Enter selection [0-3] > "
+
+case "$REPLY" in
+    0)      echo "Program terminated."
+            exit
+            ;;
+    1)      echo "Hostname: $HOSTNAME"
+            uptime
+            ;;
+    2)      df -h
+            ;;
+    3)      if [[ "$(id -u)" -eq 0 ]]; then
+                echo "Home Space Utilization (All Users)"
+                du -sh /home/*
+            else
+                echo "Home Space Utilization ($USER)"
+                du -sh "$HOME"
+            fi
+            ;;
+    *)      echo "Invalid entry" >&2
+            exit 1
+            ;;
+esac
+```
+
+`case` uses the same patterns as pathname expansion, terminated with a `)`.
+
+**`case` Patterm Examples:**
+| Pattern | Description |
+| --- | --- |
+| `a)` | Matches if *word* equals `a` |
+| `[[:alpha:]])` | Matches if *word* is a single alphabetic character |
+| `???)` | Matches if *word* is exactly three characters long |
+| `*.txt)` | Matches if *word* ends with the characters `.txt` |
+| `*)` | Matches any value of *word* |
+
+Can handle multiple patterns as "pattern1 *OR* pattern2" in a single case using `|`:<br>
+`patter1|pattern2)`
+
+`case` usually terminates with the first pattern match.<br>
+`;;&` instead of `;;` alows `case` to continue to the next test instead of terminating.
+
+
+
+<hr>
+<br>
+
+
+### Ch. 32 POSITIONAL PARAMETERS<br>()
