@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 17/05/26)
+## (24/2/26 &ndash; 20/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1391,4 +1391,55 @@ Can handle multiple patterns as "pattern1 *OR* pattern2" in a single case using 
 <br>
 
 
-### Ch. 32 POSITIONAL PARAMETERS<br>()
+### Ch. 32 POSITIONAL PARAMETERS<br>(18/05/26&ndash;19/05/26)
+
+**Postitional Parameters:** Special variables that hold input arguments passed to shell script or function. (`$0`&ndash;`$9`)
+
+`$0` contains the pathname of the program being executed. `$1` onwards hold input arguments.<br>
+Input arguments past `$9` are accessed with curly brackets: `${10}`, `${211}`, etc.
+
+`$#` contains the number of arguments on the command line.
+
+`shift`<br>
+Causes all positional parameters to move down by one.
+
+`basename`<br>
+Removes the leading portion of a pathname, leaving only the base name of a file.
+
+Shell functions don't support named parameters *(something like my_func(name, age))*. **Positional parameters** are the only way to pass arguments to a shell function.
+
+`$FUNCNAME` shell variable keeps track of the currently executed shell function.
+
+The * and $ Special Parameters:
+| Parameter | Description |
+| --- | --- |
+| `$*` | Expands into the list of positional parameters, starting with 1. When surrounded by double quotes, it expands into a double-quoted string containing all of the positional parameters, each separated by the first character of the IFS shell variable |
+| `$@` | Expands into the list of positional parameters, starting with 1. When surrounded by double quotes, it expands each positional parameter into a separate word as if it was surrounded by double quotes |
+**Example:**
+```
+#!/bin/bash
+
+# my_script
+
+my_func() {}
+
+my_func $*
+my_func "$*"
+my_func $@
+my_func "$@"
+```
+> bilal@LOQ:~$ my_script "when" "words with spaces"
+- `my_func $*` is interpreted as `my_func when words with spaces`
+- `my_func "$*"` is interpreted as `my_func "when words with spaces"`
+- `my_func $@` is interpreted as `my_func when words with spaces`
+- `my_func "$@"` is interpreted as `my_func "when" "words with spaces"`
+
+**tldr**: almost always use `"$@"`.
+
+
+
+<hr>
+<br>
+
+
+### Ch. 33 FLOW CONTROL: LOOPING WITH FOR<br>()
