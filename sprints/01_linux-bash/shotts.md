@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 20/05/26)
+## (24/2/26 &ndash; 21/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1442,4 +1442,21 @@ my_func "$@"
 <br>
 
 
-### Ch. 33 FLOW CONTROL: LOOPING WITH FOR<br>()
+### Ch. 33 FLOW CONTROL: LOOPING WITH FOR<br>(21/05/26)
+
+`for`<br>
+Implements for loop.<br>
+```
+for variable [in words]; do
+    commands
+done
+```
+
+If we omitt the list of words in `for` command, the positional parameters are used instead.
+
+bash also supports C-like `for` syntax:
+```
+for (( expression1; expression2; expression3 )); do
+    commands
+done
+```
