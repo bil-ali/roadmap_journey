@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 21/05/26)
+## (24/2/26 &ndash; 29/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -1386,7 +1386,6 @@ Can handle multiple patterns as "pattern1 *OR* pattern2" in a single case using 
 `;;&` instead of `;;` alows `case` to continue to the next test instead of terminating.
 
 
-
 <hr>
 <br>
 
@@ -1437,7 +1436,6 @@ my_func "$@"
 **tldr**: almost always use `"$@"`.
 
 
-
 <hr>
 <br>
 
@@ -1460,3 +1458,206 @@ for (( expression1; expression2; expression3 )); do
     commands
 done
 ```
+
+
+<hr>
+<br>
+
+
+### Ch. 34 STRINGS AND NUMBERS<br>(29/05/26)
+
+**Basic Parameter Expansion:** `$a` OR `${a}`
+
+`${parameter:-word}`<br>
+If *parameter* is unset or empty, it expands to defualt value *word*.<br>
+*(can't do this with positional or special parameters)*
+
+`${parameter:?word}`<br>
+If *parameter* is unset or empty, this expansion causes script to exit with an error, and *word* is sent to standard error.
+
+`${parameter:+word}`<br>
+If *parameter* is unset or empty, the expansion results in nothing. If *parameter* isn't empty, its value is substituted with *word* in expansion *(the actual value of parameter stays unchanged)*.
+
+`${!prefix*}`<br>
+`${!prefix@}`<br>
+Returns the names of existing variables with names beginning with *prefix*.
+
+#### String Operations
+
+`${#parameter}`<br>
+Expands into the length of the string contained by *parameter*.
+
+`${parameter:offset}`<br>
+`${parameter:offset:length}`<br>
+Extracts a portion of the string in *parameter*, starting from index *offset*, until the end of string, unless *length* is specified.
+
+`${parameter#pattern}`<br>
+Removes a leading portion of the string contained in *parameter* defined by *pattern*.<br>
+Removes the shortest match *(`foo=file.txt.zip; echo ${foo#*.}` &rarr; `txt.zip`)*.
+
+`${parameter##pattern}`<br>
+Removes a leading portion of the string contained in *parameter* defined by *pattern*.<br>
+Removes the longest match *(`foo=file.txt.zip; echo ${foo#*.}` &rarr; `zip`)*.
+
+`${parameter%pattern}`<br>
+Removes a trailing portion of the string contained in *parameter* defined by *pattern*.<br>
+Removes the shortest match *(`foo=file.txt.zip; echo ${foo%.*}` &rarr; `file.txt`)*.
+
+`${parameter%%pattern}`<br>
+Removes a trailing portion of the string contained in *parameter* defined by *pattern*.<br>
+Removes the shortest match *(`foo=file.txt.zip; echo ${foo%%.*}` &rarr; `file`)*.
+
+`${parameter/pattern/string}`<br>
+`${parameter//pattern//string}`<br>
+`${parameter/#pattern/string}`<br>
+`${parameter/%pattern/string}`<br>
+These expansions perform search-and-replace on the string contained in *parameter*. If text is found matching *pattern*, said text is replaced with *string*.<br>
+In the `/` form, only the first occurrence is replaced.<br>
+In the `//` form, all occurrences ares replaced.<br>
+The `/#` form required that the match occur at the beginning of the string.<br>
+The `/%` form required that the match occur at the end of the string.<br>
+*(If `/string` is omitted, matching text is simply deleted)*
+
+`declare -u upper`<br>
+Forces variable *upper* to always be upper case. Automatic case conversion, if necessary.
+
+`declare -l lower`<br>
+Forces variable *lower* to always be lower case. Automatic case conversion, if necessary.
+
+`$parameter,,pattern`<br>
+Expand the value of *parameter* into all lowercase. *pattern* is optional.
+
+`$parameter,pattern`<br>
+Expand the value of *parameter*, changing only the first character to lowercase. *pattern* is optional.
+
+`$parameter^^pattern`<br>
+Expand the value of *parameter* into all uppercase. *pattern* is optional.
+
+`$parameter^pattern`<br>
+Expand the value of *parameter*, changing only the first character to uppercase. *pattern* is optional.
+
+#### Arithmetic Evaluation and Expansion
+
+**Basic Arithmetic Expansion:** `$((expression))`
+
+Specifying Number Bases:
+| Notation | Description |
+| --- | ---- |
+| *`number`* | Default. Base 10 |
+| *`0number`* | Octal |
+| *`0xnumber`* | Hexadecimal |
+| *`base#number`* | *`number`* is in base |
+
+Shell's arithmetic operates only on integers and gives only integer results *(`$(( 5/2 ))` &rarr; `2`)*
+
+Assignment Operators:
+| Notation | Description |
+| --- | --- |
+| `parameter = value` | Simple assignment |
+| `parameter += value` | Equivalent to `parameter = parameter + value` |
+| `parameter -= value` | Equivalent to `parameter = parameter - value` |
+| `parameter *= value` | Equivalent to `parameter = parameter * value` |
+| `parameter /= value` | Equivalent to `parameter = parameter / value` |
+| `parameter %= value` | Equivalent to `parameter = parameter % value` |
+| `parameter++` | Equivalent to `parameter = parameter + 1` |
+| `parameter--` | Equivalent to `parameter = parameter - 1` |
+| `++parameter` | Equivalent to `parameter = parameter + 1` |
+| `--parameter` | Equivalent to `parameter = parameter - 1 |
+
+Pre-increment (`++parameter`) performs the operation *before* parameter is returned.<br>
+Post-increment (`parameter++`) performs the operation *after* parameter is returned.<br>
+```
+bilal@LOQ:~$ foo=1
+bilal@LOQ:~$ echo $((foo++))
+1
+bilal@LOQ:~$ echo $foo
+2
+```
+For most applications, like `for` loop, prefixing is best.
+
+#### Bit Operations
+
+Bit Operators:
+| Operator | Description |
+| --- | --- |
+| `~` | Bitwise negation. Negate all the bits in a number. |
+| `<<` | Left bitwise shift. Shift all the bits in a number to the left. |
+| `>>` | Right bitwise shift. Shift all the bits in a number to the right. |
+| `&` | Bitwise AND. Perform an AND operation on all the bits in two numbers |
+| `\|` | Bitwise OR. Perform an OR operation on all the bits in two numbers. |
+| `^` | Bitwise XOR. Perform an exclusive OR operation on all the bits in two numbers. |
+
+`((expr1?expr2:expr3))`<br>
+Comparison (ternary) operator. If expression *`expr1`* evaluates to be nonzero, then *`expr2`*; else *`expr3*.<br>
+*Example:*<br>
+`((a<1?(a+=1):(a-=1)))`
+
+#### `bc`
+
+`bc`<br>
+Precision Calculator Language. For things like using floating points.
+
+`bc -q`<br>
+`bc` interactive mode. Ended with `quit` command.
+
+`bc` can also be used with **here documents** as it takes standard input.<br>
+`bc <<< "2+2"`
+
+
+<hr>
+<br>
+
+
+### Ch. 35 ARRAYS<br>(29/05/26)
+
+Bash only supports one-dimensional arrays.
+
+`declare -a a`<br>
+Creates the array named *a*.
+
+`name[subscript]=value`<br>
+Single-value assignment.
+
+`name=(value1 value2 ...)`<br>
+`name=([subscript0]=value1 [subscript2]=value2 ...)`<br>
+Multiple-value assignment.
+
+`${array[@]}`
+Expands into list of entire contents of *array*.
+
+`${#a[@]}`<br>
+Expands into number of array elements.
+
+Define array *a* using `a[100]="foo"`, it now has 1 element, not 100.
+
+`${!array[*]}`<br>
+`${!array[@]}`<br>
+Expands into list of all array indexes.
+
+`array+=(value3 value4 value5)`<br>
+Appends values to the end of *array*.
+
+`for i in "${array[@]}"; do echo %i; done | sort`<br>
+Outputs sorted *array*.
+
+`unset 'array[subscript]'`<br>
+Deletes array element.
+
+`unset array`<br>
+Deletes *array*.
+
+Any reference to *array* without a subscript is interpreted by shell as a reference to *array[0]*.
+
+**Associative Arrays** use strings rather than integers as array indices.<br>
+*e.g.*<br>
+`echo ${colors["blue"]}`
+
+`declare -A colors`<br>
+Creates the associative array named *colors*.
+
+
+<hr>
+<br>
+
+
+### Ch. 36 EXOTICA<br>()
