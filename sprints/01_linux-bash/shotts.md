@@ -1,5 +1,5 @@
 # ["The Linux Command Line" by William Shotts]
-## (24/2/26 &ndash; 29/05/26)
+## (24/2/26 &ndash; 31/05/26)
 ## **Task:**
 
 The task is to read relevant chapters from [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf).
@@ -75,7 +75,7 @@ Lists directory contents, in long format, sorted by modification date, with the 
 | --- | --- | --- |
 | `-a` | `--all` | List all files, even hidden ones |
 | `-A` | `--almost-all` | Like -a except doesn't list . and .. |
-| `-d` | `--directory` | In conjunction with `-l`, shows details about the directory istelf rather than its contents |
+| `-d` | `--directory` | In conjunction with `-l`, shows details about the directory itself rather than its contents |
 | `-F` | `--classify` | Append an indicator character to the end of each listed name (like / for directories) |
 | `-h` | `--human-readable` | In long format listings, displat file sizes in human-readable format (rather than in bytes) |
 | `-l` | | Display in long format |
@@ -1065,7 +1065,7 @@ fi
 ```
 
 All commands issue an integer value to the system when they terminate, called an **exit status**. A value of 0 indicates success and any other value indicates failure.<br>
-`$?`<br>
+**`$?`**<br>
 Special parameter holding the **exit status** value.
 
 `test`<br>
@@ -1660,4 +1660,65 @@ Creates the associative array named *colors*.
 <br>
 
 
-### Ch. 36 EXOTICA<br>()
+### Ch. 36 EXOTICA<br>(30/5/26&ndash;31/5/26)
+
+Group command syntax:<br>
+{ command1; command2; [command3; ...] }
+
+Subshell syntax:<br>
+(command1; command2; [command3;...])
+
+Group commands are useful for managing redirection and pipelines.<br>
+`{ ls -l; echo "Listing of foo.txt"; cat foo.txt } > output.txt`<br>
+`(ls -l; echo "Listing of foo.txt"; cat foo.txt) > output.txt`<br>
+`{ ls -l; echo "Listing of foo.txt"; cat foo.txt } | lpr`<br>
+
+**Process Substitution** allows us to treat the output of a subshell as an ordinary file for purpose of redirection.<br>
+*e.g.:* `read < <(echo "foo")`
+
+`<(list)`<br>
+Process substitution for processes that produce standard output.
+
+`>(list)`<br>
+Process substitution for processes that produce standard intput.
+
+**`trap`** command implements signal-handling in programs.
+
+`trap` Syntax:<br>
+`trap argument signal [signal...]`<br>
+Reads and treats *argument* string as a command which is triggered and executed by *signal*.<br>
+*e.g.:* `trap "echo 'I am ignoring you.'" SIGINT SIGTERM`
+
+**Naming temporary files:**
+`tempfile=$(mktemp /tmp/foobar.$$.XXXXXXXXXX)`
+
+`wait`<br>
+Pauses a parent script until a specified (child) process finishes.<br>
+*(For **Asynchronous Execution**)*
+
+**`$!`**<br>
+Special parameter that holds the process ID of the last job put into the background.
+
+**Named Pipes**<br>
+Special type of file that create a connection between two processes. They behave like files but actually form FIFO buffers.<br>
+`process1 > named_pipe`<br>
+`process 2 < named_pipe`<br>
+behaves like:
+`process1 | process2`
+
+`mkfifo pipe1`<br>
+Creates named pipe, *pipe1*
+
+<br>
+
+**Special Parameters**
+| Special Parameter | Meaning |
+| --- | --- |
+| `$*` | All positional parameters as one word |
+| `$@` | All positional parameters as separate words |
+| `$#` | Number of positional parameters |
+| `$?` | Exit status of the last command |
+| `$$` | PID of the current shell |
+| `$!` | PID of the most recent background job |
+| `$0` | Name of the shell or script |
+| `$_` | Last argument of the previous command (with some additional uses) |
