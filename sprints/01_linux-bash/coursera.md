@@ -181,7 +181,7 @@ fi
 
 `$#` is a special variable that holds the number of command-line arguments read by a bash script.
 
-Arithmetic is done using the notation, `$(()).<br>
+Arithmetic is done using the notation, `$(())`.<br>
 `echo $((3+2))`
 
 #### Logical Operators
