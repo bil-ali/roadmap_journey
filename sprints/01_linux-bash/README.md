@@ -9,7 +9,7 @@ The primary resources I will employ for this exercise are
 
 ## Deliverables
 The expected outputs here are the .md file documenting my notes for [The Linux Command Line by William Shotts](https://www.kea.nu/files/textbooks/humblesec/thelinuxcommandline.pdf), and a certificate file showing completion of the Coursera course.
-- `ibm-linux.md`
+- `certificate.pdf`
 - `shotts.md`
 - `coursera.md`
 
