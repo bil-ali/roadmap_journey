@@ -1,5 +1,5 @@
 # Docker Fundamentals
-## (20/06/26 &ndash; 26/06/26)
+## (20/06/26 &ndash; 30/06/26)
 
 ### [Learn Docker – Full DevOps Course for Deploying Containerized Apps](https://www.youtube.com/watch?v=rjjES5IsPdg&t=3048s)
 
@@ -222,9 +222,7 @@ Path: The build context &mdash; usually the current directory.
 ##### **Docker File Structure &mdash; EXPOSE**
 `EXPOSE <port>`
 
-The `EXPOSE` instruction informs Docker that the container listens on the specified network ports at runtime.
-<br>
-`EXPOSE` is informational only. It doesn't actually publish or expose the port or open it to the host.
+The `EXPOSE` instruction informs Docker that the container listens on the specified network ports at runtime. `EXPOSE` is informational only. It doesn't actually publish or expose the port or open it to the host.
 
 | | |
 | --- | --- |
@@ -267,11 +265,11 @@ CMD ["python3", "main.py"]
 ##### **Docker File Structure &mdash; ENV**
 `ENV <key><value>`
 
-The `ENV` instruction allows for setting eniornment variables for the Docker container.
+The `ENV` instruction allows for setting enviornment variables for the Docker container.
 
 | | |
 | --- | --- |
-| `ENV name=DolfinED`<br>`CMD ["echo", "$name"]` | OUTPUT: DolfinED |
+| `ENV name=DolfinED`<br>`CMD ["echo", "$name"]` | **OUTPUT:**<br>DolfinED |
 
 You can use ENV to set the default values of variables, which you can later override at runtime *(with -e)*.<br>
 Example:
@@ -282,11 +280,14 @@ ENV action=ping
 ENV target=8.8.8.8
 CMD ["sh","-c","exec $action $target"]
 ```
+&darr;<br>
 `docker built -t myimage .`
-
+<br>&darr;<br>
 `docker run -e action=curl -e target=10.10.1.1 myimage`
+<br>&darr;<br>
+OUTPUT:
 
-OUTPUT: curl 10.10.1.1
+    curl 10.10.1.1
 
 ##### **Docker File Structure &mdash; LABEL**
 `LABEL key="value"`
@@ -296,3 +297,21 @@ The `LABEL` instruction in Docker is a way to add metadata *(author, version, de
 | | |
 | --- | --- |
 | `LABEL Owner="DolfinED Academy Team <team@support.dolfined.com"` | |
+
+#### **Best Practice Tips**
+
+- Group `COPY` and `RUN` wisely to improve layer caching.
+- Put less frequently changed lines early *(like installing dependencies)*.
+- Avoid unnecessary `RUN` commands to reduce layer count and image size.
+
+| Goal | What's Better? | Why? |
+| --- | --- | --- |
+| Fast Builds | More layers (smart caching) | Docker can skip unchanged layers |
+| Smaller Images | Fewer layers, clean builds | Fewer intermediate files/layers |
+| Maintainability | Readable layers | Easier debugging and edits |
+| Layer reusability | Split steps logically | Base images can be reused/cached |
+
+#### **Docker Naming Convention**
+`[registry/][username_or_org/]repository[:tag]`
+
+- 
