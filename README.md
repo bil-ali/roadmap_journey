@@ -27,9 +27,8 @@ The plan also weaves in **core CS fundamentals** (OS, networking, data structure
 ├── sprints/
 │ ├── 00_pre-linux-os-basics/
 │ ├── 01_linux-bash/
-│ ├── 02_networking-basics/
-│ ├── 03_http-api-fundamentals/
-│ ├── 04_fastapi/
+│ ├── 02_docker-fundamentals/
+│ ├── 03_networking-basics/
 │ └── ...
 ├── projects/
 │ ├── project1_fastapi_service/
@@ -61,4 +60,4 @@ Each sprint or task includes a **short `.md` proof** with:
 | --- | --- | --- |
 | Pre-Linux OS Basics | ✅ Complete | Proof in `00_pre-linux-os-basics/` |
 | Linux/Bash | ✅ Complete | Proof in `01_linux-bash/` |
-| Networking Basics | 🔄 In progress | Proof in `02_networking-basics/` |
+| Docker Fundamentals | 🔄 In progress | Proof in `02_docker-fundamentals/` |
