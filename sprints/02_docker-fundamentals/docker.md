@@ -1,5 +1,5 @@
 # Docker Fundamentals
-## (20/06/26 &ndash; 30/06/26)
+## (20/06/26 &ndash; 04/07/26)
 
 ### [Learn Docker – Full DevOps Course for Deploying Containerized Apps](https://www.youtube.com/watch?v=rjjES5IsPdg&t=3048s)
 
@@ -314,4 +314,155 @@ The `LABEL` instruction in Docker is a way to add metadata *(author, version, de
 #### **Docker Naming Convention**
 `[registry/][username_or_org/]repository[:tag]`
 
-- 
+- **Registry**: The name of the container registry *(default is docker.io)*<br>(Optional)
+- **Username or organization**: The name of the user or organization<br>(Required for non-official images only)
+- **Repository**: The name of the image or the project
+- **Tag**: The version *(defaults to Latest)*<br>(Optional)
+
+#### `docker tag`
+`docker tag SOURCE_IMAGE[:TAG] TARGET_NAME[:TAG]`
+
+The docker tag command is used to add a new name/alias to an existing Docker image.
+
+If we're going to **push**, images must be correctly tagged with the intended registry & image name before they are pushed:
+
+`docker tag SOURCE_NAME REGISTRY_HOST/USERNAME/REPO:TAG`
+
+For Dockerhub, you do not need to specify the registry as it defauls to *docker.io*:
+
+`docker tag LOCAL_IMAGE_NAME:tag USERNAME/REPO:TAG`
+
+| | |
+| --- | --- |
+| `docker tag pthon:3.10 my-python-app:latest` | |
+| `docker tag myapp registry.mycorp.com/devops/myapp:1.0.0` | This will tag the image *myapp* with the name *registry.mycorp.com/devops/myapp:1.0.0* in preparation to be pushed to the private registry *registry.mycorp.com*, under account *devops*, under repo/image *myapp* with the tag *1.0.0* |
+| `docker tag myimage myusername/myapp:latest` | *myimage* is tagged in preparation for pushing to docker hub registry, under account *myusername*, under the repo *myapp* with the tag *latest* |
+
+#### `docker login`
+`docker login Registry_Host`
+
+You have to login to Docker Hub to push to a repository.
+
+#### `docker push`
+`docker push [DOCKER_HOST]/USERNAME/REPO:TAG`
+
+Uploads a locally tagged image to a Docker registry.
+
+| | |
+| --- | --- |
+| `docker push myapp myusername/myapp:latest` | This pushes the image to Docker Hub under the account *myusername*, repo *myapp*, with the tag "*latest*" |
+| `docker push registry.mycorp.com/devops/myapp:1.0.0` | This pushes the image to registry *registry.mycorp.com* under the account name *devops*, repo *myapp*, with the tag "*1.0.0*" |
+
+<hr>
+<br>
+
+#### **Docker Bridge Networks**
+In Docker, a bridge network uses a software bridge to allow containers to communicate inside the docker host.<br>
+By default, when you start Docker, a bridge (`docker0`) is created automatically.
+
+#### **Docker Network Modes (Drivers)**
+- **Bridge** (default)&ensp;&ndash;&ensp;The default network driver.
+- **Host**&ensp;&ndash;&ensp;Remove network isolation between the container and the Docker host.
+- **None**&ensp;&ndash;&ensp;Completely isolate a container from the host and other containers.
+- **Overlay**&ensp;&ndash;&ensp;Overlay networks connect multiple Docker daemons together.
+- **Ipvlan**&ensp;&ndash;&ensp;Ipvlan networks provide full control over both IPv4 and IPv6 addressing.
+- **Macvlan**&ensp;&ndash;&ensp;Assign a MAC address to a container.
+- **Userdefined**&ensp;&ndash;&ensp;Custom network
+
+#### **Brige Driver/Mode**
+
+- Containers connected to the same bridge network can communicate
+- A bridge network isolates its containers from other containers on other bridges
+- Bridge networks apply within the same Docker host only
+- A container can connect to multiple bridge networks at the same time
+
+##### **Docker Default Bridge (`docker0`)**
+
+- The defauolt docker bridge network (`docker0`) IP subnet is 172.17.0.0/16
+- 172.17.0.1 is the IP default gateway between bridge `Docker0` and the Docker host
+- Unless otherwise specified, all newly created containers attach to `Docker0`
+- Each container created in bridge mode has an eth0 with an assigned IP address
+- A new bridge virtual interface (veth) us created with every running container
+
+![0.png](img/0.png)
+
+##### **Docker Mode&ensp;&ndash;&ensp;Containers Outbound Connectivity To External Network **
+
+In bridge network mode, when a container communicates outbound with external networks, the Docker host performs **Network Address Translation (NAT)**.<br>
+Docker host mainains NAT entries in IPtables.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Network Address Translation (NAT)** is a process where a network device (e.g., Docker host) modifies the IP address and port number in the header of an IP packet as it passes through.
+>
+> In this case, **NAT** is replacing the container's private internal IP address (`172.17.0.2`) with the Docker host's own public IP address (`192.168.112.50`). 
+> <!-- --- -->
+
+![1.png](img/1.png)
+
+#### **Decker Networking Commands**
+
+| Command | What it does |
+| --- | --- |
+| `ip a` | Display network interfaces and their associated IP addresses on a Linux-based system |
+| `docker network ls` | List all available networks |
+| `docker network create <name` | Create a new network with a specific name |
+| `docker network create --subnet 10.0.0.0/16 <network-name` | Create a new network with a custom subnet range |
+| `docker network inspect <network-name or ID>` | Inspect a docker network |
+| `docker run --network <network-name> <image-name>` | Run a new container and connect it to a Docker network |
+| `docker network connect <network-name> <container_name>` | Connect a running container to a Docker network |
+| `docker network disconnect <network-name> <container_name>` | Disconnect a running container from a Docker network *(Does not work with none and host network modes)* |
+
+<hr>
+<br>
+
+#### **Persisting Data in Docker**
+
+##### **Benefits**
+- Share data between containers
+- Separate app code from user data
+- Avoid losing data when a container stops or is deleted
+
+Two common ways to persist data in Docker containers:
+1. **Volumes**
+2. **Bind Mounting**
+
+#### **Docker Volumes**
+
+Volumes are stored in the **host filesystem** in the Docker internal sotrage area which is managed by Docker.<br>
+Each volume gets its own volume path as follows:
+```
+/var/lib/docker/volumes/<volume-name>/_data/
+```
+
+A docker volume:
+- is **isolated** from container layers
+- **persists independently** of containers
+- is **mounted into containers** at runtime
+- allows data to survive container restarts, deletion, and image rebuilds
+
+##### **`docker volume` Commands**
+
+| | |
+| --- | --- |
+| `docker volume create <volume-name` | Create a new "named" docker volume |
+| `docker volume ls` | List existing docker volumes |
+| `docker volume inspect <volume-name>` | Show detailed info about a volume |
+| `docker volume rm <volume-name>` | Delete a docker volume |
+
+##### **`docker run` Command Options & Docker Volumes**
+`-v [volume name]:[container directory]`
+
+Launch a container with a volume attached.
+
+| | |
+| --- | --- |
+| `docker run -v mydata:/app/data ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. |
+| `docker run -v mydata:/app/data:ro ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. The container has **read only** access to the *mydata* volume. |
+
+##### **Sharing Data Between Multiple Docker Containers**
+The `--volume-from` flag allows you to inherit all the volume mounts from another container.
+
+| | |
+| --- | --- |
+| `docker run -it --volumes-from cont1 ubuntu` | Create an *ubuntu* container and allow it to inherit all volume mounts from *cont1* |
