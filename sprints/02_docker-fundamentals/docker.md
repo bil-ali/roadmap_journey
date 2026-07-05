@@ -466,3 +466,28 @@ The `--volume-from` flag allows you to inherit all the volume mounts from anothe
 | | |
 | --- | --- |
 | `docker run -it --volumes-from cont1 ubuntu` | Create an *ubuntu* container and allow it to inherit all volume mounts from *cont1* |
+
+
+#### **Docker Bind Mounts**
+
+Bind mounting is simply pointing Docker to a specific folder or file on your computer right now and plugging that exact folder directly into the container.
+- Bind mounts may be stored anywehere in the host filesystem.
+- It is used with docker run commands (not in Dockerfile)
+- Perfect for development and testing (container can directly access host files)
+
+##### **`docker run` Command & Bind Mounting Options**
+
+| | |
+| --- | --- |
+| `docker run -v /home/user/project:/app myimage` | */app* in the container is mapped directly to the host path */home/user/project* |
+| `docker run -v $(pwd):/app my-dev-image` | */app* in the container is mapped directly to the host's *current working directory* |
+| `docker run -v /home/user/nginx.conf:/etc/nginx/nginx.conf nginx` | Injecting a host-specific *config* into the container without rebuilding an image |
+
+#### **Docker Volumes vs Bind Mounts**
+
+Volumes are better for production because they're:
+- Safer *(Docker manages them)*
+- Less error-prone *(no accidental host overwrite)*
+- Portable *(no hard-coded paths)*
+- Easier to back up
+- Better integrated with Docker tooling
