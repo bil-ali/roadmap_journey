@@ -491,3 +491,88 @@ Volumes are better for production because they're:
 - Portable *(no hard-coded paths)*
 - Easier to back up
 - Better integrated with Docker tooling
+
+
+#### **Docker Compose**
+
+**Docker Compose** is a tool that lets youy define and manage multi-container Docker applications.
+- It allows you to define the entire environment (services, networks, volumes, dependencies, etc.) in a simple YAML file (`docker-compose.yml`)
+- Using a single docker command, you can execute the YAML file to run a project of multiple containers on a single docker host
+- Docker Compose can build the component images using their Dockerfiles or pul them from a registry
+
+##### **Docker Compose File Structure**
+
+Example 1 (with bind mounting):
+
+`Docker-compose.yml`
+```
+services:
+  databases:
+    image: mysql
+    container_name: dolfined
+    volumes:
+      - hostPath:containerPath
+
+frontend:
+  build: .
+  ports:
+    - "3000:5000"
+
+backend:
+  build:
+    context: /usr/project/app
+    dockerfile: fileconfig
+```
+
+Example 2 (with named volume):
+
+`Docker-compose.yml`
+```
+services:
+  databases:
+    image: mysql
+    container_name: dolfined
+    volumes:
+      - volumeName:containerPath
+
+  frontend:
+    build: .
+    ports:
+      - "3000:5000"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+volumes:
+  volumeName:
+```
+
+Example 3 (with anonymous volume):
+
+`Docker-compose.yml`
+```
+services:
+  databases:
+    image: mysql
+    container_name: dolfined
+    volumes:
+      - :containerPath
+
+  frontend:
+    build: .
+    ports:
+      - "3000:5000"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+```
+
+##### **Docker Compose Commands**
+
+| | |
+| --- | --- |
+| `` |  |
