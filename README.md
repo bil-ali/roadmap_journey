@@ -60,4 +60,5 @@ Each sprint or task includes a **short `.md` proof** with:
 | --- | --- | --- |
 | Pre-Linux OS Basics | ✅ Complete | Proof in `00_pre-linux-os-basics/` |
 | Linux/Bash | ✅ Complete | Proof in `01_linux-bash/` |
-| Docker Fundamentals | 🔄 In progress | Proof in `02_docker-fundamentals/` |
+| Docker Fundamentals | ✅ Complete | Proof in `02_docker-fundamentals/` |
+| Networking Basics | 🔄 In progress | Proof in `03_networking-basics` |

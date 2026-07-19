@@ -1,7 +1,11 @@
 # Docker Fundamentals
-## (20/06/26 &ndash; 04/07/26)
+## (20/06/26 &ndash; 09/07/26)
 
-### [Learn Docker – Full DevOps Course for Deploying Containerized Apps](https://www.youtube.com/watch?v=rjjES5IsPdg&t=3048s)
+## **Task:**
+The task is to acquire adequate Docker knowledge to implement later projects, and make notes so that knowledge is retained and preserved. This will, in part, be accomplished via the following FreeCodeCamp course: [Learn Docker – Full DevOps Course for Deploying Containerized Apps](https://www.youtube.com/watch?v=rjjES5IsPdg)
+
+## **Proof:**
+### [Learn Docker – Full DevOps Course for Deploying Containerized Apps](https://www.youtube.com/watch?v=rjjES5IsPdg)
 
 #### `docker pull`
 `docker pull [OPTIONS] IMAGE[:TAG | @DIGEST]`
@@ -445,7 +449,7 @@ A docker volume:
 
 | | |
 | --- | --- |
-| `docker volume create <volume-name` | Create a new "named" docker volume |
+| `docker volume create <volume-name>` | Create a new "named" docker volume |
 | `docker volume ls` | List existing docker volumes |
 | `docker volume inspect <volume-name>` | Show detailed info about a volume |
 | `docker volume rm <volume-name>` | Delete a docker volume |
@@ -458,7 +462,9 @@ Launch a container with a volume attached.
 | | |
 | --- | --- |
 | `docker run -v mydata:/app/data ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. |
+| `docker run --mount type=volume,src=mydata,target=/app/data ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. |
 | `docker run -v mydata:/app/data:ro ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. The container has **read only** access to the *mydata* volume. |
+| `docker run --mount type=volume,src=mydata,target=/app/data,readonly ubuntu` | Create an *ubuntu* container and a volume *mydata*. Mount the volume at the */app/data* folder in the container. The container has **read only** access to the *mydata* volume. |
 
 ##### **Sharing Data Between Multiple Docker Containers**
 The `--volume-from` flag allows you to inherit all the volume mounts from another container.
@@ -480,6 +486,7 @@ Bind mounting is simply pointing Docker to a specific folder or file on your com
 | | |
 | --- | --- |
 | `docker run -v /home/user/project:/app myimage` | */app* in the container is mapped directly to the host path */home/user/project* |
+| `docker run --mount type=bind,src=/home/user/project,target=/app myimage` | */app* in the container is mapped directly to the host path */home/user/project* |
 | `docker run -v $(pwd):/app my-dev-image` | */app* in the container is mapped directly to the host's *current working directory* |
 | `docker run -v /home/user/nginx.conf:/etc/nginx/nginx.conf nginx` | Injecting a host-specific *config* into the container without rebuilding an image |
 
@@ -495,10 +502,11 @@ Volumes are better for production because they're:
 
 #### **Docker Compose**
 
-**Docker Compose** is a tool that lets youy define and manage multi-container Docker applications.
+**Docker Compose** is a tool that lets you define and manage multi-container Docker applications.
 - It allows you to define the entire environment (services, networks, volumes, dependencies, etc.) in a simple YAML file (`docker-compose.yml`)
 - Using a single docker command, you can execute the YAML file to run a project of multiple containers on a single docker host
 - Docker Compose can build the component images using their Dockerfiles or pul them from a registry
+- By default, Docker Compose sets up a bridge network, such that each container for a service is reachable by all other compose services' containers on that network.
 
 ##### **Docker Compose File Structure**
 
@@ -575,4 +583,15 @@ services:
 
 | | |
 | --- | --- |
-| `` |  |
+| `docker compose build` | Builds the images for the services |
+| `docker compose run <service-name>` | Creates a specific service (container) included in the docker-compose.yml file |
+| `docker compose up` | Builds the images if they are not located locally and starts the containers |
+| `docker compose -f <file-name> up` | Specifies a different compose file, builds the images, and starts the containers |
+| `docker compose up -d` | Similar to '`docker compose up`' but runs the containers in detached mode |
+| `docker compose down` | Stops and removes all containers created by '`docker compose up`' |
+| `docker compose down --volumes` | Stops and removes all containers and volumes (named and anonymous) created by '`docker compose up`' |
+| `docker compose down --remove-orphans` | Stops and removes all current Compose containers and any old (orphan) containers that are no longer referenced by Compose yaml file |
+| `docker compose down --volumes --remove-orphans` | Stops and removes all current Compose containers and volumes (named and anonymous) and any old (orphan) containers that are no longer referenced by Compose yaml file |
+| `docker compose ps` |  |
+| `docker compose stop` |  |
+| `docker compose start` |  |

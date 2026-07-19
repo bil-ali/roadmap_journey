@@ -19,6 +19,5 @@ The expected outputs here are the .md file documenting my notes for [The Linux C
 ├── README.md
 ├── shotts.md
 ├── coursera.md
-├── certificate.pdf
-└── images/     # Screenshots
+└── certificate.pdf
 ```
