@@ -11,7 +11,7 @@ The expected outputs here is the .md file documenting my notes for [Learn Docker
 
 ## Structure
 ```
-[01_linux-bash]/
+[02_docker-fundamentals]/
 ├── img
 ├── docker.md
 └── README.md

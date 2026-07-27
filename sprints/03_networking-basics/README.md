@@ -8,7 +8,7 @@ This sprint's main goal is to develop a working knowledge of computer networking
 
 ## Structure
 ```
-[02_networking-basics]/
+[03_networking-basics]/
 ├── README.md
 ├── kurose-ross.md
 ├── ostep48.md
