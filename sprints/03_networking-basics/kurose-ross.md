@@ -26,7 +26,10 @@ The proof will be the per-chapter notes I write below.
 **Hosts/End Systems:** Any device that is connected to a computer network as a source or destination of data. (e.g., mobile computer, smartphone, router, server, cell phone tower)
 
 End systems are connected together by a network of **communication links** and **packet switches**.
-
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Packets:** Small chunks of data that messages are broken into before being sent across a computer network.
+> <!-- --- -->
 **Packet Switch:** Takes a packet arriving on one of its incoming communication links and forwards that packet on one of its outgoing communication links.<br>
 Two types of packet switches: **Routers** and **Link-layer Switches**.
 
@@ -37,3 +40,7 @@ Two type of hosts: **Clients** and **Servers**.
 **Client:** A device or program that request data or services from a server. *(e.g., desktops, laptops, smartphones)*
 <br>
 **Server:** A powerful system or program listens for client requests and provides requested resources. *(e.g., web servers, file servers, database servers)*
+
+**Store-and-Forward Transmission:** The packet switch must receive the entire packet before it can begin to transmit the first bit of the packet onto the outbound link.
+
+Sending one packet from source to destination over a path consisting of $N$ links *(thus, there are $N-1$ routers between source and destination)* each of rate $R$, end-to-end delay = $N\dfrac{L}{R}$.
