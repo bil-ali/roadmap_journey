@@ -12,5 +12,5 @@ This sprint's main goal is to develop a working knowledge of computer networking
 ├── README.md
 ├── kurose-ross.md
 ├── ostep48.md
-└── images/
+└── img/
 ```

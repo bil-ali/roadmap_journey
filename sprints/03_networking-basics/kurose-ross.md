@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (00/00/26 &ndash; 00/00/26)
+## (27/07/26 &ndash; 02/08/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -21,7 +21,7 @@ The proof will be the per-chapter notes I write below.
 6. **Data Link Layer**
 7. **Physical Layer**
 
-### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(00/00/26&ndash;00/00/26)
+### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(27/07/26&ndash;02/08/26)
 
 **Hosts/End Systems:** Any device that is connected to a computer network as a source or destination of data. (e.g., mobile computer, smartphone, router, server, cell phone tower)
 
@@ -48,13 +48,26 @@ Sending one packet from source to destination over a path consisting of $N$ link
 In addition to store-and-forward delays, there's also **queuing delay** due to output buffers.
 <br>
 **Queuing delay:** The time a data packet spends in a router's buffer before it gets transmitted onto a link.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> When the arrival rate *(in bps)* to link exceeds the transmission rate *(in bps)* of link, packets will start to queue.
+> <!-- --- -->
 
-Buffer space is finite. If a packet arrivges when buffer is already full, there is **packet loss**.
+Buffer space is finite. If a packet arrives when buffer is already full, there is **packet loss**.
 
-In the Internet, every end systemn has an IP address.<br>
+In the Internet, every end system has an IP address.<br>
 When a source end system wants to send a packet to a destination end system, the source includes the destination's IP address in the packet's header.
 
+
+**Forwarding:** The local action of a router moving arriving packets from its input links to appropriate output links (according to ***forwarding table***).
+
 **Forwarding Table:** Maps destination addresses *(IP or MAC)* to specific outgoing ports. Stored in routers/switches.
+
+Where do the contents of the forwarding table come from? ***Routing***,
+
+**Routing:** The distributed process where routers&mdash;working together&mdash;automically figure out the best paths across a network and use those paths to build the forwarding tables.
+
+<br>
 
 **Packet Switching:** A networking method that splits data into packets, use a store-and-forward technique through nodes, and reassembles them at the destination.
 
@@ -100,4 +113,52 @@ In packet switching, link capacity is shared on a packet-by-packet basis and onl
 **Content-Provider Networks:** Private networks built and operated by large companies *(Google, Netflix, Amazon)* to host and distribute their own content directly to ISPs and end users.
 
 **The Internet:**<br>
+The **Internet** is a network of networks, consisting of a complex hierarchy of provider and customer ISPs, content-provider networks, and IXPs, all linked by standardized protocols.
 
+![Figure 1.15](img/0.png)
+
+<hr>
+
+![Figure 1.16](img/1.png)
+
+In packet-switched networks, there are several types of delays:
+- **Nodal Processing Delay:**<br>
+    The time required check for bit-level errors in the packet and examine its header to determine where to direct the packet.
+- **Queuing Delay**:<br>
+    The time the packet waits in queue to be transmitted onto the link.
+- **Transmission Delay**:<br>
+    The amount of time required to push all of the packet's bits into the link. ($\dfrac{L}{R}$)&ensp;*(A function of the packet's length and the link's transmission rate only)*
+- **Propagation Delay**:<br>
+    The time required to propagate from the beginning of the link to next router.&ensp;*(A function of the distance between the two routers only)*
+
+**Total Nodal Delay:** The sum of all of the above.
+$$
+d_{\text{nodal}} = d_{\text{proc}} + d_{\text{queue}} + d_{\text{trans}} + d_{\text{prop}}
+$$
+
+Queuing delay can vary from packet to packet, so for a metric, we use *average queuing delay*, *variance of queuing delay*, and *probability the the queuing delay exceeds some specified value*.
+
+**Traffic Intensity:** $\dfrac{La}{R}$,
+<br>where $L$ is packet length *(in bits)*,&ensp;$a$ is the average rate at which packets arrive at the queue *(in packets/sec)*,&ensp; $R$ is the transmission rate *(in bits/sec)*.
+
+If $\frac{La}{R} > 1$, then the average rate at which bits arrive at the queue exceeds the rate at which bits can be transmitted from the queue &rarr; queue will grow!
+<br>*(Conversely, when $\frac{La}{R} < 1$, the queue should shrink)*
+
+> ***Design your system so that the traffic intensity is no greater than 1.***
+
+In reality, because traffic is random and bursty, even when traffic intensity < 1, **average queuing delay increases exponentially as traffic intensity approaches 1**.
+
+**Packet Loss:** When a packet is transmitted into the network core, but never reaches its destination.
+
+**End-to-End Delay:** The sum of all nodal delays encountered at each router along the path between two hosts.
+
+**Instantaneous Throughput:** The rate *(in bits/sec)* at which data is actually being received at its destination at a specific moment in time.
+
+**Average Throughput:** $\dfrac{F}{T}$,
+<br>where it takes $T$ seconds for destination to receive all $F$ bits.
+
+For a single, long-lived data transfer with no competing traffic on a network with $N$ links, with transmission rates $R_1$, $R_2$, ... , $R_N$, the throughput is **min{R<sub>1</sub>, R<sub>2</sub>, ... , R<sub>N</sub>}**.
+
+**Throughput**: The end-to-end data delivery rate at the receiver, with the absolute upper bound constrained by the bottleneck link, i.e., **Throughput ≤ min{R<sub>1</sub>, R<sub>2</sub>, ... , R<sub>N</sub>}**.
+
+*(In reality, since there's competing traffic, the min{} comparison actually uses effective transmission rate after multiplexing instead of $R_N$)*
