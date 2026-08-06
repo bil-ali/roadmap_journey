@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 02/08/26)
+## (27/07/26 &ndash; 07/08/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -21,7 +21,7 @@ The proof will be the per-chapter notes I write below.
 6. **Data Link Layer**
 7. **Physical Layer**
 
-### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(27/07/26&ndash;02/08/26)
+### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(27/07/26&ndash;07/08/26)
 
 **Hosts/End Systems:** Any device that is connected to a computer network as a source or destination of data. (e.g., mobile computer, smartphone, router, server, cell phone tower)
 
@@ -115,11 +115,11 @@ In packet switching, link capacity is shared on a packet-by-packet basis and onl
 **The Internet:**<br>
 The **Internet** is a network of networks, consisting of a complex hierarchy of provider and customer ISPs, content-provider networks, and IXPs, all linked by standardized protocols.
 
-![Figure 1.15](img/0.png)
+![Figure 1.15](img/0.png "Figure 1.15")
 
 <hr>
 
-![Figure 1.16](img/1.png)
+![Figure 1.16](img/1.png "Figure 1.16")
 
 In packet-switched networks, there are several types of delays:
 - **Nodal Processing Delay:**<br>
@@ -129,7 +129,8 @@ In packet-switched networks, there are several types of delays:
 - **Transmission Delay**:<br>
     The amount of time required to push all of the packet's bits into the link. ($\dfrac{L}{R}$)&ensp;*(A function of the packet's length and the link's transmission rate only)*
 - **Propagation Delay**:<br>
-    The time required to propagate from the beginning of the link to next router.&ensp;*(A function of the distance between the two routers only)*
+    The time required to propagate from the beginning of the link to next router. ($\dfrac{d}{s}$)&ensp;*(A function of the distance between the two routers only)*<br>
+    *($d$: length of physical link,&ensp;$s$: propagation speed (~2x10<sup>8</sup> m/sec))*
 
 **Total Nodal Delay:** The sum of all of the above.
 $$
@@ -139,9 +140,9 @@ $$
 Queuing delay can vary from packet to packet, so for a metric, we use *average queuing delay*, *variance of queuing delay*, and *probability the the queuing delay exceeds some specified value*.
 
 **Traffic Intensity:** $\dfrac{La}{R}$,
-<br>where $L$ is packet length *(in bits)*,&ensp;$a$ is the average rate at which packets arrive at the queue *(in packets/sec)*,&ensp; $R$ is the transmission rate *(in bits/sec)*.
+<br>where $L$: packet length *(in bits)*,&ensp;$a$: average rate at which packets arrive at the queue *(in packets/sec)*,&ensp; $R$: link transmission rate *(in bits/sec)*.
 
-If $\frac{La}{R} > 1$, then the average rate at which bits arrive at the queue exceeds the rate at which bits can be transmitted from the queue &rarr; queue will grow!
+If $\frac{La}{R} > 1$, then the average rate at which bits arrive at the queue exceeds the rate at which bits can be transmitted from the queue &rarr; queue will **grow** with no upper bound!
 <br>*(Conversely, when $\frac{La}{R} < 1$, the queue should shrink)*
 
 > ***Design your system so that the traffic intensity is no greater than 1.***
@@ -161,4 +162,46 @@ For a single, long-lived data transfer with no competing traffic on a network wi
 
 **Throughput**: The end-to-end data delivery rate at the receiver, with the absolute upper bound constrained by the bottleneck link, i.e., **Throughput ≤ min{R<sub>1</sub>, R<sub>2</sub>, ... , R<sub>N</sub>}**.
 
-*(In reality, since there's competing traffic, the min{} comparison actually uses effective transmission rate after multiplexing instead of $R_N$)*
+*(In reality, since there's competing traffic and connections are shared across links, the min{} comparison actually uses effective transmission rate after multiplexing instead of $R$)*
+
+**The Internet Protocol Stack**
+<br>
+5\.&emsp;**Application**<br>
+4\.&emsp;**Transport**<br>
+3\.&emsp;**Network**<br>
+2\.&emsp;**Link**<br>
+1\.&emsp;**Physical**
+
+
+**Application Layer**
+- Where the network applications and their protocols reside. These protocols are distributed across end systems to exchange packets between applications.
+- Application-layer packets are called **messages**.
+- **e.g.**, HTTP protocol, SMTP, and FTP.
+
+**Transport Layer**
+- Transports application-layer messages between application endpoints.
+- Transport-layer packets are called **segments**.
+- Two types of protocols: TCP and UDP.
+
+**Network Layer**
+- Responsible for moving network-layer packets from one host to another.
+- Network-layer packets are called **datagrams**/**IP packets**.
+- Contains the IP protocol and routing protocols.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> The Network Layer (IP) gets the data to the right computer. The Transport Layer gets the data to the right app on that computer.
+> <!-- --- -->
+
+**Link Layer**
+- Responsible for moving packet from one node's *(host or router)* network layer to the network layer of the next node in the route.
+- Link-layer packets are called **frames**.
+- **e.g.**, Ethernet, WiFi, DOCSIS protocol.&ensp;(Depends from link to link)
+
+**Physical Layer**
+- Responsible for moving the individual bits within the frame from one node to the next.
+- Protocols depend on the actual transmission medium of the link. **e.g.**, twisted-pair copper wire, coaxial cable, fibre optics.
+
+<br>
+
+![Figure 1.24](img/2.png "Figure 1.24")
