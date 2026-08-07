@@ -205,3 +205,41 @@ For a single, long-lived data transfer with no competing traffic on a network wi
 <br>
 
 ![Figure 1.24](img/2.png "Figure 1.24")
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Transport-layer protocol **encapsulates** aopplication-layer *message* with transport layer header to create transport-layer *segment*.<br>
+> Network-layer protocol **encapsulates** transport-layer *segment* with network layer heager to create a network-layer *datagram*.<br>
+> Link-layer protocl **encapsulates** network-layer *datagram* with link-layer header to create a *frame*.
+> <!-- --- -->
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Hosts** implement all 5 layers of the protocol stack.
+>
+> **Link-layer switches** implement only layer 1 and 2.
+>
+> **Routers** implement only layer layers 1 through 3.
+> <!-- --- -->
+
+<hr>
+
+**Denial-of-Service (DoS) Attack:** A malicious atempt to disrupt the normal functioning of a targeted server, service, or network, leaving it slow, unresponsive, or unavailable to legitimate users.
+
+Three main types of DoS:
+- Vulnerability attack
+- Bandwidth flooding
+- Connection flooding
+
+**Distributed Denial-of-Service (DDoS) attack:** A DoS attack launched from a **botnet** of multiple devices spead across different locations, making it harder to block or trace back.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Botnet:** A network of compromised devices.
+> <!-- --- -->
+
+**Packet Sniffer:** A passive receiver device/program that captures and records a copy of every packet transmitted across a network segment.
+
+**IP Spoofing:** The ability to inject packets into the Intenet with a false source IP address header.
+
+**End-point Authentication:** A security mechanism that verifies the identity of the communicating peer, ensuring any messages from them are genuine and not from an impostor.
