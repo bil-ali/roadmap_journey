@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 07/08/26)
+## (27/07/26 &ndash; 11/08/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -21,7 +21,7 @@ The proof will be the per-chapter notes I write below.
 6. **Data Link Layer**
 7. **Physical Layer**
 
-### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(27/07/26&ndash;07/08/26)
+### **Ch. 1&emsp;COMPUTER NETWORKS AND THE INTERNET**<br>(27/07/26&ndash;08/08/26)
 
 **Hosts/End Systems:** Any device that is connected to a computer network as a source or destination of data. (e.g., mobile computer, smartphone, router, server, cell phone tower)
 
@@ -242,4 +242,30 @@ Three main types of DoS:
 
 **IP Spoofing:** The ability to inject packets into the Intenet with a false source IP address header.
 
-**End-point Authentication:** A security mechanism that verifies the identity of the communicating peer, ensuring any messages from them are genuine and not from an impostor.
+**Lines of Defense:**
+
+- **Authentication:** proving you are who you say you are (to protect from IP spoofing)
+- **Confidentiality:** cia encryption
+- **Integrityy checks:** digital signatures prevent/detect tampering
+- **Access Restrictions:** password-protected VPNs
+- **Firewalls:** Specialized "middle boxes" in access and core networks
+
+
+<hr>
+<br>
+
+
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;)
+
+Two main application architectural paradigms:
+- **Client-Server Architecture**
+- **Peer-to-Peer (P2P) Architecture**
+
+**Client-Server Architecture:**
+There is an always-on host, called the **server**, which passively listens for and services requests from many other hosts, called **clients**. The server has a fixed, well-known **IP address**, which a client sends packets to in order to contact the server.<br>
+Example applications: the Web, e-mail, video streaming.
+
+Client-server applications with single-server can become overwhelmed, so they often use **data centers**, housing many hosts, to create a powerful virtual server.
+
+**Peer-to-Peer Architecture:**
+The application exploits direct communication between pairs of intermittently connected hosts, called **peers**, which are user-controlled devices *(desktops, laptops, etc.)*. Because peers exchange data without passing through a dedicated server, each peer can act as both a client and a server.
