@@ -290,13 +290,13 @@ A receiving process *(specifically its socket)* is uniquely identified by two pi
 There's multiple transport-layer protocols, which we may have to pick between.
 
 Transport-layer protocols' services can be classified across the following dimensions:
-- Reliable Data Transfer<br>
+- **Reliable Data Transfer**<br>
   *(data sent by one end of the application is delivered correctly and completely to the other end of the application)*
-- Throughput<br>
+- **Throughput**<br>
   *(guaranteed available throughput at some specified rate)*
-- Timing<br>
+- **Timing**<br>
   *(guarantees like "every bit that the sender pumps into the socket arrives at the receiver's socket no more than x msec later")*
-- Security<br>
+- **Security**<br>
   *(e.g., encryption-decrpytion, data integrity, end-point authentication)*
 
 **Loss-Tolerant Applications:** Applications that can tolerate some amount of data loss. (**e.g.,** audio/video calls)
@@ -309,15 +309,66 @@ The Internet has only two available transport-layer protocols: **TCP** and **UDP
 
 **TCP Services:**
 - **Connection-oriented service:**<br>
-  
+  Client and server exchange transport-layer control information with each other (TCP handshake) before the application-level messages begin to flow. After the handshake, we say there's a TCP connection between them, which is **full-duplex**.
 - **Reliable data transfer:**<br>
-  
+  Processes can rely on TCP to deliver all data without error and in the proper order.
 - **Congestion-control mechanism:**<br>
-  m
-
+  Throttles a sending process when the network is congested between sender and receiver. Also attempts to limit each TCP connection to its fair share of network bandwidth.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Full-Duplex Connection:**&ensp;A connection over which both processes can send messages to each other at the same time.
+> <!-- --- -->
 
 **UDP Services:**
 - **No-frills, lightweight:**<br>
   Connectionless *(no handshake)*, unreliable data transfer service *(may be packet loss, messages may arrive out of order)*, no congestion-control mechanism.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Many firewalls are configured to block most types of UDP traffic.
+> <!-- --- -->
 
-  Neither TCP nor UDP provides any encryption.
+Neither TCP nor UDP provides any encryption (**Security**).
+
+Niether TCP nor UDP provide any **Throughput** or **Timing** guarantees either, but they're not really needed anyway. *(Internet already provides satisfactory service to time-sensitive applications)*
+
+There exists an enhancement for TCP, that implements Security services in the application layer: **Transport Layer Security (TLS)**.
+
+**TCP-enhanced-with-TLS:** TCP but with security services like encryption, data integrity, and end-point authentication.
+
+    When an application uses TLS, the sending process passes cleartext data to the TLS socket; TLS in the sending host then encrypts the data and passes the encrypted data to the TCP socket. The encrypted data travels over the Internet to the TCP socket in the receiving process. The receiving socket passes the encrypted data to TLS, which decrypts the data. Finally, TLS passes the cleartext data through its TLS socket to the receiving process.
+
+<br>
+
+**World Wide Web:** A client-server application that allows users to obtain documents from Web servers *on demand*. The Web application consists of many components, including a naming schema (URLs), a standard for document formats (HTML), Web browsers, Web servers, and an application-layer protocol (HTTP) that defines the sequence of messages exchanged between browser and Web server.
+
+**HTTP (HyperText Transfer Protocol):** A fundamental protocol of the Internet, *(defined in [RFC 1945], [RFC 7230], [RFC 7540], [RFC 9114])*, which serves as the foundation of data communication for the World Wide Web.
+
+**HTTP** is implemented in two programs: a client program and a server program.
+<br>
+**Web browsers** *(e.g., Chrome, Edge)* implement the client side of HTTP, and **Web servers** *(e.g., Apache, Nginx, Microsoft Internet Information Server)* implement the server side of HTTP.
+<br>
+HTTP defines how Web clients request Web pages from Web servers and how servers transfer Web pages to clients.
+
+A **Web Page** consists of objects. Most Web pages consist of a base HTML file and several referenced objects. The base HTML file references the other objects in the page with the objects' URLs.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Each URL has two components: the **hostname** of the server that houses the object, and the object's **path name**.<br>
+> In `http://www.someSchool.edu/someDepartment/picutre.gif`, `www.someSchool.edu` is the hostname and `/someDepartment/picutre.gif` is the path name.
+> <!-- --- -->
+
+HTTP is a **Stateless Protocol:** the server does not retain any state information between successive requests. Every request is treated as a brand-new, isolated transaction, with no memory of previous requests from the same client.
+
+HTTP/1 and HTTP/2 run over TCP. HTTP/3 runs over UDP.
+
+Two types of TCP connections: **Non-Persistant Connection** and **Persistant Connection**.
+
+**Non-Persistent Connection** is established for and immediately closed after exactly one request message and one response message.<br>
+Time it takes for a client to request and receive a single object:&ensp;2 RTTs + transmission time.&emsp;*(one RTT to establish the TCP connection, one RTT to handle the HTML request)*
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> The time it takes for a small packet to travel from a client to a server and back to the client.
+> <!-- --- -->
+
+**Persistent Connection** is when a TCP connection remains open across multiple request-response exchanges. It is closed when it isn't used for a certain time.<br>
+Multiple, subsequent requests can also be made to a server using "**pipelining**" i.e., back-to-back without waiting for response. The server then sends the responses/objects back-to-back.<br>
+
