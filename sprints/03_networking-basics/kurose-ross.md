@@ -372,3 +372,54 @@ Time it takes for a client to request and receive a single object:&ensp;2 RTTs +
 **Persistent Connection** is when a TCP connection remains open across multiple request-response exchanges. It is closed when it isn't used for a certain time.<br>
 Multiple, subsequent requests can also be made to a server using "**pipelining**" i.e., back-to-back without waiting for response. The server then sends the responses/objects back-to-back.<br>
 
+Two types of HTTP messages: **Request Messages** and **Response Messages**
+
+**HTTP Request Message**
+
+General format:
+![Figure 2.8](img/3.png "Figure 2.8")<br>
+It has three sections, the **Request Line**, **Header Line(s)**, and the **Entity Body**.
+
+The **request line** has 3 fields: method field, URL field, and HTTP version field.
+
+Method field can take on several different values, e.g.:
+- **`GET`**:<br>Used when browser requests an object, with the requested object identified in the URL field.
+- **`POST`**:<br>Used when the client submits data (e.g., form entries or file uploads)&mdash;like when user provides search words to a search engine. The data is carried in the entity body.
+- **`HEAD`**:<br>Used to get the same response from server as for `GET`, but without the requested object.&ensp;*(Used for debugging)*
+- **`PUT`**:<br>Used to upload an object to a specific path *(specified in URL field)* on a specific Web server.
+- **`DELETE`**:<br>Used to request the removal of an object form a Web server, with the target object identified in the URL field.
+
+Subsequent lines after request line are called **header lines**.
+
+**Example:**
+```
+GET /somedir/page.html HTTP/1.1
+Host: www.someschool.edu
+Connection: close
+User-agent: Mozilla/5.0
+Accept-language: fr
+```
+- In request line, the browser is requesting the object `/somedir/page.html`. The browser implements version HTTP/1.1
+- `Host: www.someschool.edu` specifies the host on which the object resides.&ensp;*(required for Web proxy caches)*
+- `Connection: close` tells the server to close the connection after sending the requested object.
+- `User-agent` header line specifies the user agent *(browser type)* that is making the request to the server: `Mozilla/5.0`.
+- `Accept-language: fr` indicates that the user prefers to receive a French version of the object, if available, otherwise, server should send the default version.
+
+<br>
+
+**HTTP Response Message**
+
+General format:
+![Figure 2.9](img/4.png "Figure 2.9")<br>
+It has three sections, the **Status Line**, **Header Line(s)**, and the **Entity Body**.
+
+The **entity body** is the meat of the message&mdash;it contains the requested object.
+
+The **status line** has 3 fields: the protocol version field, a status code, and a corresponding status message.
+
+The status code and asopciayted phrase indicate the result of the request. Some common ones are as follows:
+- **`200 OK`:**<br>Request succeeded and the information is returned in the response.
+- **`301 Moved Permanently`:**<br>Requested object has been permanently moved; the new URL is specified in `Location:` header of the response message. The client software will automatically retrieve the new URL.
+- **`400 Bad Request`:**<br>This is a generic error code indicating that the request could not be understood by the server.
+- **`404 Not Found`:**<br>The requested document does not exist on this server.
+- **`505 HTTP Version Not Supported`:**<br>The requested HTTP protocol version is not supported by the server.
