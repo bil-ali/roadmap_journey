@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 18/08/26)
+## (27/07/26 &ndash; 27/08/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -255,7 +255,7 @@ Three main types of DoS:
 <br>
 
 
-### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;18/08/26)
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;27/08/26)
 
 Two main application architectural paradigms:
 - **Client-Server Architecture**
@@ -333,15 +333,15 @@ Niether TCP nor UDP provide any **Throughput** or **Timing** guarantees either, 
 
 There exists an enhancement for TCP, that implements Security services in the application layer: **Transport Layer Security (TLS)**.
 
-**TCP-enhanced-with-TLS:** TCP but with security services like encryption, data integrity, and end-point authentication.
+**TCP-enhanced-with-TLS:**&ensp;TCP but with security services like encryption, data integrity, and end-point authentication.
 
     When an application uses TLS, the sending process passes cleartext data to the TLS socket; TLS in the sending host then encrypts the data and passes the encrypted data to the TCP socket. The encrypted data travels over the Internet to the TCP socket in the receiving process. The receiving socket passes the encrypted data to TLS, which decrypts the data. Finally, TLS passes the cleartext data through its TLS socket to the receiving process.
 
 <br>
 
-**World Wide Web:** A client-server application that allows users to obtain documents from Web servers *on demand*. The Web application consists of many components, including a naming schema (URLs), a standard for document formats (HTML), Web browsers, Web servers, and an application-layer protocol (HTTP) that defines the sequence of messages exchanged between browser and Web server.
+**World Wide Web:**&ensp;A client-server application that allows users to obtain documents from Web servers *on demand*. The Web application consists of many components, including a naming schema (URLs), a standard for document formats (HTML), Web browsers, Web servers, and an application-layer protocol (HTTP) that defines the sequence of messages exchanged between browser and Web server.
 
-**HTTP (HyperText Transfer Protocol):** A fundamental protocol of the Internet, *(defined in [RFC 1945], [RFC 7230], [RFC 7540], [RFC 9114])*, which serves as the foundation of data communication for the World Wide Web.
+**HTTP (HyperText Transfer Protocol):**&ensp;A fundamental protocol of the Internet, *(defined in [RFC 1945], [RFC 7230], [RFC 7540], [RFC 9114])*, which serves as the foundation of data communication for the World Wide Web.
 
 **HTTP** is implemented in two programs: a client program and a server program.
 <br>
@@ -376,7 +376,7 @@ Two types of HTTP messages: **Request Messages** and **Response Messages**
 
 **HTTP Request Message**
 
-General format:
+General format:<br>
 ![Figure 2.8](img/3.png "Figure 2.8")<br>
 It has three sections, the **Request Line**, **Header Line(s)**, and the **Entity Body**.
 
@@ -409,7 +409,7 @@ Accept-language: fr
 
 **HTTP Response Message**
 
-General format:
+General format:<br>
 ![Figure 2.9](img/4.png "Figure 2.9")<br>
 It has three sections, the **Status Line**, **Header Line(s)**, and the **Entity Body**.
 
@@ -417,9 +417,97 @@ The **entity body** is the meat of the message&mdash;it contains the requested o
 
 The **status line** has 3 fields: the protocol version field, a status code, and a corresponding status message.
 
-The status code and asopciayted phrase indicate the result of the request. Some common ones are as follows:
+The status code and associated phrase indicate the result of the request. Some common ones are as follows:
 - **`200 OK`:**<br>Request succeeded and the information is returned in the response.
 - **`301 Moved Permanently`:**<br>Requested object has been permanently moved; the new URL is specified in `Location:` header of the response message. The client software will automatically retrieve the new URL.
 - **`400 Bad Request`:**<br>This is a generic error code indicating that the request could not be understood by the server.
 - **`404 Not Found`:**<br>The requested document does not exist on this server.
 - **`505 HTTP Version Not Supported`:**<br>The requested HTTP protocol version is not supported by the server.
+
+**Example:**
+```
+HTTP/1.1 200 OK
+Connection: close
+Date: Mon, 21 Oct 2024 18:58:21 GMT
+Server: Apache/2.2.3 (CentOS)
+Last-Modified: Sun, 20 Oct 2024 13:20:46 GMT
+Content-Length: 6821
+Content-Type: text/html
+  (data data data data data ...)
+```
+- The status line is indicating that the sever is using `HTTP/1.1` and that everything is `OK` *(i.e., the server has found, and is sending, the requested object)*.
+- `Connection: close` tells the client that the server is going to close the connection after sending the message.
+- `Data:` header indicates the time and date when the HTTP response was created and sent by the server.
+- `Server:` indicates that the message was generated by an `Apache` Web server.
+- `Last-Modified:` indicates the time and date when the object was created or last modified.
+- `Content-Length:` indicates the number of bytes in the object being sent.
+- `Content-Type:` indicates that the object in the entity body is `HTML` text.
+- `(data data data data data ...)` is the entity body *(i.e., the object being sent)*.
+
+<br>
+
+**Cookies** allow sites to maintain user-specific state information across multiple otherwise stateless HTTP transactions.
+
+Cookie technology has four components:
+1. A cookie header line in the HTTP response message;
+2. A cookie header line in the HTTP request message;
+3. A cookie file kept on the user's end system and managed by the user's browser;
+4. A back-end database at the website.
+
+How cookies work:<br>
+![Figure 2.10](img/5.png "Figure 2.10")
+
+The client browser sees `Set-cookie:` header on the Web server's HTTP response, and appends a line to the special cookie file that it manages. This line includes the hostname of the server and the identification number in the `Set-cookie:` header.<br>
+All susbequent HTTP requests to this server consult the cookie file, extract the identification number, and include the `Cookie:` header.
+
+This implements a user session layer on top of stateless HTTP.
+
+<br>
+
+**Browser Caching:**&ensp;A client-side mechanism where the Web browser locally stores the content of recently received Web objects in its browser cache. When a user requests a Web object, the browser first checks its brower cache. If the object is there, it may be immediately displayed, without having to make a new Web server request.
+
+Browser caching optimizes the browser's minimum delay of 2RTT down to a potential zero RTT.
+
+HTTP provides fields in both `HTTP GET` and response messages to help the server and browser manage browser caching:
+- **`Cache-Control`:**<br>
+  `Cache-Control` field in an HTTP response message lets the server specify how the content in the HTTP respone message should be cached.&ensp;*(e.g., `Cache-Control: no-store`, `Cache-Control: max-age=3600`)*
+- **`If-Modified-Since`:**<br>
+  HTTP's mechanism to facilitate caching in request messages is the conditional GET message: the usual `HTTP GET` message but with a `If-Modified-Since:` header line.<br>The server will reply with the full object if that object has changed since time specified in `If-Modified-Since:` field; otherwise, it will simply let the browser know that its cached object is still current (`304 NOT Modified`) and doesn't send the object again.
+
+<br>
+
+On HTTP/1.1 pipelining multiple requests on a singular persistent TCP connection would lead to **Head of Line (HOL) Blocking**.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **HOL Blocking:**&ensp;A performance bottleneck where the first item in a queue delays all items behind it.
+>
+> Large/slow response at the front of a pipelined TCP connection blocks subsequent smaller/faster responses behind it from being delivered to the client, even though they could have been processed earlier, thus resulting in user-perceived delay.
+> <!-- --- -->
+
+On HTTP/1.1, HOL was circumvented by opening multiple parallel TCP connections to handle separate objects. As a result, a browser would end up opening multiple TCP connections just to transport a single Web page  *(Not ideal!)*.
+
+**HTTP/2:**<br>A revision of HTTP that gets rid of the parallel TCP connections by introducing request/response multiplexing over a *single* TCP connection. It also provides request prioritization, server push, binary framing, and header compression.
+
+**Request/Response Multiplexing:**&ensp;Each message is broken down into frames, and the frames are then interleaved on the same TCP connection. This is done for both responses *(holding Web objects)* as well as requests, significantly decreasing user-perceived delay.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Interleaving:** If there are n response messages *(and thus n objects)*, first TCP transports the 1st frame of the first response, then the 1st frame of the second response, then up to the 1st frame of the nth response, then the 2nd frame of the first response, and so on...
+>
+> Interleaving doesn't *have* to be this round-robin implementation exactly, but it will at least be similar in spirit.
+> <!-- --- -->
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> The header field of the message becomes one frame, and the body of the message is broken down into one or more additional frames.
+> <!-- --- -->
+
+Messages are broken down into frames (or re-assembled from frames) and binary encoded *(for efficiency)* in the framing sublayer of the HTTP/2 protocol.
+
+**Request Prioritization:**&ensp;When a client sends concurrent requests to a server, it can prioritize the responses it is requesting by assigning a weight between 1 and 256 to each message *(higher number = higher priority)*.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> It's not like higher-priority responses get sent first completely, ignoring multiplexing; their frames get preferential treatment in interleaving implementation.
+> <!-- --- -->
+
+**Server Pushing:**&ensp;The ability for a server to send multiple responses for a single request. It allows a server to proactively send additional resources to a client before the cient explicitly requests them.<br>
+*(e.g., analyzing base HTML page to identify all the objects needed to fully render the Web page, and also sending all the objects not even requested yet.)
