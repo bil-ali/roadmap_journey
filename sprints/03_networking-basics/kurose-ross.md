@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 27/08/26)
+## (27/07/26 &ndash; 28/08/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -255,7 +255,7 @@ Three main types of DoS:
 <br>
 
 
-### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;27/08/26)
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;28/08/26)
 
 Two main application architectural paradigms:
 - **Client-Server Architecture**
@@ -322,10 +322,6 @@ The Internet has only two available transport-layer protocols: **TCP** and **UDP
 **UDP Services:**
 - **No-frills, lightweight:**<br>
   Connectionless *(no handshake)*, unreliable data transfer service *(may be packet loss, messages may arrive out of order)*, no congestion-control mechanism.
-> <!-- --- -->
-> **\*\*NOTE****<br>
-> Many firewalls are configured to block most types of UDP traffic.
-> <!-- --- -->
 
 Neither TCP nor UDP provides any encryption (**Security**).
 
@@ -336,6 +332,18 @@ There exists an enhancement for TCP, that implements Security services in the ap
 **TCP-enhanced-with-TLS:**&ensp;TCP but with security services like encryption, data integrity, and end-point authentication.
 
     When an application uses TLS, the sending process passes cleartext data to the TLS socket; TLS in the sending host then encrypts the data and passes the encrypted data to the TCP socket. The encrypted data travels over the Internet to the TCP socket in the receiving process. The receiving socket passes the encrypted data to TLS, which decrypts the data. Finally, TLS passes the cleartext data through its TLS socket to the receiving process.
+
+<br>
+
+**Application-Layer Protocols** define:
+- types of messages exchanged
+- message syntax
+- message semantics
+- rules for when and how processes send and respond to messages
+
+Two types of Application-Layer Protocols: 
+1. **Open Protocols** *(defined in RFCs (e.g., HTTP, SMTP))*
+2. **Proprietary Protocols** *(e.g., Skype, Zoom)*
 
 <br>
 
@@ -366,7 +374,7 @@ Two types of TCP connections: **Non-Persistant Connection** and **Persistant Con
 Time it takes for a client to request and receive a single object:&ensp;2 RTTs + transmission time.&emsp;*(one RTT to establish the TCP connection, one RTT to handle the HTML request)*
 > <!-- --- -->
 > **\*\*NOTE****<br>
-> The time it takes for a small packet to travel from a client to a server and back to the client.
+> **Round-Trip Time (RTT):**&ensp;The time it takes for a small packet to travel from a client to a server and back to the client.
 > <!-- --- -->
 
 **Persistent Connection** is when a TCP connection remains open across multiple request-response exchanges. It is closed when it isn't used for a certain time.<br>
@@ -488,6 +496,12 @@ On HTTP/1.1, HOL was circumvented by opening multiple parallel TCP connections t
 
 **HTTP/2:**<br>A revision of HTTP that gets rid of the parallel TCP connections by introducing request/response multiplexing over a *single* TCP connection. It also provides request prioritization, server push, binary framing, and header compression.
 
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> HTTP/2 doesn't fully resolve the HOL blocking problem either.
+> Since multiple messages are being multiplexed over a single TCP connection, if a packet is lost and thus has to be retransmitted and processed, that delays all other messages, even if they don't depend on the lost packet (TCP holds ALL packets in its buffer until lost packet is received).
+> <!-- --- -->
+
 **Request/Response Multiplexing:**&ensp;Each message is broken down into frames, and the frames are then interleaved on the same TCP connection. This is done for both responses *(holding Web objects)* as well as requests, significantly decreasing user-perceived delay.
 > <!-- --- -->
 > **\*\*NOTE****<br>
@@ -510,4 +524,44 @@ Messages are broken down into frames (or re-assembled from frames) and binary en
 > <!-- --- -->
 
 **Server Pushing:**&ensp;The ability for a server to send multiple responses for a single request. It allows a server to proactively send additional resources to a client before the cient explicitly requests them.<br>
-*(e.g., analyzing base HTML page to identify all the objects needed to fully render the Web page, and also sending all the objects not even requested yet.)
+*(e.g., analyzing base HTML page to identify all the objects needed to fully render the Web page, and sending all the objects not even requested yet along with current response)*
+
+<br>
+
+While HTTP/1.0, HTTP/1.1, and HTTP/2 all run on TCP, **HTTP/3** runs on UDP *(specifically **QUIC**)*.
+
+**Quick UDP Internet Connections (QUIC):**&ensp;A UDP-based transport protocol that integrates TLS encryption and stream-level multiplexing, along with numerous other services into the previously barebones UDP protocol.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Technically, **QUIC** is a sub-layer in the application layer that uses UDP to send and receive packets over the internet *(analogous to TCP-enhanced-with-TLS and TCP)*.
+> <br>
+> However, from the application developor's directive, QUIC may as well just be a new transport layer protocol.
+> <!-- --- -->
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **HTTPS:**&ensp;The secure version of HTTP, achieved by the standard HTTP application-layer protocol over TCP-enhanced-with-TLS instead of basic TCP.
+>
+> HTTPS is slower than HTTP as it has **two** handshake phases before messages can be exchanged: 1) TCP handshake, 2) TLS handshake *(sharing encryption keys between client and server)*.
+> <!-- --- -->
+
+"**Streams**" in QUIC refer to the different data streams *(different HTTP messages, in an HTTP context)* sharing the same QUIC connection.
+
+**QUIC Services:**
+- **Connection-Oriented:**<br>
+  Like TCP.
+- **Reliable Data Transfer:**<br>
+  Like TCP.
+- **Congestion and Flow Control:**<br>
+  Like TCP.
+- **Built-In Encryption:**<br>
+  Integrates TLS 1.3 directly into QUIC protocol, eliminating second handshake for TLS over TCP.
+- **Independent Data Streams:**<br>
+  Fixes the problem of HOL blocking in case of packet loss.<br>*(every stream has its own buffer, so streams with full data get to go through)*
+- **0-RTT Handshakes:**<br>
+  For returning clients.
+- **Connection Migration:**<br>
+  Allowing connections to remain active if the client's IP address changes.
+
+**HTTP/3:**<br>The latest version of HTTP. It uses a persistent QUIC connection between client and server, instead of TCP.
+
