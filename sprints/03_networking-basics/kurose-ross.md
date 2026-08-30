@@ -368,7 +368,7 @@ HTTP is a **Stateless Protocol:** the server does not retain any state informati
 
 HTTP/1 and HTTP/2 run over TCP. HTTP/3 runs over UDP.
 
-Two types of TCP connections: **Non-Persistant Connection** and **Persistant Connection**.
+Two types of HTTP connections: **Non-Persistent Connection** and **Persistant Connection**.
 
 **Non-Persistent Connection** is established for and immediately closed after exactly one request message and one response message.<br>
 Time it takes for a client to request and receive a single object:&ensp;2 RTTs + transmission time.&emsp;*(one RTT to establish the TCP connection, one RTT to handle the HTML request)*
@@ -565,3 +565,67 @@ While HTTP/1.0, HTTP/1.1, and HTTP/2 all run on TCP, **HTTP/3** runs on UDP *(sp
 
 **HTTP/3:**<br>The latest version of HTTP. It uses a persistent QUIC connection between client and server, instead of TCP.
 
+<hr>
+
+**E-Mail** has three major components: 
+- **user agent** *(e.g., Microsoft Outlook, Apple Mail, Gmail)*
+- **mail server** *(contains mailbox and message queue)*
+- **Simple Mail Transfer Protocol (SMTP)**.
+
+**SMTP:**&ensp;The principal application-layer protocol for email. It uses TCP to reliably transfer mail from the sender's mail server to the recipient's mail server.<br>
+*([RFC 5321], port `25`)*
+
+SMTP has two sides: client side and server side. Both sides run on every mail server.<br>When a mail server is sending mail, it acts as an SMTP client. When a mail server receives mail, it acts as an SMTP server.
+
+SMTP is archaic, so it requires message *(header and body)* to be in 7-bit ASCII.
+
+Unlike user agent, mail server doesn't typically reside on the local host, since the SMTP server must be always-on. Typically, there's a remote, shared mail server that user agent has to access (using SMTP or HTTP when sending mail, and IMAP or HTTP when accessing mail).
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Internet Message Access Protocol (IMAP):**&ensp;An application-layer protocol used by email clients to access, retrieve, and manage messages stored on a remote mail server.<br>*([RFC 3501])*
+
+![Figure 2.14](img/6.png "Figure 2 .14")
+
+<hr>
+
+IP Address consists of four bbytes and has a rigid hierarchical structure. As we read it from left to right, we get more specific information about the host's location.
+
+Two ways to identify a host: by **hostname**, and **IP address**.
+
+**DNS (Domain Name System):**&ensp;It is (1) a distributed database implemented in a hierarchy of DNS servers, and (2) application-layer protocol that allows hosts to query the distributed database. It serves as a directory service that translates hostnames to IP addresses.
+
+DNS protocol runs over UDP and uses port `53`.<br>
+(All DNS query and reply messages are sent within UDP datagrams to port `53`)
+
+DNS is commonly employed by other application-layer protocols like HTTP and SMTP.<br>
+For every hostname, HTTP first receives the IP address from DNS, and only then can it initiate a TCP connection to the HTTP server process located at port `80` at that IP address.
+
+**DNS Services:**
+- **Translating hostnames to IP address**
+- **Hostnsme-to-IP-Address Translation:**<br>
+  Allows a single physical host (with one canonical hostname) to be reachable via multiple alias hostnames.
+- **Mail Server Aliasing**:<br>
+  Allows multiple domain names to have their mail delivered to the same actual mail server (with one canonical mail server hostname).
+- **Load Distribution:**<br>
+  DNS performs load distribution among replicated servers, each having a different IP address. One alias hostname is associated with a *set* of IPs, and DNS rotates the ordering of the addresses with each reply, distributing traffic among the replicated servers.
+
+DNS uses a large number of servers organized in a hierarchical fashion and distributed around the world.
+
+Three classes of DNS servers (in hierarchical order):
+- **Root DNS Servers**<br>
+  Nearly 2000 root servers scattered around the world.<br>Root servers provide the IP addresses of the TLD servers.
+- **Top-Level Domain (TND) DNS Servers**<br>
+   For each of the top-level domains *(`com`,`org`,`net`,`edu`,`gov`,`uk`,`fr`,`ca`,`jp`, etc.)*, there is TLD server *(or server cluster)*.<br>TLD servers provide the IP addresses for authoritative servers.
+- **Authoritative DNS Servers**<br>
+  Authoritative DNS Servers house the official DNS records for a specific organization's publicly accessible hosts, mapping those hostnames to their corresponding IP addresses.<br>
+  Definitive source of truth for queries about that domain.
+
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **IANA**
+> <!-- --- -->
+
+![Figure 2.17](img/7.png "Figure 2.17")
+
+![Figure 2.18](img/8.png "Figure 2.18")
