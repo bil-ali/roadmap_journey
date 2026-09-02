@@ -620,12 +620,63 @@ Three classes of DNS servers (in hierarchical order):
   Authoritative DNS Servers house the official DNS records for a specific organization's publicly accessible hosts, mapping those hostnames to their corresponding IP addresses.<br>
   Definitive source of truth for queries about that domain.
 
-
 > <!-- --- -->
 > **\*\*NOTE****<br>
-> **IANA**
+> These ~2000 root servers are copies of 13 different root servers, managed by 12 different organizations, and coordinated through the **Internet Assigned Numbers Authority (IANA)**.
 > <!-- --- -->
 
+Another type of DNS server (not part of this hierarchy): **Local DNS Server**.
+
+Each ISP has a local DNS server. When a host connects to an ISP, the ISP provides the host with the IP addresses of one or more of its local DNS servers.
+
+When a host makes a DNS query, the query is sent to the local DNS server, which acts as a proxy, forwarding the query into the DNS server hierarchy.<br>
 ![Figure 2.17](img/7.png "Figure 2.17")
 
+Any DNS query can be iterative or recursive.
+In the above Figure, the query sent from "Requesting host" to "Local DNS server" is a **recursive query**, and the subsequent three queries are **iterative queries**.
+
+**Recursive Query:**&ensp;The DNS server takes full responsibility for resolving the query. It contacts other DNS servers on the client's behalf, follows the chain of referrals, and returns on the final answer (IP address) to the client. The client sends just one request and waits for the complete result.
+
+**Iterative Query:**&ensp;The DNS server does not do the legwork and instead gives back a referral to another DNS server that is closer to the answer. The client must then send a new query directly to that referred server, repeating the process until it finally gets the IP address.
+
+A fully recursive DNS query chain:<br>
 ![Figure 2.18](img/8.png "Figure 2.18")
+
+**DNS Caching**&ensp;When a DNS server receives a DNS reply *(containing a hostname-to-IP mapping)*, it can cache that mapping in its local memory. If another query arrives for the same hostname, the DNS server can provide the desired IP address, even if it is not authoritative for the hostname.
+
+Local DNS servers can cache the IP addresses of TLD servers. Because of this, root servers are almost always bypassed in the query chain.<br>*(It also protects DNS root servers from DDoS)*
+
+DNS servers implement the DNS distributed database by each storing **Resource Records (RR)**.
+<br>
+Each DNS reply messages carries one or more **resource records**.
+<br>
+A **resource record** is a four-tuple of the following fields:&ensp;**(`Name`, `Value`, `Type`, `TTL`)**
+
+**`TTL`** is the "time to live" of the resource record **(determines when a resource should be removed from cache)**.
+
+The meaning of `Name` and `Value` depends on `Type`:
+- If `Type=A`, then `Name` is a hostname and `Value` is the IP address for the hostname.<br>*(e.g., `(relay1.bar.foo.com, 145.37.93.126, A)`)*
+- If `Type=NS`, then `Name` is a domain and `Value` is the hostname of an authoritative DNS server that knows how to obtain the IP addresses for hosts in the domain.<br>*(e.g., `(foo.com, dns.foo.com, NS)`)*
+- If `Type=`, then `Value` is a canonical hostname for the alias hostname `Name`.<br>*(e.g., `(foo.com, relay1.bar.foo.com, CNAME)`)*
+- If `Type=MX`, then `Value` is the canonical name of a mail server that has an alias hostname `Name`.<br>*(e.g., `(foo.com, mail.bar.foo.com, MX)`)*
+
+If a DNS server is authoritative for a particular hostname, then the DNS server will contain a Type A record for the hostname.<br>*(Or even if a DNS server is not authoritative, it may have Type A record stored in cache)*
+
+If a server is not authoritative for a hostname, then server will contain a Type NS record for the domain that includes the hostname, and a Type A record that provides the IP address of the DNS server in the `Value` field of the `NS` record.<br>*(**e.g.**, `edu` TLD server for the host `gaia.cs.umss.edu` will contain: `(umass.edu, dns.umass.edu, NS)` and `(dns.umass.edu, 128.119.40.111, A)`)*
+
+<br>
+
+**DNS Message:**&ensp;A standardized packet consisting of a fixed 12-byte header, followed by a query (Question) section and three variable-length sections of relevant resource records (Answers, Authority, and Additional).
+
+Two types of DNS Messages: query messages and reply messages. Both have the same format:<br>
+![Figure 2.19](img/9.png "Figure 2.19")
+- **Identification** is a 16-bit number that identifies the query. This identifier is also copied into reply messages, allowing client to match received replies with sent queries.<br>
+**Flag** field includes a number of flags, like 1-bit query/reply flag *(0: query, 1: reply)*, 1-bit authoritative flag, 1-bit recursion-desired flag, 1-bit recursion-available flag, etc.
+- **Questions** section contains information about the query that is being made.
+- **Answers** section, in a reply from a DNS server, contains the resource records for the name that was originally queried.
+- **Authority** section contains records of other authoritative servers.
+- **Additional** section contains other helpful records.
+
+<br>
+
+**Registrar:**&ensp;
