@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 02/09/26)
+## (27/07/26 &ndash; 06/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -255,7 +255,7 @@ Three main types of DoS:
 <br>
 
 
-### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;02/09/26)
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;06/09/26)
 
 Two main application architectural paradigms:
 - **Client-Server Architecture**
@@ -657,7 +657,7 @@ A **resource record** is a four-tuple of the following fields:&ensp;**(`Name`, `
 The meaning of `Name` and `Value` depends on `Type`:
 - If `Type=A`, then `Name` is a hostname and `Value` is the IP address for the hostname.<br>*(e.g., `(relay1.bar.foo.com, 145.37.93.126, A)`)*
 - If `Type=NS`, then `Name` is a domain and `Value` is the hostname of an authoritative DNS server that knows how to obtain the IP addresses for hosts in the domain.<br>*(e.g., `(foo.com, dns.foo.com, NS)`)*
-- If `Type=`, then `Value` is a canonical hostname for the alias hostname `Name`.<br>*(e.g., `(foo.com, relay1.bar.foo.com, CNAME)`)*
+- If `Type=CNAME`, then `Value` is a canonical hostname for the alias hostname `Name`.<br>*(e.g., `(foo.com, relay1.bar.foo.com, CNAME)`)*
 - If `Type=MX`, then `Value` is the canonical name of a mail server that has an alias hostname `Name`.<br>*(e.g., `(foo.com, mail.bar.foo.com, MX)`)*
 
 If a DNS server is authoritative for a particular hostname, then the DNS server will contain a Type A record for the hostname.<br>*(Or even if a DNS server is not authoritative, it may have Type A record stored in cache)*
@@ -679,4 +679,37 @@ Two types of DNS Messages: query messages and reply messages. Both have the same
 
 <br>
 
-**Registrar:**&ensp;
+**Registrar:**&ensp;A commercial entity that verifies the uniqueness of the domain name and enters the domain name into the DNS database (for a small fee).
+
+Registrars are accredited by the **Internet Corporation for Assigned Names and Numbers (ICANN)**.
+
+Alice in Australia wants to view the Web page `www.networkutopia.com`:
+- Alice's host will send a DNS query to her local DNS server.
+- The local DNS server will then contact a TLD `com` server. *(Assuming root DNS server is bypassed due to DNS caching)*
+- This TLD server contains the Type NS and Type A resources, `(networkingutopia.com, dn1.networkingutopia.com, NS)` and `(dns1.networkingutopia.com, 212.212.212.1, A)` as they were inserted into all of the TLD `com` servers by a registrar.
+- The TLD `com` server sends a reply to Alice's local DNS server, containing the two recourse records.
+- The local DNS server then sends a DNS query to `212.212.212.1`, asking for the Type A record corresponding to `www.networkutopia.com`.
+- This Type A provides the IP address of the desired Web server: `212.212.212.4`, which the local DNS server passes back to Alice's host.
+- Alice's browser can now initiate a TCP connection to the host `212.212.212.4` and send an HTTP request for the Web page's contents.
+
+<br>
+
+Videos can be compressed to any bit rate desired, trading off video quality to with bit rate *(higher the bit rate, better the image quality)*.
+
+Average end-to-end throughput is the most important performance metric for video streaming.
+
+For continuous playout, the network's provided average end-to-end throughput must be at least as large as the bit rate of the compressed video.
+
+**HTTP Streaming:**&ensp;The video is simply stored at an HTTP server as an ordinary file with a specific URL, and accessed like by client via a `HTTP GET` request.
+
+**Dynamic Adaptive Streaming over HTTP (DASH):**&ensp;The video is encoded into several different versions, each version having a different bit rate/video quality. Each version is stored in the HTTP server&mdash;each with a different URL, along with with a manifest file, which provides a URL for each version. The videos are all segmented temporally such that a client can dynamically request chunks from different versions at a time, depending on available bandwidth.
+
+The client first requests the **manifest file** and learns about the various versions. The client then selects one chunk at a time by specifying a URL and a byte range in an `HTTP GET` request message for each chunk. While downloading chunks, the client also measures the received bandwidth and runs a rate determination algorithm to select the version to request the next chunk from.
+
+
+**Content Distribution Network (CDN):**&ensp;A geographically distributed network of servers that stores cached copies of web content *(video, images, documets)* and routes each user's request to the server lcationm that will deliver that content with the best possible speed and user experience.
+
+Two types of CDNs:
+- **Private CDN**:<br>Owned by the content provider itself *(**e.g.**, Google's CDN, Netlfix's CDN)*.
+- **Third-Party CDN**:<br>Distributes content on behalf of multiple content providers *(**e.g.**, Akamai, Cloudflare, Amazon Cloudfront)*.
+
