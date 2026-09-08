@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 06/09/26)
+## (27/07/26 &ndash; 08/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -255,7 +255,7 @@ Three main types of DoS:
 <br>
 
 
-### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;06/09/26)
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;08/09/26)
 
 Two main application architectural paradigms:
 - **Client-Server Architecture**
@@ -371,7 +371,7 @@ HTTP/1 and HTTP/2 run over TCP. HTTP/3 runs over UDP.
 Two types of HTTP connections: **Non-Persistent Connection** and **Persistant Connection**.
 
 **Non-Persistent Connection** is established for and immediately closed after exactly one request message and one response message.<br>
-Time it takes for a client to request and receive a single object:&ensp;2 RTTs + transmission time.&emsp;*(one RTT to establish the TCP connection, one RTT to handle the HTML request)*
+Time it takes for a client to request and receive a single object:&ensp;2 RTTs + transmission time.&ensp;*(one RTT to establish the TCP connection, one RTT to handle the HTML request)*
 > <!-- --- -->
 > **\*\*NOTE****<br>
 > **Round-Trip Time (RTT):**&ensp;The time it takes for a small packet to travel from a client to a server and back to the client.
@@ -712,4 +712,102 @@ The client first requests the **manifest file** and learns about the various ver
 Two types of CDNs:
 - **Private CDN**:<br>Owned by the content provider itself *(**e.g.**, Google's CDN, Netlfix's CDN)*.
 - **Third-Party CDN**:<br>Distributes content on behalf of multiple content providers *(**e.g.**, Akamai, Cloudflare, Amazon Cloudfront)*.
+
+Two different CDN philosophies:
+- **Enter Deep**
+  - Deploying server clusters in access ISPs all over the world.
+  - Improve user delay and throughput by reducing links between user and CDN server.
+  - Highly distributed, so hard to maintain.
+- **Bring Home**
+  - Building large clusters at smaller number of sites. Instead of getting inside the access ISP, these CDNs typically place their clusters in IXPs.
+  - Lower maintenance and management overhead.
+  - Higher delay and lower throughput to end users.
+
+When a browser is instructed to retrieve a specific video, the CDN must intercept the request so that it can:
+1) Determine a suitable CDN server cluster for that client at that time
+2) Redirect the client's request to a server in that cluster.
+
+CDN takes advantage of DNS to intercept and redirect requests.<br>
+**e.g.**, if there's a DNS request for `http://video.netcinema.com/6Y7B23V`, the authoritative DNS server will see the "`video`" in the URL and, instead of returning anIP address, it will redirect the LDNS to the CDN's own DNS system, which eventually returns the IP address for the correct CDN server for that query.
+
+![Figure 2.20](img/10.png "Figure 2.20")
+
+CDN selects the appropriate cluster to redirect requests to via a **cluster selection strategy**.
+
+One simple strategy is to just assign a client to the cluster that is **geographically closest**.
+
+Another, more nuanced strategy is to pick based on **real-time measurements** of delay and loss performrance between clusters and clients.<br>To perform these measurements, CDN can have each of its clusters periodically send probes to all of the LDNSs around the world.
+
+A CDN doesn't place all of its contents in all of its servers. Instead, it depends on **CDN Caching**.
+
+**CDN Caching:**&ensp;The practice of storing different subsets of content at different geographic locations, regularly swapping out older or less popular content for fresher or more in-demand content. The servers at each location collectively act as a **cache**.
+
+Two fundamental strategies for caching:
+- **Push**<br>
+  CDN preemptively sends to each of its geographical locations the content it expects to be in greatest demand.&ensp;*(e.g., Netflix)*
+- **Pull**<br>
+  User request first gets redirected to a nearby cache. If the cache has the video, it's streamed to user. If it doesn't, it's retrieved from a central CDN server, streamed to user, and stored in cache.&ensp;*(e.g., YouTube)*
+
+<br>
+
+**Google**'s worldwide infrastructure consists of two tier of data centers *(**Large Scale data centers** and **Network Edge sites**)*, interconnected by global, wide-area private network *(**B4**)*, and connected to the ISPs at hundreds of peering points. Also Google cloud.
+
+<br>
+
+A typical network application consists of a pair of programs&mdash;a client program and a server program&mdash;residing in two different end systems. When these two programs are executed, a client process and a server process are created, and these processes communicate with each other by reading from, and writing to, **sockets**.
+
+Two types of networking applications: "**open**" and **proprietary**.
+
+An "**open**" application is just an implementation whose operation is specified in a protocol standard (RFC).<br>
+A client program and a server program, written by two independent developers carefully following the rules of the RFC, should be able to interoperate.
+
+#### **Socket Programming with UDP**
+
+Before sending process can push a packet of data out of the socket door , when using UDP, it must first attach a destination address *(IP address and port number)* to the packet.<br>
+The sender's source address *(IP address and port number)* are also attached to the packet. This isn't typically done in UDP application code, OS does it automatically.
+
+**Example Client-Server Application:**
+1. The client reads a line of characters from its keyboard and sends the data to the server.
+2. The server receives the data and convers the characters to uppercase.
+3. The servers sends the modified data to the client.
+4. The client receives the modified data and display the line on its screen.
+
+UDPClient.py
+``` python 3
+from socket import *
+serverName = 'hostname'
+serverPort = 12000
+clientSocket = socket(AF_INET, SOCK_DGRAM)
+message = input('Input lowercase sentence:')
+clientSocket.sendto(message.encode(), (serverName, serverPort))
+modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
+print(modifiedMessage.decode())
+clientSocket.close()
+```
+
+UDPServer.py
+``` python 3
+from socket import *
+serverport = 12000
+serverSocket = socket(AF_INET, SOCK_DGRAM)
+serverSocket.bind((", serverPort))
+print("The server is ready to receive")
+while True:
+  message, clientAddress = serverSocket.recvfrom(2048)
+  modifiedMessage = message.decode().upper()
+  serverSocket.sendto(modifiedMessage.encode(), clientAddress)
+```
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> - `AF_NET` means the underlying network is using IPv4.
+> - `SOCK_DGRAM` means it is a UDP socket.
+> - `recvfrom()` input `2048` is buffer size.
+> 
+> <br>
+> 
+> - `serverSocket.bind((", serverPort))` assigns port number `12000` to the server's socket.
+> <!-- --- -->
+
+#### **Socket Programming with TCP**
 
