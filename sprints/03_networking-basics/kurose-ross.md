@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 08/09/26)
+## (27/07/26 &ndash; 09/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -255,7 +255,7 @@ Three main types of DoS:
 <br>
 
 
-### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;08/09/26)
+### **Ch. 2&emsp;APPLICATION LAYER**<br>(11/08/26&ndash;09/09/26)
 
 Two main application architectural paradigms:
 - **Client-Server Architecture**
@@ -778,7 +778,7 @@ from socket import *
 serverName = 'hostname'
 serverPort = 12000
 clientSocket = socket(AF_INET, SOCK_DGRAM)
-message = input('Input lowercase sentence:')
+message = input('Input lowercase sentence: ')
 clientSocket.sendto(message.encode(), (serverName, serverPort))
 modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
 print(modifiedMessage.decode())
@@ -788,9 +788,9 @@ clientSocket.close()
 UDPServer.py
 ``` python 3
 from socket import *
-serverport = 12000
+serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
-serverSocket.bind((", serverPort))
+serverSocket.bind(('', serverPort))
 print("The server is ready to receive")
 while True:
   message, clientAddress = serverSocket.recvfrom(2048)
@@ -810,4 +810,46 @@ while True:
 > <!-- --- -->
 
 #### **Socket Programming with TCP**
+
+In TCP, before client and server can start exchanging data, they first need to handshake to establish a TCP connection.
+
+For the handshake, TCP server program must have a special welcoming socket, which is the initial point of contact for all clients wanting to communicate with the server.
+<br>
+During the three-way TCP handshake, the client process contacts the welcoming socket (`serverSocket`) of the server to request a connection with that server. When the server accepts this request, it creates a new socket (`connectionSocket`) that is dedicated to that particular client.
+
+With the TCP connection established, when one side wants to send data to other side, they just drop the data into the connection, no addresses needed.
+
+**Example Client-Server Application:**
+
+Same application as before.
+
+TCPClient.py
+``` python 3
+from socket import *
+serverName = 'servername'
+serverPort = 12000
+clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket.connect((serverName, serverPort))
+sentence = input('Input lowercase sentence: ')
+clientSocket.send(sentence.encode())
+modifiedSentence = clientSocket.recv(1024)
+print('From Server: ', modifiedSentence.decode())
+clientSocket.close()
+```
+
+TCPServer.py
+``` python 3
+from socket import *
+serverPort = 12000
+serverSocket = socket(AF_INET, SOCK_STREAM)
+serverSocket.bind(('', serverPort))
+serverSocket.listen(1)
+print('The server is ready to receive')
+while True:
+  connectionSocket, addr = serverSocket.accept()
+  sentence = connectionSocket.recv(1024).decode()
+  capitalizedSentence = sentence.upper()
+  connectionSocket.send(capitalizedSentence.encode())
+  connectionSocket.close()
+```
 
