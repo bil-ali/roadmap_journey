@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 09/09/26)
+## (27/07/26 &ndash; 20/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -853,3 +853,57 @@ while True:
   connectionSocket.close()
 ```
 
+
+<hr>
+<br>
+
+
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;)
+
+**Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
+
+Transport layer deals with two fundamental problems in networking:
+1. How two entities can communicate reliably over a medium that may lsoe and corrupt data
+2. Controlling the transmission rate of transport=layer entities in order to avoid, or recover from, congestion within the network.
+
+Transport layer protocols live in the end systems only.
+
+***On the sending side,*** the transport converts the application-layer **messages** it receives from a sending application process into transport-layer **segments**.<br>
+***On the receiving side,*** the network layer extracts the transport-layer **segment** from the **datagram** and passes the **segment** up to the transport layer. The transport layer then processes the received segment, making the data in the segment available to the receiving application.
+
+More than one transport-layer protocol may be available to a network application *(**e.g.,** TCP and UDP for the Internet)*.
+
+The services that a transport protocol can provide are often constrained by the services model of the underlying network-layer protocol.<br>*(Transport layer can't provide delay or bandwidth guarantees between processes if network layer doesn't provide delay or bandwidth guarantees between hosts)*
+
+Again, Internet has two transport-layer protocols: **UDP** and **TCP**.
+
+**UDP Services:**&ensp;Process-to-Process Data Delivery; Error Checking.
+<br>
+**TCP Services:**&ensp;Process-to-Process Data Delivery; Error Checking; Reliable Data Transfer; Congestion Control.
+
+The transport layer provides process-to-process delivery through **transport-layer multiplexing** and **demultiplexing**.
+
+Remember, a process can have multiple uniquely identified sockets.<br>
+Transport layer in a receiving host doesn't deliver data directly to a process, but rather to a process socket.
+
+**Transport-Layer Multiplexing:**&ensp;At the source host, collecting data from multiple sockets/processes, adding transport-layer header information to each chunk to form segments, and passing them to the network layer.
+
+**Transport-Layer Demultiplexing:**&ensp;At the receiving host, using an incoming transport-layer segment's header fields to identify the correct socket and deliver the segment's data to the socket/process.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Each port number is a 16-bit number, ranging from `0` to `65536`.
+>
+> Port numbers `0`&ndash;`1023` are **well-known port numbers**.
+> <!-- --- -->
+
+**Connectionless Multiplexing and Demultiplexing with UDP**
+- UDP socket is fully identified by a two-tuple:&ensp;**(`Destination IP Address`,`Destination Port Number`)**
+- If two UDP segments have *different* source IP addresses and/or source port numbers, but the *same* destination IP address and destination port number, then the two segements will be directed to the same destination process via the same destination socket.
+
+<br>
+
+**Connection-Oriented Multiplexing and Demultiplexing with TCP**
+- Remember, TCP is connection-oriented, and each connection has its own socket.
+- TCP socket is fully identified by a four-tuple:&ensp;**(`Source IP Address`,`Source Port Number`,`Destination IP Address`,`Destination Port Number`)**.
+- Two arriving TCP segments with *different* source IP addresses or source port numbers will *(with the exception of TCP segment carrying original connection-establishment request)* be directed to two different sockets, even if they have the *same* destination IP address and destination port number.
