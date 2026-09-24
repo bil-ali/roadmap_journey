@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 20/09/26)
+## (27/07/26 &ndash; 24/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;24/09/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -876,6 +876,11 @@ More than one transport-layer protocol may be available to a network application
 The services that a transport protocol can provide are often constrained by the services model of the underlying network-layer protocol.<br>*(Transport layer can't provide delay or bandwidth guarantees between processes if network layer doesn't provide delay or bandwidth guarantees between hosts)*
 
 Again, Internet has two transport-layer protocols: **UDP** and **TCP**.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Some literature *(like RFCs)* refers to tansport-layer packets over TCP as **segments** and tansport-layer packets over TCP as **datagrams**.
+> <!-- --- -->
 
 **UDP Services:**&ensp;Process-to-Process Data Delivery; Error Checking.
 <br>
@@ -907,3 +912,82 @@ Transport layer in a receiving host doesn't deliver data directly to a process, 
 - Remember, TCP is connection-oriented, and each connection has its own socket.
 - TCP socket is fully identified by a four-tuple:&ensp;**(`Source IP Address`,`Source Port Number`,`Destination IP Address`,`Destination Port Number`)**.
 - Two arriving TCP segments with *different* source IP addresses or source port numbers will *(with the exception of TCP segment carrying original connection-establishment request)* be directed to two different sockets, even if they have the *same* destination IP address and destination port number.
+
+<br>
+
+Why some applications pick UDP over TCP:
+- **Finer application-level control over what data is sent and when**<br>
+  *(No delay from congestion-control mechanisms. Doesn't automatically resend segments like TCP does.)*
+- **No connection establishment**
+  *(No handshake delay.)*
+- **No connection state**<br>
+  *(TCP stores connection state (send/receive buffers, congestion-control parameters, etc.) in end system.)*
+- **Small packet header overhead*<br>
+  *(UDP has 8 bytes of header overhead in every segment, as compared to TCP's 20 bytes.)*
+
+Applications that run over UDP:
+- DNS usually runs over UDP
+- UDP is used to carry network management (SNMP) data
+- Real-time applications
+
+Any services *(reliable data transfer, security)* UDP doesn't have can be implemented over it in the application layer (QUIC).
+
+UDP's lack of congestion control can result in high loss rates between sender and receiver, and the crowding out of TCP sessions sharing the same bottleneck link.
+
+**UDP Segment Structure:**
+
+![Figure 3.7](img/11.png "Figure 3.7")<br>
+- UDP header has four fields, 2 bytes each.
+- **Length** field specifies the number of bytes in the UDP segment *(header + data)*.
+- **Checksum** is used by receiving host to check whether errors have been introduced into the segment.<br>
+  UDP at the sender side performs the 1s complement of the sum of all the 16-bit words in the segment *(**whole** segment, including headers; checksum field is set to `0`s)*, with any overflow encountered during the sum being wrapped around. This result is what's put in the checksum field of the UDP segment.
+
+At the receiver, the checksum field is added to the sum of all the other 16-bit words in the segment, and the final sum at the receiver should obviously be `1111111111111111`. If one of the bits is a `0`, then we know that errors have been introduced into the packet.
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> In reality, the checksum is also calculated over a few of the fields in the IP header in addition to the UDP segment.
+> <!-- --- -->
+
+UDP *must* provide error detection at the transport layer, on an end-to-end basis, if the end-to-end data transfer service is to provide error detection.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **End-End Principle:**&ensp;Functions that are essential to communication between two endpoints *(reliability, error detection, security)* should be implemented at the communicating endpoints, not assumed to be guaranteed by the intermediate network.
+> <!-- --- -->
+
+UDP only provides error checking, it doesn't do anything to recover from an error.
+
+<br>
+
+The problem of implementing **reliable data transfer** occurs not only at the transport layer, but also at the link layer and the application layer as well.
+
+Part of the problem is that the layer below the reliable data transfer protocol may be unreliable.<br>
+*(TCP is a reliable data transfer protocol that is implemented on top of an unreliable network layer)*
+<br>
+![Figure 3.8](img/12.png "Figure 3.8")
+
+
+**Reliable Data Transfer over a Lossy Channel with Bit Errors: `rdt3.0`**
+
+`rdt3.0` sender:<br>
+![Figure 3.15](img/13.png "Figure 3.15")
+<br>
+`rdt3.0` receiver:<br>
+![Figure 3.14](img/14.png "Figure 3.14")
+
+`rdt3.0` is a:
+- **ARQ (Automatic Repeat reQuest) protocol:**&ensp;*Any protocol that uses acknowledgements and retransmissions to achieve reliable transfer.*
+- **Stop-and-wait protocol:**&ensp;*Sender sends one packet, then waits for an ACK before sending the next.*
+- **Alternating-bit protocol:**&ensp;*Uses 1-bit sequence numbers (0,1,0,1,...)*.
+
+![Figure 3.16](img/15.png "Figure 3.16")
+
+This is a funtional reliable data transfer protocol, but it would have horrible performance because it's **stop-and-wait**.
+
+The solution to this performance problem: **pipelining**.
+
+Pipelining requires the following changes in protocol:
+- The range of sequence numbers must be increased
+- The sender and receiver sides of the protocols may have to buffer more than one packet
+
+Two approaches to pipelined error recovery: **Go-Back-N** and **Selective Repeat**.
