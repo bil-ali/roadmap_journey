@@ -990,4 +990,21 @@ Pipelining requires the following changes in protocol:
 - The range of sequence numbers must be increased
 - The sender and receiver sides of the protocols may have to buffer more than one packet
 
-Two approaches to pipelined error recovery: **Go-Back-N** and **Selective Repeat**.
+Two approaches to pipelined error recovery: **Go-Back-N** and **Selective Repeat**.<br>
+These are both **sliding-window protocols**.
+> **\*\*NOTE****<br>
+> **Sliding-Window Protocol:**&ensp;A general ARQ strategy uses a moving window of sequence numbers to allow multiple packets in flight, with the window sliding as acknowledgements arrive.
+> <!-- --- -->
+
+**Go-Back-N (GBN):**&ensp;A sliding-window protocol where the sender may have up to $N$ unacknowledged packets outstanding, but uses cumulative ACKs and a single timer; on timeout or loss, it retransmits the lost packet and all subsequent unacknowledged packets. The receiver accepts only in-order packets and discards out-of-order ones.
+<br>
+![Figure 3.19](img/16.png "Figure 3.19")
+<br>
+![Figure 3.22](img/17.png "Figure 3.22")
+
+**Selective Repeat (SR):** A sliding-window protocol where both sender and receiver have separate windows. The receiver buffers out-of-order packets and ACKs them individually, so the sender retransmits only the specific packets that are lost or unacknowledged.
+<br>
+![Figure 3.23](img/18.png "Figure 3.23")
+<br>
+![Figure 3.26](img/19.png "Figure 3.26")
+
