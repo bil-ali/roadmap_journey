@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 24/09/26)
+## (27/07/26 &ndash; 25/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;24/09/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;25/09/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1007,4 +1007,21 @@ These are both **sliding-window protocols**.
 ![Figure 3.23](img/18.png "Figure 3.23")
 <br>
 ![Figure 3.26](img/19.png "Figure 3.26")
+
+<br>
+
+**TCP** provides a **full-duplex service** *(data can flow from Process A to Process B and from Process B to Process A at the same time)*.
+
+TCP connection is always **point-to-point** *(between **two** hosts)*.
+
+**TCP three-way handshake:**&ensp;First, client sends a special TCP segment (`SYN`) to server's welcoming socket. Second, the server creates a dedicated connection socket from which it sends back a special TCP segment (`SYN`+`ACK`). Third, the client responds back to the server with a special segment (`TCP`) *(which may or may not carry a piggybacked payload)*.
+> **\*\*NOTE****<br>
+> TCP server's listening socket and connection socket(s) all have the same port number (`80`), so client is blind to these socket internals; it's just "sending to socket".<br>
+> TCP can have all its sockets have the same port number because multiplexing/demultiplexing is based on 4-tuple, which includes source address and source port.
+> <!-- --- -->
+
+TCP sender and receiver both have their own respective **send and receive buffers**.<br>
+![Figure 3.27](img/20.png "Figure 3.27")
+
+**Maximum Segment Size:**&ensp;The maximum amount of payload data *(in bytes)* a TCP segment can carry.This does not include headers.
 
