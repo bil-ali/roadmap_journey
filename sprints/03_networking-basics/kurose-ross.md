@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 25/09/26)
+## (27/07/26 &ndash; 26/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;25/09/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;26/09/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -992,6 +992,7 @@ Pipelining requires the following changes in protocol:
 
 Two approaches to pipelined error recovery: **Go-Back-N** and **Selective Repeat**.<br>
 These are both **sliding-window protocols**.
+> <!-- --- -->
 > **\*\*NOTE****<br>
 > **Sliding-Window Protocol:**&ensp;A general ARQ strategy uses a moving window of sequence numbers to allow multiple packets in flight, with the window sliding as acknowledgements arrive.
 > <!-- --- -->
@@ -1015,6 +1016,7 @@ These are both **sliding-window protocols**.
 TCP connection is always **point-to-point** *(between **two** hosts)*.
 
 **TCP three-way handshake:**&ensp;First, client sends a special TCP segment (`SYN`) to server's welcoming socket. Second, the server creates a dedicated connection socket from which it sends back a special TCP segment (`SYN`+`ACK`). Third, the client responds back to the server with a special segment (`TCP`) *(which may or may not carry a piggybacked payload)*.
+> <!-- --- -->
 > **\*\*NOTE****<br>
 > TCP server's listening socket and connection socket(s) all have the same port number (`80`), so client is blind to these socket internals; it's just "sending to socket".<br>
 > TCP can have all its sockets have the same port number because multiplexing/demultiplexing is based on 4-tuple, which includes source address and source port.
@@ -1023,5 +1025,89 @@ TCP connection is always **point-to-point** *(between **two** hosts)*.
 TCP sender and receiver both have their own respective **send and receive buffers**.<br>
 ![Figure 3.27](img/20.png "Figure 3.27")
 
-**Maximum Segment Size:**&ensp;The maximum amount of payload data *(in bytes)* a TCP segment can carry.This does not include headers.
+**Maximum Segment Size:**&ensp;The maximum amount of payload data *(in bytes)* a TCP segment can carry. This does not include headers.
+
+**Maximum Transmission Unit (MTU):**&ensp;The maximum size of an IP datagram (header + payload) that can be sent by the local sending host.
+<br>
+**Path MTU:** The bottleneck MTU over a connection.
+
+MSS is oviously set to always be smaller than MTU.
+
+**TCP Segment Structure**
+
+![Figure 3.28](img/21.png "Figure 3.28")<br>
+- 32-bit **Sequence Number** field and **Acknowledgement Number** field are used for reliable data transfer.
+- 16-bit **Receive Window** field indicates the number of bytes that a receiver is willing to accept. Used for flow control.
+- 4-bit **Header Length** field specifies the length of the TCP header. (Typically 20 bytes, but may vary due to **Options** field)
+- **Flag Field** classically contains 6 bits.
+  - `ACK`:&ensp;Indicates that the value in the acknowledgement field is valid and acknowledsges a successfully received segment
+  - `RST`:&ensp;Used for connection teardown
+  - `SYN`:&ensp;Used for connection setup
+  - `FIN`:&ensp;Used for connection teardown
+  - `PSH`:&ensp;Indicates that the receiver should pass the data to the upper layer immediately
+  - `URG`:&ensp;Indicates that the segment contains data marked as "urgent" by the sending upper-layer entity
+  > <!-- --- -->
+  > **\*\*NOTE****<br>
+  > Modern TCP flag field is actually 8 bits.
+  > - `CWR`:&ensp;Used in congestion control
+  > - `ECE`:&ensp;Used in congestion control
+  > <!-- --- -->
+- 16-bit **Urgent Data Pointer** field indicates the location of the last byte of urgent data within the segment. Only meaningful when `URG` is set to 1.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> In practice, `PSH`, `URG`, and the urgent data pointer are not used. They're basically dead weight.
+> <!-- --- -->
+
+TCP views data in terms of an ordered **byte stream**, rather than structured segments.<br>
+The **sequence number** for a segment is therefore the byte-stream number of the first byte in the segment.<br>
+The **acknowledgemnt number** that host A puts in its segment is the sequence number of the next byte Host A is expecting from Host B.
+
+TCP provides **cumulative acknowledgments**.<br>If a receiver puts `43` in the acknowledgment field, it's telling the sender it has received everything through byte `42`.
+
+TCP technically leaves handling of out-of-order segments up to the programmer *(whether to discard or cache)*. In practice, the move is obviously to cache out-of-order bytes and wait for the missing bytes to fill in the gaps.
+
+Sequence number doesn't start at 0; both sides of a TCP connection radnomly choose an initial sequence number.
+
+**Simple Telnet Example:**
+<br>
+![Figure 3.30](img/22.png "Figure 3.30")
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Telnet:**&ensp;An application-layer protocol used for remote login, that runs over TCP. It allows a user on one host to interactively log in to another host, sending each typed character to the remote machine and receiving it echoed back.<br>
+> Telnet is unencrypted, so it's now been effectively replaced by SSH.
+> <!-- --- -->
+
+TCP uses a **single retransmission timer per conneciton**.
+
+The timer is associated with the oldest unacknowledged segment, and when it receives an `ACK`, the timer is either reset or stopped depending on whether there are still any unacknowledged segments.
+
+**Deriving Timeout Interval**
+
+Clearly, we know timeout should be larger than RTT, but also not too large and also should be flexible based on congestion.
+
+**SampleRTT:**&ensp;The amount of time between when a segment is send and when an acknowledgement for the segment is received.
+
+**EstimatedRTT:**&ensp;Exponential weighted moving average of SampleRTT values.
+$$
+EstimatedRTT = (1-\alpha) \cdot EstimatedRTT + \alpha \cdot SampleRTT
+$$
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Recommended value of $\alpha$ is $0.125$
+> <!-- --- -->
+
+**DevRTT:**&ensp;Exponential weighted moving average of the difference between SampleRTT and EstimatedRTT.
+$$
+EstimatedRTT = (1-\beta) \cdot DevRTT + \beta \cdot |SampleRTT-EstimatedRTT|
+$$
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Recommended value of $\beta$ is $0.25$
+> <!-- --- -->
+
+Finally,
+$$
+TimeoutInterval = EstimatedRTT + 4 \cdot DevRTT
+$$
 
