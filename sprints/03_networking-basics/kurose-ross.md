@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 26/09/26)
+## (27/07/26 &ndash; 27/09/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;26/09/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;27/09/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1015,7 +1015,7 @@ These are both **sliding-window protocols**.
 
 TCP connection is always **point-to-point** *(between **two** hosts)*.
 
-**TCP three-way handshake:**&ensp;First, client sends a special TCP segment (`SYN`) to server's welcoming socket. Second, the server creates a dedicated connection socket from which it sends back a special TCP segment (`SYN`+`ACK`). Third, the client responds back to the server with a special segment (`TCP`) *(which may or may not carry a piggybacked payload)*.
+**TCP three-way handshake:**&ensp;First, client sends a special TCP segment (**SYN Segment**) to server's welcoming socket. Second, the server creates a dedicated connection socket from which it sends back a special TCP segment (**SYNACK Segment**). Third, the client responds back to the server with a special segment (**ACK Segment**) *(which may or may not carry a piggybacked payload)*.
 > <!-- --- -->
 > **\*\*NOTE****<br>
 > TCP server's listening socket and connection socket(s) all have the same port number (`80`), so client is blind to these socket internals; it's just "sending to socket".<br>
@@ -1111,3 +1111,74 @@ $$
 TimeoutInterval = EstimatedRTT + 4 \cdot DevRTT
 $$
 
+TCP's **reliable data transfer** service ebsures that the data that a process reads out of its TCP receive buffer is uncorrupted, without gaps, without duplication, and in sequence.
+
+Only using retransmission timeout for loss-recovery is inefficient, which is why TCP also uses duplicate acknowledgements, i.e., **Fast Retransmit**.
+
+**Fast Retransmit:**&ensp;The sender, upon receiving three duplicate ACKs for the same data *(not counting the origin ACK for this data)*, infers was lost and immediately retransmits it without waiting for timeout.
+
+TCP's error-recovery mechanism is a hybrid of GBN and SR (single timer, cumuulative acknowledgements).
+
+In a TCP connnection, sent data first gets stored in the receiver application's receive buffer. If the receiver application reads from its buffer too slowly, and sender keeps sending too quickly, the receiver buffer will overflow, resulting in packet loss.
+To prevent this, TCP provides a **flow control service**.
+
+**Flow Control:**&ensp;Matching the rate at which the sender is sending against the rate at which the receiving application is reading.
+
+TCP provides flow control by having sender maintain a dynamic variable called **receive window**, which is used to give the sender an idea of how muich free buffer space is available at the receiver.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Since TCP is duplex, both sides of the connection maintains a receive window, since they're both senders.
+> <!-- --- -->
+![Figure 3.36](img/23.png "Figure 3.36")
+$$
+rwnd = RcvBuffer - [LastByteRcvd - LastByteRead]
+$$
+
+Host B tells Host A how much spare room it has in the buffer by placing its current value of $rwnd$ in the **receive window field** of every segment it sends to Host A.<br>
+Host A, in turn, makes sure throughout the connection's life that:
+$$
+LastByteSent - LastByteAcked \leq rwnd
+$$
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> $LastByteRcvd - LastByteRead$:&ensp;TCP data in buffer.
+> <br>
+> $LastByteSent - LastByteAcked$:&ensp;Amount of unacknowledged data that A has sent into the connection.
+> <!-- --- -->
+
+Once Host B's receive buffer becomes full *($rwnd=0$)*, Host A doesn't stop sending completely. Instead, it switches to sending segments with 1 byte of data. This way, it can keep track of `rwnd` through Host B's acknowledgement messages.
+
+<br>
+
+TCP connection begins with the **three-way handshake**.
+
+Since TCP server allocates buffers and variables *(creates connection)* before step 3 of the handshake even takes place, that leaves TCP vulnerable to **SYN flooding** attacks.
+
+**SYN Flooding:**&ensp;Attacker(s) send a large number of TCP SYN segments, without completing the third handshake step. The server's connection resources become exhausted as they are allocated for half-open connections. Consequently, legitimate clients are denied service.
+
+The defense against this: **SYN cookies**.
+
+**SYN Cookies:**&ensp;After step 2 of the handshake, instead of allocating state, the server encodes connection state into the 32-bit intial sequence number (ISN) of the SYN-ACK. That ISN is the "cookie." The client, if legitimate, responds with ISN+1 in its final ACK. The server validates it and uses ISN to reconstruct the connection state. This way, server remains stateless and doesn't exhaust any memory until after step 3 of the handshake.
+
+The three-way handshake inherently causes a one RTT delay *(Steps 1 and 2)*. This can be elimated using **Fast Open**/**0-RTT Handshaking**.
+
+**TCP Fast Open:**&ensp;During an intial connection, client obtains a fast-open cookie from the server, which encodes all of the connection information needed for future connections. On a later connection to the same server, the client forgoes steps 1 and 2 and just sends this cookie along with the piggyback data from step 3 in its very first message. The server may *(or may not!)* accept this cookie, in which case the connection is established with 0 RTT.
+
+**Closing a TCP Connection:**<br>
+- The client application process issues a close command.
+- This causes the client TCP to send a special segment with `FIN` flag bit set to 1.
+- The server receives the segment, and sends an acknowledgement segment in return.
+- The server sends its own shutdown segment with `FIN` bit set to 1, to client.
+- Client receives and acknowledges the server's shutdown segment.
+- Delay to handle possible packet-loss of this final acknowledgemnet.
+- All resources in the two hosts are deallocated.
+
+**TCP States of Client TCP**<br>
+![Figure 3.39](img/24.png "Figure 3.39")
+
+**TCP States of Server TCP**<br>
+![Figure 3.40](img/25.png "Figure 3.40")
+
+<br>
+
+If host ever receives a TCP segment whose port number or source IP don't match any ongoing sockets, it sends back a special reset segment, with `RST` flag bit set to 1. This tells the original sender "I don't have a socket for that segment. Please do not resend."
