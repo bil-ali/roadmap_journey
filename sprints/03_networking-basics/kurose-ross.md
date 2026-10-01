@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 27/09/26)
+## (27/07/26 &ndash; 01/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;27/09/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;01/10/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1066,7 +1066,7 @@ TCP provides **cumulative acknowledgments**.<br>If a receiver puts `43` in the a
 
 TCP technically leaves handling of out-of-order segments up to the programmer *(whether to discard or cache)*. In practice, the move is obviously to cache out-of-order bytes and wait for the missing bytes to fill in the gaps.
 
-Sequence number doesn't start at 0; both sides of a TCP connection radnomly choose an initial sequence number.
+Sequence number doesn't start at 0; both sides of a TCP connection randomly choose an initial sequence number.
 
 **Simple Telnet Example:**
 <br>
@@ -1082,9 +1082,9 @@ TCP uses a **single retransmission timer per conneciton**.
 
 The timer is associated with the oldest unacknowledged segment, and when it receives an `ACK`, the timer is either reset or stopped depending on whether there are still any unacknowledged segments.
 
-**Deriving Timeout Interval**
+**Deriving Timeout Interval:**
 
-Clearly, we know timeout should be larger than RTT, but also not too large and also should be flexible based on congestion.
+Clearly, we know timeout should be larger than RTT, but also not too large and should also be flexible based on congestion.
 
 **SampleRTT:**&ensp;The amount of time between when a segment is send and when an acknowledgement for the segment is received.
 
@@ -1111,20 +1111,20 @@ $$
 TimeoutInterval = EstimatedRTT + 4 \cdot DevRTT
 $$
 
-TCP's **reliable data transfer** service ebsures that the data that a process reads out of its TCP receive buffer is uncorrupted, without gaps, without duplication, and in sequence.
+TCP's **reliable data transfer** service ensures that the data that a process reads out of its TCP receive buffer is uncorrupted, without gaps, without duplication, and in sequence.
 
-Only using retransmission timeout for loss-recovery is inefficient, which is why TCP also uses duplicate acknowledgements, i.e., **Fast Retransmit**.
+Only using timeout for loss-recovery is inefficient, which is why TCP also uses duplicate acknowledgements, i.e., **Fast Retransmit**.
 
-**Fast Retransmit:**&ensp;The sender, upon receiving three duplicate ACKs for the same data *(not counting the origin ACK for this data)*, infers was lost and immediately retransmits it without waiting for timeout.
+**Fast Retransmit:**&ensp;The sender, upon receiving three duplicate ACKs for the same data *(not counting the origin ACK for this data)*, infers segment was lost and immediately retransmits it without waiting for timeout.
 
-TCP's error-recovery mechanism is a hybrid of GBN and SR (single timer, cumuulative acknowledgements).
+TCP's error-recovery mechanism is a hybrid of GBN and SR (single timer, cumuulative acknowledgements, caching out-of-order segments).
 
 In a TCP connnection, sent data first gets stored in the receiver application's receive buffer. If the receiver application reads from its buffer too slowly, and sender keeps sending too quickly, the receiver buffer will overflow, resulting in packet loss.
 To prevent this, TCP provides a **flow control service**.
 
 **Flow Control:**&ensp;Matching the rate at which the sender is sending against the rate at which the receiving application is reading.
 
-TCP provides flow control by having sender maintain a dynamic variable called **receive window**, which is used to give the sender an idea of how muich free buffer space is available at the receiver.
+TCP provides flow control by having sender maintain a dynamic variable called **receive window**, which is used to give the sender an idea of how much free buffer space is available at the receiver.
 > <!-- --- -->
 > **\*\*NOTE****<br>
 > Since TCP is duplex, both sides of the connection maintains a receive window, since they're both senders.
@@ -1182,3 +1182,95 @@ The three-way handshake inherently causes a one RTT delay *(Steps 1 and 2)*. Thi
 <br>
 
 If host ever receives a TCP segment whose port number or source IP don't match any ongoing sockets, it sends back a special reset segment, with `RST` flag bit set to 1. This tells the original sender "I don't have a socket for that segment. Please do not resend."
+
+<br>
+
+**Network congestion** occurs when there's too many sources attempting to send data at too high a rate.
+
+Routers along a connection path have buffers that allow them to store incoming packets when the packet-arrival rate exceeds the outgoing link's capacity. In congestion, these router buffers become overwhelmed.
+
+**Sending Rate:**&ensp;The rate at which application sends original data into the socket.&ensp;*($\lambda_{in}$ bytes/sec)*<br>
+**Offered Load:**&ensp;The rate at which transport layer sends segments (original data *and* retransmitted data) into the network.&ensp;*($\lambda'_{in}$ bytes/sec)*
+
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> Considering link capacity is R; if offered load is 0.5R bytes/sec and the rate at which data are delivered to the receiving application is 0.333 bytes/sec, that means out of 0.5R units of data transmitted, on average, 0.333R bytes/sec are original data and 0.166R bytes/sec are retransmitted.
+> <!-- --- -->
+
+**Costs of Congestion:**
+- Large queuing delays are experienced as the packet-arrival rate nears the link capacity.
+- The sender must perform retransmissions in order to compensate for dropped (lost) packets due to buffer overflow.
+- Unneeded retransmissions by the sender in the cace of large delays may cause a router to use its link bandwidth to forward unneeded copies of a packet.
+- When a packet is dropped along a path, the transmission capacity that was used at each of the upstream links to forward that packet to the point at which it is dropped ends up having been wasted.
+
+In other words:
+- **Increased queueing delay as the packet arrival rate to a congested link nears its capacity**
+- **Decreased application-to-application throughput due to presence of retransmitted packets**
+- **Potential for congestion collapse**
+
+**Congestion Collapse:**&ensp;Increasing the offered load causes useful end-to-end throughput to actually decrease *(potentially to 0)*. Packets consume buffer and transmission resources upstream before being dropped downstream, and retransmissions add even more load.
+
+The **bottleneck link** is the link along the end-to-end path, such that if senders slowly increase their transmission rate, that link will be the first link to experience congestion loss.<br>
+A connection has at most one bottleneck link.
+
+The aggregate end-to-end throughput achieved by the $N$ connections passing through a bottleneck link will be determined by the bottleneck link's transmission rate, $R$.
+
+**The goal of congestion control:**<br>
+For the $N$ connections to set their transport layers' sending rates so that their aggregate sending rate is close to, but does not exceed, the bottleneck link capacity.
+
+Two broad approaches to congestion control: **End-to-End Congestion Control** and **Network-Assisted Congestion Control**.
+
+**End-to-End Congestion Control:**&ensp;The network layer provides no explicit support to the transport layer for congestion-control purposes. Even the presence of network congestion must be inferred based on observed network behavior (packet loss, etc.).<br>
+TCP takes the end-to-end approach.
+
+**Network-Assisted Congestion Control:**&ensp;Routers provide explicit feedback to the sender and/or receiver regarding the congestion state of the network.<br>
+More recent IP and TCP may use the network-assisted approach.
+
+Network feeds back congestion information to sender in one of two ways:
+- **Direct network feedback**<br>
+  Choke packet sent directly from a network router to the sender. 
+- **Network feedback via receiver**<br>
+  Router marks/updates a field in a packet flowing from sender to receiver to indicate congestion. The receiver then notifies the sender of the congestion indication through the ACK reply to the sender's congestion-marked packet *(by setting the `ECE` flag in ACK reply's TCP header to 1)*.
+
+<br>
+
+#### **End-to-End TCP Congestion Control**
+
+TCP has each sender limit the rate at which it sends traffic into its connection as a funcion of perceived network congestion.<br>
+If TCP sender perceives congestion on the path, it reduces its send rate; if it perceives theire is little congestion, it increases its send rate.
+
+Many different flavors of TCP congestion control" **"Classic" TCP**, **TCP Vegas**, **CUBIC TCP**, **BBR**.
+
+In "Classic" TCP, each side of a connection keeps track of a **congestion window** variable, `cwnd`, and imposes the following constraint:
+$$
+LastByteSent - LastByteAcked \leq min\{cwnd, rwnd\}
+$$
+
+This constraint limits the amount of unacknowledged data at the sender and therefore indirectly limits the sender's send rate. Sender can adjust the congestion window to adjust its send rate.
+
+Classic TCP guiding principles:
+- **A lost segment implies congestion**, and hence, the TCP sender's rate should be decreased when a segment is lost.
+- **An acknowledged segment indicates that the network is delivering the sender's segments to the receiver**, and hence, the sender's rate can be increased when an ACK arrives for a previously unacknowledged segment
+- **Bandwidth probing**<br>
+  *(TCP's strategy for adjusting transmission rate. Keep increasing transmission rate until loss occurs, back off by decreasing rate, then probe again by increasing again.)*
+
+TCP is **self-clocking:**&ensp;The network's own feedback (ACKs) determines how fast the sender injects data, rather than a fixed timer.<br>
+*(If ACKs arrive slowly, the congestion window will increase slowly; if ACKs arrive at a high rate, the congestion window increase more quickly)*
+
+**TCP Congestion Control Algorithm**
+
+Three components: **Slow Start**, **Congestion Avoidance**, **Fast Recovery**
+1. **Slow Start**<br>
+   TCP connection begins in slow start phase. The value of `cwnd` begins at 1 MSS *(thus an initial sending rate of MSS/RTT bytes/sec)* and increases by 1 MSS for every acknowledgment that arrives. Therefore, send rate grows exponentially fast, doubling every RTT.<br>
+   If there is a timeout loss event:&ensp;`ssthresh`=`cwnd`/2; `cwnd`=1.<br>
+   If there is a triple duplicate ACKs loss event:&ensp;&rarr; Fast Recovery mode.<br>
+   When `cwnd` = `ssthresh`:&ensp;&rarr; Congestion Avoidance mode.
+2. **Congestion Avoidance**<br>
+   Rather than doubling `cwnd` every RTT, TCP now increases the `cwnd` by 1 MSS every RTT.<br>
+   Timeoout loss event is treated same as in slow-start (`ssthresh`=`cwnd`/2; `cwnd`=1).<br>
+   If there is a triple duplicate ACKs loss event:&ensp;&rarr; Fast Recovery mode.
+3. **Fast Recovery** (optional)<br>
+   If there is a triple duplicate ACKs loss event:&ensp;`ssthresh`=`cwnd`/2; `cwnd`=(`cwnd`/2)+3.<br>
+   During Fast Recovery, `cwnd` increases by 1 MSS for every additional duplicate ACK received the missing segment.<br>
+   If an ACK arrives for new data: `cwnd`=`ssthresh`, and &rarr; Congestion Avoidance mode.<br>
+   If a timeout loss event occurs, `ssthresh`=`cwnd`/2; `cwnd`=1, and &rarr; Slow Start.
