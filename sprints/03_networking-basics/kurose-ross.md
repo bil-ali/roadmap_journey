@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 01/10/26)
+## (27/07/26 &ndash; 03/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;01/10/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;03/10/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1267,10 +1267,36 @@ Three components: **Slow Start**, **Congestion Avoidance**, **Fast Recovery**
    When `cwnd` = `ssthresh`:&ensp;&rarr; Congestion Avoidance mode.
 2. **Congestion Avoidance**<br>
    Rather than doubling `cwnd` every RTT, TCP now increases the `cwnd` by 1 MSS every RTT.<br>
-   Timeoout loss event is treated same as in slow-start (`ssthresh`=`cwnd`/2; `cwnd`=1).<br>
+   If there is a timeout loss event:&ensp;&rarr; Slow Start mode.<br>
    If there is a triple duplicate ACKs loss event:&ensp;&rarr; Fast Recovery mode.
 3. **Fast Recovery** (optional)<br>
    If there is a triple duplicate ACKs loss event:&ensp;`ssthresh`=`cwnd`/2; `cwnd`=(`cwnd`/2)+3.<br>
    During Fast Recovery, `cwnd` increases by 1 MSS for every additional duplicate ACK received the missing segment.<br>
    If an ACK arrives for new data: `cwnd`=`ssthresh`, and &rarr; Congestion Avoidance mode.<br>
    If a timeout loss event occurs, `ssthresh`=`cwnd`/2; `cwnd`=1, and &rarr; Slow Start.
+
+**TCP Tahoe** does not implement Fast Recovery *(its `cwnd` is always cut down to 1)*.
+<br>
+**TCP Reno** is just TCP Tahoe + Fast Recovery.
+<br>
+![Figure 3.50](img/26.png "Figure 3.50")
+
+TCP is said to have **AIMD** *(additive-increase, multiplicative-decrease)* congestion control.
+
+Classic TCP congestion control algorithms *(like Tahoe and RENO)* have been entirely replaced, first by TCP CUBIC, and then by BBR.
+
+**TCP CUBIC** only differs slightly from TCP Reno, and that's in its Congestion Avoidance phase.
+- Let $W_{max}$ be the size of `cwnd` when loss was last detected, and $K$ be the future point in time when window size will again reach $W_{max}$.
+- TCP CUBIC increases the congestion window as a cubic function of time since the last congestion event *(i.e., the distance between current time $t$ and $K$)*.
+- When $t$ is far from $K$, the congestion window size increases are much larger than when $t$ is close to $K$.<br>
+  When $t<K$, CUBIC quickly ramps up TCP's sending rate to get close to $W_{max}$, and then probes cautiously.<br>
+  When $t>K$, congestion window increases are initially small because it's in the cautious probing stage. As $t$ keeps exceeding $K$, window size increases rapidly to more quickly find a new $W_{max}$.
+
+![Figure 3.52](img/27.png "Figure 3.52")
+
+**TCP Vegas**, instead of inferring congestion from packet loss events, uses measured RTT delay to proactively detect congestion onset, hopefully before packet loss occurs.
+
+In TCP Vegas, the sender measures the RTT for all acknowledge packets. The smallest measurement, $RTT_{min}$, is said to be the RTT for when the path is uncongested. $RTT_{min}$ gives us the uncongested throughput rate, `cwnd`/$RTT_{min}$.
+
+If the actual sender-measured throughput is close the uncongested throughput, the path isn't congested, so the TCP sending rate can be increased.<br>
+If the sender-measured throughput is significantly less than the uncongested throughput, the path is congested and the Vegas TCP sender will decrease its sending rate.
