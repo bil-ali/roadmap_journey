@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 03/10/26)
+## (27/07/26 &ndash; 04/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;03/10/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;04/10/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1300,3 +1300,29 @@ In TCP Vegas, the sender measures the RTT for all acknowledge packets. The small
 
 If the actual sender-measured throughput is close the uncongested throughput, the path isn't congested, so the TCP sending rate can be increased.<br>
 If the sender-measured throughput is significantly less than the uncongested throughput, the path is congested and the Vegas TCP sender will decrease its sending rate.
+
+<br>
+
+**BBR (Bottleneck Bandwidth and Round-trip propagation time)** is built on the idea of "Keep the pipe full, but no fuller."<br>It doesn't wait for packet loss to signal congestion.
+
+**Bandwidth Delay Product (BDP):**&ensp;The amount of in-flight data required to completely fill the bottleneck link without creating a standing queue.<br>
+$$BDP = BW \cdot RTT_{min}$$
+![Bandwidth Delay Product (BDP)](img/28.png "Bandwidth Delay Product (BDP)")<br>
+Going with the pipe analogy, BDP is the precise amount of data needed to fill the pipe at any given moment.
+
+In BBR, the "just full enough" point is when the amount of in-flight packets ($n_{inflight}$) reaches the connection's BDP.<br>
+Increasing $n_{inflight}$ beyond this point won't increase throughput, and only increases RTT.
+
+BBR's main goal is to keep $n_{inflight}$ approximately equal to BDP.
+
+In operation, BBR is constantly trying to answer two questions:
+1. **How fast can the network deliver data right now?**&ensp;(bottleneck bandwidth)
+2. **What's the shortest possible round-trip time?**&ensp;(minimum RTT, when there are no queues)
+
+It does this on two different schedules.
+
+1. **Long time scale:**&ensp;BBR periodically reduces $n_{inflight}$ to drain any queues, and measure the true minimum RTT (to see if it's gotten lower).<br>*(This RTT value is used for BDP calculation)*
+2. **Short time scale:**&ensp;BBR continuously cycles through three phases:
+   - **Acceleration:**&ensp;BBR increases its sending rate, which increases $n_{inflight}$. It keeps doing this until throughput plateaus. At this point, it knows it has found the maximum sending rate.
+   - **Cruising:**&ensp;BBR keeps sending at the throughput-plateau rate, and it uses the ACK arrival rate as the real-time measurement to maintain that rate.
+   - **Deceleration:**&ensp;BBR deliberately slows down, sending a bit slower than the network can deliver, reducing $n_{inflight}. This reduces queue pressure, and BBR checks whether RTT dropped.
