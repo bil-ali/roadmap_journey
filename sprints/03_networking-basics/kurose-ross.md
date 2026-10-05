@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 04/10/26)
+## (27/07/26 &ndash; 05/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;04/10/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;05/10/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -1234,7 +1234,7 @@ Network feeds back congestion information to sender in one of two ways:
 
 <br>
 
-#### **End-to-End TCP Congestion Control**
+**End-to-End TCP Congestion Control**
 
 TCP has each sender limit the rate at which it sends traffic into its connection as a funcion of perceived network congestion.<br>
 If TCP sender perceives congestion on the path, it reduces its send rate; if it perceives theire is little congestion, it increases its send rate.
@@ -1325,4 +1325,30 @@ It does this on two different schedules.
 2. **Short time scale:**&ensp;BBR continuously cycles through three phases:
    - **Acceleration:**&ensp;BBR increases its sending rate, which increases $n_{inflight}$. It keeps doing this until throughput plateaus. At this point, it knows it has found the maximum sending rate.
    - **Cruising:**&ensp;BBR keeps sending at the throughput-plateau rate, and it uses the ACK arrival rate as the real-time measurement to maintain that rate.
-   - **Deceleration:**&ensp;BBR deliberately slows down, sending a bit slower than the network can deliver, reducing $n_{inflight}. This reduces queue pressure, and BBR checks whether RTT dropped.
+   - **Deceleration:**&ensp;BBR deliberately slows down, sending a bit slower than the network can deliver, reducing $n_{inflight}$. This reduces queue pressure, and BBR checks whether RTT dropped.
+
+BBR also has a transmission pacing mechanism to ensure that large bursts of segments are not sent back to back.
+
+<br>
+
+**Network-Assisted Explicit Congestion Notification**
+
+Both modern TCP and IP have since been extended to also be able to implement **network-assisted congestion control**.
+
+**Explicit Congestion Notification:**&ensp;A TCP/IP extension extension that lets routers explicitly signal congestion onset to TCP senders and receivers by marking packets (using two bits in the IP datagram header). The receiver echoes this back to the sender (using TCP's `ECE` flag). The sender reacts by reducing its congestion window (and setting the `CWR` *(Congestion Reduced)* bit in the next segment).<br>
+![Figure 3.54](img/29.png "Figure 3.54")
+
+<br>
+
+**Fairness** in a congestion-control mechanism is when all connections passing through a bottleneck link get an equal share of the bandwidth *($R/K$ bytes/sec)*.
+
+UDP doesn't have a congestion control system like TCP, so applications running over UDP can keep sending at a constant rate, regardless of congestion. Because of this, UDP sources can crowd out TCP traffic.
+
+Even giving each connection an equal share of bandwidth doesn't fix the fairness problem, because there's nothing stopping a TCP-based application from using multiple parallel connections to get a larger chunk of link bandwidth.
+
+
+<hr>
+<br>
+
+
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(00/00/26&ndash;00/00/26)
