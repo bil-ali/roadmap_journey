@@ -858,7 +858,7 @@ while True:
 <br>
 
 
-### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;05/10/26)
+### **Ch. 3&emsp;TRANSPORT LAYER**<br>(20/09/26&ndash;06/10/26)
 
 **Transport Layer** extends the network layer's delivery service between two end systems to a delivery service between two application-layer processes running on the end systems.
 
@@ -956,6 +956,13 @@ UDP *must* provide error detection at the transport layer, on an end-to-end basi
 > <!-- --- -->
 
 UDP only provides error checking, it doesn't do anything to recover from an error.
+
+UDP payload for a single segment cannot be larger than $65,527$ bytes.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> **Length** field is 16-bit, so it has maximum value $2^{16} = 65,535$ bytes.<br>
+> $65,535\text{ bytes}- 8\text{ bytes}$ *(header size)* $=65,527\text{ bytes}$.
+> <!-- --- -->
 
 <br>
 
@@ -1351,4 +1358,45 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(00/00/26&ndash;00/00/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;)
+
+Primary role of the network layer: move packets from a sending host to a receiving host.
+
+Network layer can be decomposed into two parts: **data plane** and **control plane**.
+
+Two main network layer functions: **Forwarding** and **Routing**.
+
+**Forwarding:**&ensp;The router-local action of transferring a packet from an input link interface to te appropriate output link interface(s).
+
+**Routing:**&ensp;The network-wide process that determines the end-to-end paths that packets take from source to destination.
+
+**Data Plane** is in charge of **Forwarding**.<br>
+**Control Plane** is in charge of **Routing**.
+
+Forwarding takes place at very short timescales, which is why it has to be hardware-level.<br>
+Routing can be (and is) implemented on software because it takes place on much longer timescales.
+
+**Forwarding Table:**&ensp;A router-specific lookup table that maps values from an arriving packet's header fields to the outgoing link interface that the packet should be forwarded to. The router indexes into this table using header values to determine the correct output interface.
+
+Forwarding Table is populated by the routing algorithm in control plane.
+
+Traditionally, routing algorithms were contained within their routers, but communicated with each other.
+
+In the **SDN** approach, the control-plane is separated from physical, individual routers, and implemented in software. A **Remote Controller** computes and distributes forwarding tables, while routers mainly only perform data-plane forwarding.
+
+The **network service model** specifies which services the network layer provides to the transport layer above it.
+
+Possible network layer services:
+- Guaranteed delivery
+- Guaranted delivery with bounded delay
+- In-order packet delivery
+- Guaranteed minimal bandwidth
+- Security
+
+The Internet's network layer provides a single servce: **best-effort service**.
+
+**Best Effort Service:**&ensp;Packets are neither guaranteed to be received in the order in which they were sent, or even received at all. There is no guarantee on the end-to-end delay nor is there a minimal bandwidth guarantee.
+
+There do exist network architectures that provide more services than Internet (ATM, Intserv).
+
+Best-effort service sounds bad, but combined with adequate bandwidth provisioning and bandwidth-adaptive application-level protocols *(e.g., DASH)*, it turns out to be good enough.
