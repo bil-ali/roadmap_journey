@@ -1373,16 +1373,13 @@ Two main network layer functions: **Forwarding** and **Routing**.
 **Data Plane** is in charge of **Forwarding**.<br>
 **Control Plane** is in charge of **Routing**.
 
-Forwarding takes place at very short timescales, which is why it has to be hardware-level.<br>
-Routing can be (and is) implemented on software because it takes place on much longer timescales.
-
 **Forwarding Table:**&ensp;A router-specific lookup table that maps values from an arriving packet's header fields to the outgoing link interface that the packet should be forwarded to. The router indexes into this table using header values to determine the correct output interface.
 
 Forwarding Table is populated by the routing algorithm in control plane.
 
-Traditionally, routing algorithms were contained within their routers, but communicated with each other.
+Traditionally, routing algorithm implementation was contained with a particular router, which communicated with other routers using routing protocols.
 
-In the **SDN** approach, the control-plane is separated from physical, individual routers, and implemented in software. A **Remote Controller** computes and distributes forwarding tables, while routers mainly only perform data-plane forwarding.
+In the **SDN (Software-defined Networking)** approach, the control-plane is separated from physical, individual routers, and implemented in software. A **Remote Controller** computes and distributes forwarding tables, while routers mainly only perform data-plane forwarding.
 
 The **network service model** specifies which services the network layer provides to the transport layer above it.
 
@@ -1400,3 +1397,28 @@ The Internet's network layer provides a single servce: **best-effort service**.
 There do exist network architectures that provide more services than Internet (ATM, Intserv).
 
 Best-effort service sounds bad, but combined with adequate bandwidth provisioning and bandwidth-adaptive application-level protocols *(e.g., DASH)*, it turns out to be good enough.
+
+"**Forwarding**" and "**switching**" can be used interchangeably.<br>
+"**Routers**" and "**switches**" cannot, although both are **packet switches**.
+
+**Routers** base their forwarding decision on header-field values in the network-layer datagram, and thus are considered network-layer devices.
+<br>
+**Switches** base their forwarding decision on header-field values in the link-layer frame, and thus are considered link-layer devices.
+
+**Generic Router Architecture:**
+
+![Figure 4.4](img/30.png "Figure 4.4")<br>
+Four main router components:
+1. **Input ports**<br>
+  Performs three main functions: physical layer function of terminating an incoming physical link *(receiving raw signal from link and converting it into bits)*; all necessary link layer functions; and the lookup function of consulting the forwarding table to determine which output port to forward to.<br>
+  ![Figure 4.5](img/31.png "Figure 4.5")
+2. **Switch Fabric**<br>
+   Connects the router's input ports to its output ports.
+3. **Output Ports**<br>
+   Stores packets received from the switching fabric and transmits them on the outgoing link *(by performing necessary link-layer and physical-layer functions)*.<br>
+  ![Figure 4.7](img/32.png "Figure 4.7")
+4. **Routing Processor**<br>
+   Performs control plane functions. In traditional routers, it does it all itself. In SDN routers, it's responsible for communicating with the network controller, which runs all the routing algorithms. It also performs network management functions.
+
+Input ports, output ports, and switching fabric are almost always implemented in hardware, because data plane operates at the nanosecond timescale.<br>
+Control plane operates at the millisecond or second timescale, so control plane functions on routing processor are implemented in software.
