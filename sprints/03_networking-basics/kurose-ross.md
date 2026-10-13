@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 05/10/26)
+## (27/07/26 &ndash; 13/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;13/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1366,7 +1366,7 @@ Network layer can be decomposed into two parts: **data plane** and **control pla
 
 Two main network layer functions: **Forwarding** and **Routing**.
 
-**Forwarding:**&ensp;The router-local action of transferring a packet from an input link interface to te appropriate output link interface(s).
+**Forwarding:**&ensp;The router-local actiovof transferring a packet from an input link interface to te appropriate output link interface(s).
 
 **Routing:**&ensp;The network-wide process that determines the end-to-end paths that packets take from source to destination.
 
@@ -1422,3 +1422,49 @@ Four main router components:
 
 Input ports, output ports, and switching fabric are almost always implemented in hardware, because data plane operates at the nanosecond timescale.<br>
 Control plane operates at the millisecond or second timescale, so control plane functions on routing processor are implemented in software.
+
+Forwarding table is copied from routing processor to the input port line cards on a separate bus, so forwarding decisions are made locally at each input port (no centralized processing bottleneck).
+
+There may be queueing before packet can be sent to switch fabric.
+
+**Destination-Based Forwarding:**&ensp;Router forwards a packet based only on the packet's destination address. It matches the destination address against forwarding table, using longest prefix matching rule. If no prefix matches, it forwards to the default interface.
+
+In practice, **Ternary Content Addressable Memories (TCAMs)** are often *(not always!)* used for address lookup.
+
+**Ternary Content Addressable Memory (TCAM):**&ensp;A content-addressable memory in which each stored but can be `0`, `1`, or `*` ("don't care"), and input data is compared against stored data in parralel.
+> <!-- --- -->
+> **\*\*NOTE****<br>
+> TCAM being **content-addressable** means that, unlike normal memory, which is accessed by an address, a TCAM is searched by its conent: you give it a key, and it tells you which stored entry matches.
+> <!-- --- -->
+
+TCAM is good for IP lookup as prefixes in forwarding table can be stored like `11001000 00010111 00010*** ********`, `11001000 00010111 00011000 ********`, etc., and matched with given IP in parallel in one clock cycle.
+
+This destination-based forwarding IP-lookup is an example of a more general **"match plus action"** abstraction that is central to generalized forwarding.
+
+Input port's main action is the IP lookup, but it also does:<br>
+1\) Physical-layer and link-layer processing<br>
+2\)Checking packet's version number, checksum, and time-to-live field<br>
+3\)Updating counters used for network management
+
+**Switching**, at the switching fabric can be accomplished in a number of ways:
+- **Switching via memory**<br>
+  Earliest, traditional routers *(basically just computers)*, where the entire switching process is done under direct control of the CPU (routing processor), and input and output ports function as traditional I/O devices. Input port interrupts routing processor, copies packet into **process memory**, then routing processor extracts the destination address, performs forwarding table lookup, and copies packet into output port buffer.<br>
+  In modern routers, everything's done locally by the input line card itself, rather than central routing processor. Input line card then writes the packet into **shared memory** associated with the correct output port.
+  *()*
+- **Switching via a bus**<br>
+  The input port transfers packet directly to the ouput port over a **shared bus**, without any intervention from the routing processor. Input port prepends a switch-internal label to the packet indicating which output port the packet is being transferred to. All ports receive the packet, but only the port that matches the label keeps the packet.<br>
+  *(Only one packet can cross the bus at a time. Because every packet must cross the bus, the router's switching sppeed is limited to the bus speed)*
+- **Switching via an interconnection network**<br>
+  Using a more sophisticated interconnection network, such as a **crossbar switch**, for example, eliminates the bandwidth limitation of a single, shared bus. A packet from port A to port Y, forexample, is picked up only by port Y. Multiple switches can be forwarded in parallel.<br>
+  Crossbar switch is non-blocking: if two packets forwarded to two different output ports, neither is blocked; if two packets from two different input ports to the same output port, one has to wait.
+> **\*\*NOTE****<br>
+> **Crossbar Switch:**&ensp;An interconnection network consisting of 2N buses that connect N input ports to N output ports.
+> <!-- --- -->
+![Figure 4.6](img/33.png "Figure 4.6")<br>
+
+A router's switching capacity can be scaled by running multiple switchin fabrics in parallel.<br>
+Input port breaks a packet into K smaller chunks, and "sprays" the chunks through K out of N switching fabrics to the selecte output port, which reassembles the K chunks into original packet.
+
+<br>
+
+Packet queues may form at both the input and output port.
