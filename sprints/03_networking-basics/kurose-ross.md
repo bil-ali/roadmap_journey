@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 13/10/26)
+## (27/07/26 &ndash; 14/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;13/10/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;14/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1455,7 +1455,7 @@ Input port's main action is the IP lookup, but it also does:<br>
   The input port transfers packet directly to the ouput port over a **shared bus**, without any intervention from the routing processor. Input port prepends a switch-internal label to the packet indicating which output port the packet is being transferred to. All ports receive the packet, but only the port that matches the label keeps the packet.<br>
   *(Only one packet can cross the bus at a time. Because every packet must cross the bus, the router's switching sppeed is limited to the bus speed)*
 - **Switching via an interconnection network**<br>
-  Using a more sophisticated interconnection network, such as a **crossbar switch**, for example, eliminates the bandwidth limitation of a single, shared bus. A packet from port A to port Y, forexample, is picked up only by port Y. Multiple switches can be forwarded in parallel.<br>
+  Using a more sophisticated interconnection network, such as a **crossbar switch**, for example, eliminates the bandwidth limitation of a single, shared bus. A packet from port A to port Y, for example, is picked up only by port Y. Multiple switches can be forwarded in parallel.<br>
   Crossbar switch is non-blocking: if two packets forwarded to two different output ports, neither is blocked; if two packets from two different input ports to the same output port, one has to wait.
 > **\*\*NOTE****<br>
 > **Crossbar Switch:**&ensp;An interconnection network consisting of 2N buses that connect N input ports to N output ports.
@@ -1468,3 +1468,78 @@ Input port breaks a packet into K smaller chunks, and "sprays" the chunks throug
 <br>
 
 Packet queues may form at both the input and output port.
+
+**Input Queueing** occurs when switch fabric transfer rate is not fast enough to keep up with the input port's transmission rate.
+
+Even with a crossbar switch, where packets can be switched in parallel, if two packets are headed to the same output port, one of them must wait. As a consequence, all the packets behind that waiting packet must also wait *(even if their destination output port is free)*; this is **HOL Blocking**.
+
+**Output Queueing** occurs when switch fabric transfer rate is too fast for output port's transmission rate to keep up.
+
+When queues grow too large and exhaust port buffer memory, a decision must be made: drop the arriving packet *(**drop-tail** strategy)*, or remove one or more already-queued packets to make room.
+
+**Active Queue Management (AQM):**&ensp;A class of router queue-management policies that proactively drop or mark packets *before* the buffer becomes full, in order to signal congestion to senders.<br>
+e.g., RED, PIE, CoDel.
+
+A **packet scheduler** at the output port chooses which packets from the queue to transmit first.
+
+Due to queueing, it's important to determine how much buffering should be provisioned at a port.
+
+Let $B$ is the amount of buffering, $RTT$ is average round-trip time, and $C$ is link capacity.
+
+The old rule of thumb was:&ensp;$B = RTT \cdot C$
+
+The new rule of thumb:&ensp;$B = RTT \cdot C/\sqrt{N}$
+
+Large buffers allow a router to absorb short-term fluctuations/bursts in traffic, but also lead to increaded delay. Increased RTT due to queueing delay also makes TCP senders slower to respond to congestion and/or packet loss.
+
+**Bufferbloat:**&ensp;A condition where a network buffer stays develops a persistent standing queue that does not drain, causing sustained queueing delay even though the link may be fully utilized.
+
+> **\*\*NOTE****<br>
+> More queueing delay directly increases RTT.<br>
+> Queueing delay does not directly affect throughput. High throughput and high queueing delay can occur together.<br>
+> Queueing does indirectly affect throughput, though. Small queueing buffers may lead to packet loss, which reduces throughput.
+> <!-- --- -->
+
+For **packet scheduling**, there are various queueing disciplines: **FIFO**/**FCFS**, **priority queueing**, **round-robin queueing**, **WFQ**.
+
+**First-in-First-OUT (FIFO)**
+
+Selects packets for link transmission in the same order in which they arrived at the output link queue.
+
+![Figure 4.12](img/34.png "Figure 4.12")
+
+**Priority Queueing**
+
+Packets arriving at the output link are classified into priority classes upon arrival. Each priority class typically has its own queue. When choosing a packet to transmit, select a packet from the highest priority class that has a non-empty queue. The choice among packets in the same priority class is made via FIFO.
+
+**Non-Preemptive Priority Queueing:**&ensp;Once transmission of a packet has started, it cannot be interrupted. A newly arriving higher-priority packet must wait until the current packet finishes transmission.
+
+![Figure 4.14](img/35.png "Figure 4.14")
+
+**Round Robin Queueing**
+
+Packets are sorted into classes as with priority queueing. Scheduler alternates services among the classes.
+
+**Work-Conservative Queueing:**&ensp;Never allows link to remain idle when there are packets of sny class queued fro transmission.<br>
+A work-conserving round robin discipline that looks for a packet of a given class but finds none will immediately check the next class in the round robin sequence.
+
+![Figure 4.15](img/36.png "Figure 4.15")
+
+**Weighted Fair Queueing (WFQ)**
+
+A generalized form of round robin queueing. WFQ serves classes in a circular manner, just like round robin, and is also work-conserving.
+
+In WFQ, each class may receive a differential amount of service in any interval of time.<br>
+Each class, $i$, is assigned a weight, $w_{i}$. When there are are class $i$ packets to send, class $i$ will be guaranteed to receive a $w_{i} / (\sum{w_{j}})$ fraction of the bandwidth.
+> **\*\*NOTE****<br>
+> The sum in the denominator is taken over all classes that also have packets queued for transmission.
+> <!-- --- -->
+
+<br>
+
+**What exactly constitutes a "class" of traffic is up to the ISP to decide**, but could be potentially based on any set of field in the IP datagram header.
+
+**Net Neutrality**
+- No Blocking
+- No Throttling
+- No Paid Prioritization
