@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 14/10/26)
+## (27/07/26 &ndash; 15/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1342,7 +1342,7 @@ BBR also has a transmission pacing mechanism to ensure that large bursts of segm
 
 Both modern TCP and IP have since been extended to also be able to implement **network-assisted congestion control**.
 
-**Explicit Congestion Notification:**&ensp;A TCP/IP extension extension that lets routers explicitly signal congestion onset to TCP senders and receivers by marking packets (using two bits in the IP datagram header). The receiver echoes this back to the sender (using TCP's `ECE` flag). The sender reacts by reducing its congestion window (and setting the `CWR` *(Congestion Reduced)* bit in the next segment).<br>
+**Explicit Congestion Notification (ECN):**&ensp;A TCP/IP extension extension that lets routers explicitly signal congestion onset to TCP senders and receivers by marking packets (using two bits in the IP datagram header). The receiver echoes this back to the sender (using TCP's `ECE` flag). The sender reacts by reducing its congestion window (and setting the `CWR` *(Congestion Reduced)* bit in the next segment).<br>
 ![Figure 3.54](img/29.png "Figure 3.54")
 
 <br>
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;14/10/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;15/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1537,9 +1537,46 @@ Each class, $i$, is assigned a weight, $w_{i}$. When there are are class $i$ pac
 
 <br>
 
-**What exactly constitutes a "class" of traffic is up to the ISP to decide**, but could be potentially based on any set of field in the IP datagram header.
+What exactly constitutes a "class" of traffic is up to the ISP to decide, but could be potentially based on any set of fields in the IP datagram header.
 
 **Net Neutrality**
 - No Blocking
 - No Throttling
 - No Paid Prioritization
+
+<br>
+
+There are two types of IP: **IPv4** and **IPv6**.<br>
+*(IPv4 is currently widely deployed, IPv6 is its proposed replacement)*
+
+**IPv4 Datagram Format:**
+
+![Figure 4.17](img/37.png "Figure 4.17")<br>
+- **Version Number:** 4 bits, specifying the IP protocol version of the datagram *(IPv4 vs IPv6 etc.)*.
+- **Header Length:** 4 bits, necessary because of the Options header. *(Typical IP datagram header is 20 bytes, with no Options)*
+- **Type of Service:** 8 bits, to allow different types of IP datagrams to be distinguished from each other *(e.g., real-time datagrams like VoIP vs non-real-time like FTP)*.<br>In modern, 6 bits are used for TOS, 2 bits are used for ECN.
+- **Datagram Length:** 16 bits, indicating total length of IP datagram (header plus data), in bytes.
+- **Identifier, flags, fragmentation offset:** These three fields have to do with **IP fragmentation**.
+- **Time-to-live (TTL):** 8 bits, included to ensure that datagrams don't circulate forever. Decremented by 1 each time the datagram is processed by a router, and once it reaches 0, datagram is dropped.
+- **Protocol:** 8 bits, specifying which transport-layer protocol *(TCP, UDP, ICMP, etc.)* to pass the datagram to at final destination.
+- **Header Checksum:** 16 bits, computed by performing the 1s complements of the sum of all the 16-bit words in the IP header *(**whole** header; checksum field is set to `0`s)*.<br>Checksum error condition is checked at every hop, and new checksum value is computed at every router *(because TTL and potentially Options values change)*.
+- **Source and Destination IP Addresses** 32 bits each.
+- **Options**
+- **Data (payload):** In most circumstances, contains TCP or UDP transport-layer segment. Could also carry other types of data like **ICMP** messages
+
+> **\*\*NOTE****<br>
+> **IP Fragmentation:**&ensp;If a large IP datagram must travel over a link whose maximum packet size is smaller than the datagram, the router can break the datafram into smaller IP datagrams. Each fragment is a complete IP packet with its own header, with the payload being a piece of the original. These fragments are forwarded independently, and reassembled into the original datagram at the final destination host, before passing payload up to the transport layer.
+>
+> - **Identifier:** 16 bits. When a datagram is fragmented, all its fragments carry the same identifier, to aid in reassmebly at destination.
+> - **Flags:** 3 bits
+>   - **`DF` (Don't Fragment):** If set, the datagram must not be fragmented.
+>   - **`MF` (More Fragments):** If set, more fragments follow. The last fragments has `MF` = 0.
+>   - Reserved Bit
+> - **Fragmentation Offset:** 13 bits, telling where a fragment's data belongs in the original datagram's payload, measured in units of 8 bytes.
+> <!-- --- -->
+
+> **\*\*NOTE****<br>
+> **ICMP (Internet Control Message Protocol):**&ensp;A network-layer protocol used by hosts and routers to exchange error and control information about IP packet delivery.
+> 
+> Even though it may be in IP datagram payloads, ICMP is *not* a transport-layer protocol.
+> <!-- --- -->
