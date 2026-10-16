@@ -1580,3 +1580,45 @@ There are two types of IP: **IPv4** and **IPv6**.<br>
 > 
 > Even though it may be in IP datagram payloads, ICMP is *not* a transport-layer protocol.
 > <!-- --- -->
+
+There is no fragmentation and no Options header in IPv6.
+
+<br>
+
+A host typically only has a single link into the network.<br>
+Routers by definition have multiple links *(since their whole job is to forward data from input links to output link)*.
+
+**Interface:**&ensp;The boundary between a host/router and one of its physical links.
+
+**Each interface must have its own IP address.**<br>
+*(meaining a router will have multiple IPs, one for each interface)*
+
+Each IP address is 4 bytes long, written in dotted-decimal notation.
+<br>
+e.g., `193.32.216.9`, which in binary is `11000001 00100000 11011000 00001001`.
+
+Technically, every interface must have a globally unique IP *(except for interfaces behind **NAT**)*
+
+A portion of an interface's address is determined by the **subnet** it is in.
+
+**Subnet:**&ensp;An isolated network formed by a group of host and router interfaces that are connected together without any routers in between *(by LAN, WiFi, etc.)*. All interfaces in the same subnet share the same IP network prefix.
+
+**Subnet Mask:**&ensp;A 32-bit value that indicates which bits of an IP address indentify the subnet prefix and which bit identify the host.<br>
+Subnet mask two notations: `/25` or `255.255.255.128` *(which is `11111111.11111111.11111111.10000000` in bits)*.
+
+![Figure 4.18](img/38.png "Figure 4.18")<br>
+Six subnets here: `223.1.1.0/24`, `223.1.2.0/24`, `223.1.3.0/24`, `223.1.7.0/24`, `223.1.8.0/24`, and `223.1.9.0/24`.
+
+**Classless InterDomain Routing (CIDR):**&ensp;The Internet's address assignment strategy. It generalizes subnet addressing, by dividing the 32-bit IP address into a network prefic of `x` leading bits and a remaining host part, written as `a.b.c.d/x`.
+
+When a router outside the organization forwards a datagran whose destination is inside the organization, only the leading `x` bits of the address need be considered.<br>
+The remaining non-prefix bits of the address are considered when forwarding packets within the organization.
+
+> **\*\*NOTE****<br>
+> **Classful Indexing**, which was replaced by CIDR only allowed prefixes of bit length, 8 (Class C), 16 (Class B), or 24 (Class A).
+> <!-- --- -->
+
+**Address Aggregation:**&ensp;The practice of combining multiple smaler network prefixes into a single larger prefix for routing. This reduces the number of entries in forwarding tables and makes routing more scalable.<br>
+*(e.g., individual organization IPs, `200.23.16.0/23`, `200.23.18.0/23`, and `200.23.20.0/23`, being advertied to the rest of the world as their ISP's IP, `200.23.16.0/20`)*
+
+**IP Broadcast Address:** `255.255.255.255`<br>When a host sends a datagram with destination address `255.255.255.255`, it's delivered to all hosts on the same subnet.
