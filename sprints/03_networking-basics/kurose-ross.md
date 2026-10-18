@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 15/10/26)
+## (27/07/26 &ndash; 18/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;15/10/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;18/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1597,7 +1597,7 @@ Each IP address is 4 bytes long, written in dotted-decimal notation.
 <br>
 e.g., `193.32.216.9`, which in binary is `11000001 00100000 11011000 00001001`.
 
-Technically, every interface must have a globally unique IP *(except for interfaces behind **NAT**)*
+Technically, every interface must have a globally unique IP *(except for interfaces behind **NAT**)*.
 
 A portion of an interface's address is determined by the **subnet** it is in.
 
@@ -1615,10 +1615,89 @@ When a router outside the organization forwards a datagran whose destination is 
 The remaining non-prefix bits of the address are considered when forwarding packets within the organization.
 
 > **\*\*NOTE****<br>
-> **Classful Indexing**, which was replaced by CIDR only allowed prefixes of bit length, 8 (Class C), 16 (Class B), or 24 (Class A).
+> **Classful Indexing**, which was replaced by CIDR only allowed prefixes of bit length, 8 (Class C), 16 (Class B), or 24 (Class A).<br>
+> Basically CIDR, but `x` can only have values 8, 16, or 24.
 > <!-- --- -->
 
 **Address Aggregation:**&ensp;The practice of combining multiple smaler network prefixes into a single larger prefix for routing. This reduces the number of entries in forwarding tables and makes routing more scalable.<br>
 *(e.g., individual organization IPs, `200.23.16.0/23`, `200.23.18.0/23`, and `200.23.20.0/23`, being advertied to the rest of the world as their ISP's IP, `200.23.16.0/20`)*
 
 **IP Broadcast Address:** `255.255.255.255`<br>When a host sends a datagram with destination address `255.255.255.255`, it's delivered to all hosts on the same subnet.
+
+Organizations get a contiguous block of addresses allocated to them by ISP.
+<br>
+ISP gets its address space from **ICANN (Internet Corporation for Assigned Names and Numbers)**.
+
+**ICANN** is in charge of:
+- Assigning IP addresses
+- Managing the DNS root servers
+- Assigning domain names and resolving domain name disputes.
+
+Once an organization is allocated its address block, they're not going to manually configure every host IP. This allocation is done automatically by **DHCP (Dynamic Host Configuration Protocol)**.
+
+**Dynamic Host Configuration Protocol (DHCP):**&ensp;A  client-server, plug-and-play protocol that automatically assigns a host an IP address when it joins a network. It can also provide related configuration information like subnet mask, default gateway, and local DNS server address.
+
+DHCP can be configured to either allocate a given host the same IP address or a different temporary IP address every time it connects to the network.
+
+DHCP is a client-server protocol, where the client is a newly arriving host, and the server is the DHCP server of which every subnet has at least one.
+> **\*\*NOTE****<br>
+> A subnet with no DHCP server will have a DHCP relay agent that knows the address of a DHCP server.
+> <!-- --- -->
+
+For a newly arriving host, the DHCP protocol is a four-step process:<br>
+![Figure 4.24](img/39.png "Figure 4.24")
+1. **DHCP server discovery**<br>
+   Client sends a **DHCP discover message** within a UDP packet to port `67`. This UDP packet is encapsulated in an IP datagram with source IP address `0.0.0.0`, and destination IP address `255.255.255.255`, so it is broadcast to all nodes in the subnet.
+2. **DHCP server offers**<br>
+   DHCP server(s) receiving a discover message respond(s) to the client with a **DHCP offer message**, broadcast to `255.255.255.255`. Each offer message contains the transaction ID of the discover message, the proposed IP address for the client, the network mask, and an IP address lease time.
+3. **DHCP request**<br>
+   Client chooses an offer, and reponds to that server with a **DHCP request message**, echoing back the configuration parameters.
+4. **DHCP ACK**<br>
+   Server responds to the request message with a **DHCP ACK message**, confirming the requested parameters.
+
+Once the interaction is complete, the client can use the DHCP-allocated IP address for the lease duration *(lease can be renewed btw)*.
+
+Since a new IP address is obtained from DHCP each time a node connects to a new subnet, a TCP connection to a remote application cannot be maintained as a mobile node moves between subnets.
+
+ISPs having to assign a *range* of globally unique, publicly routable IP addresses for every SOHO *(small office/home office)* is not scaleable. And expecting ordinary homeowners to manage IP addresses is unreasonable. This is why we also have **NAT (Network Address Translation)**, which allows a network with a single public IP address to support many hosts.
+
+**Netork Address Translation (NAT):**&ensp;A router technique where the router translates the private IP addresses of devices inside a local network into a single public IP address (and back) as packets leave and enter the network. It also uses a NAT Translation Table to rewrite transport-layer port numbers so many private hosts can share one IPv4 address and communicate with the Internet.<br>
+![Figure 4.25](img/40.png "Figure 4.25")
+
+Private addresses can only be used to send packets within the private network; they are not globally routable on the public Internet.
+> **\*\*NOTE****<br>
+> [RFC 1918] reserves three IPv4 address blocks for private networks:
+> - `10.0.0.0/8`
+> - `172.16.0.0/12`
+> - `192.168.0.0/16`
+>
+> [RFC 6598] reserves a new private address block for ISP use only: `100.64.0.0/10`.
+> <!-- --- -->
+
+The NAT-enabled router, to the outside world looks like a single device with a single IP address.
+
+NAT isn't just a home/SOHO thing, ISPs use it too.
+
+**Carrier-Grade NAT (CGNAT):**&ensp;NAT deployed by an ISP at large scale so that many home networks can share a smaller pool of public IPv4 addresses.
+
+To avoid address overlap between ISP NAT's private addresses and customers' home NAT private addresses, CGNAT uses the `100.64.0.0/10` ISP-only address space.
+
+NAT works perfectly fine, but the overwriting of port numbers can cause problems with inbound traffic *(especially in P2P)*.<br>
+If an outside host sends an unsolicited packet to the NAT's public IP and some port, NAT has no mapping *(because the inbound packet is unsolicited)* telling it which host this is for, so the packet is dropped.
+
+**NAT Traversal:**&ensp; A set of techniques that let devices behind NAT receive incoming connections, so peer-to-peer and server applications can work despite NAT blocking unsolicited inbound traffic.<br>(**e.g.**, port forwarding, UPnP, STUN, hole punching)
+
+> **\*\*NOTE****<br>
+> **NAT isn't an alternative to DHCP**, they work together.<br>
+> The router gets its WAN from the ISP's DHCP server, and the router runs a DHCP server to provide private addresses to hosts on its private network.
+> <!-- --- -->
+
+Attackers, knowing the IP address range of someone's network, can easily send malicious IP datagrams to addresses in their range.
+
+Two popular defenses to malicious packet attacks: **firewalls** and **instrusion detection systems (IDS)**.
+
+**Firewall:**&ensp;A defense mechanism that inspects datagram and segment header fields and denies suspicious datagrams entry into the internal network; it can block based on IP addresses/ports, and track approved TCP connections.
+
+**IDS (Intrusion Detection System):**&ensp;Typically at the network boundary, it performs deep packet inspection (examining headers *and* payloads) and matches them against a database of known attack signatures, creating an alert on a match.
+
+**IPS (Intrusion Prevention System):**&ensp;Same as IDS, except it actually blocks packets in addition to creating alerts.
