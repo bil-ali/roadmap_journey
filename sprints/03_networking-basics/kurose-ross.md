@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 18/10/26)
+## (27/07/26 &ndash; 21/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;18/10/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;21/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1560,7 +1560,7 @@ There are two types of IP: **IPv4** and **IPv6**.<br>
 - **Time-to-live (TTL):** 8 bits, included to ensure that datagrams don't circulate forever. Decremented by 1 each time the datagram is processed by a router, and once it reaches 0, datagram is dropped.
 - **Protocol:** 8 bits, specifying which transport-layer protocol *(TCP, UDP, ICMP, etc.)* to pass the datagram to at final destination.
 - **Header Checksum:** 16 bits, computed by performing the 1s complements of the sum of all the 16-bit words in the IP header *(**whole** header; checksum field is set to `0`s)*.<br>Checksum error condition is checked at every hop, and new checksum value is computed at every router *(because TTL and potentially Options values change)*.
-- **Source and Destination IP Addresses** 32 bits each.
+- **Source and Destination IP Addresses:** 32 bits each.
 - **Options**
 - **Data (payload):** In most circumstances, contains TCP or UDP transport-layer segment. Could also carry other types of data like **ICMP** messages
 
@@ -1701,3 +1701,88 @@ Two popular defenses to malicious packet attacks: **firewalls** and **instrusion
 **IDS (Intrusion Detection System):**&ensp;Typically at the network boundary, it performs deep packet inspection (examining headers *and* payloads) and matches them against a database of known attack signatures, creating an alert on a match.
 
 **IPS (Intrusion Prevention System):**&ensp;Same as IDS, except it actually blocks packets in addition to creating alerts.
+
+<br>
+
+**IPv6** was developed because the 32-bit IPv4 address space was being exhausted *(it was fully assigned in 2011)*.
+
+IPv6 uses 128-bit addresses. It also has a streamlined, fixed 40-byte header. IPv6 introduces **flow labeling**, while removing IPv4 mechanisms like fragmentation and IP header checksum.
+
+**Flow Labeling:**&ensp;An IPv6 mechanism that lets a sender mark packets as belonging to a particular **flow**. Routers can then identify those packets and treat that flow accordingly.
+
+A **flow** is deliberately vaguely defined. It's basically a sequence of related packets that a sender wants the network to treat specially *(e.g., audio/video needing real-time service)*.
+
+**IPv6 Datagram Format**
+
+![Figure 4.26](img/41.png "Figure 4.26")<br>
+- **Version:** 4 bits, identifying the IP version number *(`6` for IPv6, `4` for IPv4)*.
+- **Traffic Class:** 8 bits, used to give priority to certain datagrams.&ensp;(Equivalent to TOS field in IPv4)
+- **Flow label:** 20 bits, used to identify a flow of datagrams.
+- **Payload Length:** 16 bit unsigned int, giving the payload size in bytes.
+- **Next Header:** 8 bits, identifying the protocol to which the contents of the datagram will be delivered *(TCP, UDP, etc.)*.&ensp;(Equivalent to Protocol field in IPv4)
+- **Hop Limit:** 8 bits, holding value that is decremented one by each router that forwards the datagram; if it reaches 0, the datagram is dropped.&ensp;(Equivalent to TTL in IPv4) 
+- **Source and Destination Addresses:** 128 bits each.
+- **Data:** Carries the payload and, optionally, extension header(s).
+
+IPv6 does not have an explicit "Options" field in the IP header, but it stil exists, implemented via the Next Header field and extension headers.<br>
+The Next Header field has value `0`, for Hop-by-Hop Options *(as opposed to `6` for TCP, `17` for UDP, etc.)*.
+This header is stored as an Extension Header in the Data field of the IPv6 datagram, between the IPv6 40-bit header and the encapsulated TCP segment:
+```
+┌──────────────────────────┐
+│ IPv6 main header (40 B)  │
+├──────────────────────────┤
+│ Extension header(s)      │  ← optional, zero or more
+├──────────────────────────┤
+│ Transport-layer segment  │  ← TCP/UDP, or ICMPv6, etc.
+│ (plus its payload data)  │
+└──────────────────────────┘
+```
+
+IPv6 doesn't allow fragmentation and reassembly at intermediate routers. If an IPv6 datagram received by a router is too large to be forwarded, the router drops it and sends a "Packet Too Big" ICMP error message back to the sender.<br>This considerably speeds up IP forwarding as fragmentation and and reassembly are time-consuming processes.
+
+IPv6 deems header checksum redundant since TCP/UDP already do it. This saves packet processing the processing time of checking and recomputing checksum at every router.
+
+Transitioning to IPv6 is a problem: new IPv6-capable systems can be made backward-compatible, but existing IPv4 systems can't handle IPv6 datagrams.
+
+Common technique to send IPv6 datagrams over a path involving IPv4 routers: **tunneling**.
+
+**Tunneling:**&ensp;Encapsulating a complete packet of one protocol inside the payload of another protocol so it can travel through a network that does not support the first protocol.
+<br>
+**IPv6 Example:**<br> 
+IPv6 node on the sending side of the tunnel takes the entire IPv6 datagram and puts it in the data field of an IPv4 datagram, addressed to the IPv6 at the far end of the tunnel, and IPv4 protocol field value set to `41`. Intervening IPv4 routers forward it normally. The receiving IPv6 node checks the `41` in protocol field, and extracts the IPv6 datagram.<br>
+![Figure 4.27](img/42.png "Figure 4.27")
+
+> **\*\*NOTE****<br>
+> **IPv6 Addressing**
+>
+> An IPv6 address is 128 bits long, written as eight groups of four hexadecimal digits separated by colons. e.g., `abcd:ef01:2345:6789:abcd:ef01:2345:6789`.
+> 
+> The address is typically *(in unicast)* divided into two main parts: **Network Prefix** (first 64 bits) and **Interface Identifier** (last 64 bits):
+> ```
+> |<---------- 64 bits ---------->|<---------- 64 bits ---------->|
+> +-------------------------------+-------------------------------+
+> |       Network Prefix          |     Interface Identifier      |
+> +-------------------------------+-------------------------------+ 
+> ```
+> The Network Prefix is usually split further into **Global Routing Prefix** (`/48`) and **Subnet ID** (`/16`).<br>
+> The Interface Identifier is typically random **(for privacy)**.
+>
+> Leading zeroes in address are omitted *(e.g., `2001:db8:0:0:8:800:200c:417a`)*.
+>
+> A sequence of consecutive all-zero groups is replaced by `::`. This can appear only once in an address; longest or *(in case of tie)* leftmost zero run is compressed.<br>*(e.g., `2001:0db8:0000:0001:0000:0000:0000:0001` &rarr; `2001:db8:0:1::1`)*
+>
+> There is Mixed Notation, where the last 32 bits can be written as IPv4 dotted-decimal. (e.g., `2001:db8:1:2:3:4:192.0.2.1`)<br>
+> IPv4 addresses in IPv6 notation are written with a `::ffff:`. (e.g., `::ffff:192.0.2.128`)
+> 
+> IPv6 prefix notation is CIDR-style, same as IPv4 (e.g., 2001:db8::/32)
+> 
+> IPv6 addresses have 3 types, based on their routing and delivery methods: **Unicast**, **Anycast**, and **Multicast**.
+> 1. **Unicast:**&ensp;Identifies a single interface. A packet sent here is delivered to that one interface.
+>     - **Global Unicast (`2000::/3`):** Publicly routable addresses, analogous to public IPv4 addresses.
+>     - **Link-Local (`fe80::/10`):** Automatically configured on every IPv6 interface; valid only on the local link and never forwarded by routers.
+>     - **Unique Local (`fc00::/7`):** Addresses used inside a private network, and not routable on the public Internet; equivalent of IPv4 private addresses.
+>     - **Loopback (`::1`):** Special address that means "this host itself."
+>     - **Unspecified (`::`):** Special all-zero address used when host doesn't have an address yet *(but NEVER used as a destination address)*.
+> 2. **Anycast:**&ensp;Identifies a group of interfaces. Packet is delivered to the nearest member of the group by routing distance.
+> 3. **Multicast:**&ensp;Identifies a group of interfaces. Packet is delivered to every member of the group.
+> <!-- --- -->
