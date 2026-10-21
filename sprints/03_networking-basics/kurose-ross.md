@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 21/10/26)
+## (27/07/26 &ndash; 22/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -588,9 +588,9 @@ Unlike user agent, mail server doesn't typically reside on the local host, since
 
 <hr>
 
-IP Address consists of four bbytes and has a rigid hierarchical structure. As we read it from left to right, we get more specific information about the host's location.
+IP Address consists of four bytes and has a rigid hierarchical structure. As we read it from left to right, we get more specific information about the host's location.
 
-Two ways to identify a host: by **hostname**, and **IP address**.
+Two ways to identify a host: **hostname**, and **IP address**.
 
 **DNS (Domain Name System):**&ensp;It is (1) a distributed database implemented in a hierarchy of DNS servers, and (2) application-layer protocol that allows hosts to query the distributed database. It serves as a directory service that translates hostnames to IP addresses.
 
@@ -601,8 +601,8 @@ DNS is commonly employed by other application-layer protocols like HTTP and SMTP
 For every hostname, HTTP first receives the IP address from DNS, and only then can it initiate a TCP connection to the HTTP server process located at port `80` at that IP address.
 
 **DNS Services:**
-- **Translating hostnames to IP address**
-- **Hostnsme-to-IP-Address Translation:**<br>
+- **Hostnsme-to-IP-Address Translation**
+- **Hostname Aliasin:**<br>
   Allows a single physical host (with one canonical hostname) to be reachable via multiple alias hostnames.
 - **Mail Server Aliasing**:<br>
   Allows multiple domain names to have their mail delivered to the same actual mail server (with one canonical mail server hostname).
@@ -1358,7 +1358,7 @@ Even giving each connection an equal share of bandwidth doesn't fix the fairness
 <br>
 
 
-### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;21/10/26)
+### **Ch. 4&emsp;THE NETWORK LAYER: DATA PLANE**<br>(08/10/26&ndash;22/10/26)
 
 Primary role of the network layer: move packets from a sending host to a receiving host.
 
@@ -1442,9 +1442,9 @@ TCAM is good for IP lookup as prefixes in forwarding table can be stored like `1
 This destination-based forwarding IP-lookup is an example of a more general **"match plus action"** abstraction that is central to generalized forwarding.
 
 Input port's main action is the IP lookup, but it also does:<br>
-1\) Physical-layer and link-layer processing<br>
-2\)Checking packet's version number, checksum, and time-to-live field<br>
-3\)Updating counters used for network management
+1) Physical-layer and link-layer processing<br>
+2) Checking packet's version number, checksum, and time-to-live field<br>
+3) Updating counters used for network management
 
 **Switching**, at the switching fabric can be accomplished in a number of ways:
 - **Switching via memory**<br>
@@ -1544,7 +1544,7 @@ What exactly constitutes a "class" of traffic is up to the ISP to decide, but co
 - No Throttling
 - No Paid Prioritization
 
-<br>
+<hr>
 
 There are two types of IP: **IPv4** and **IPv6**.<br>
 *(IPv4 is currently widely deployed, IPv6 is its proposed replacement)*
@@ -1593,9 +1593,9 @@ Routers by definition have multiple links *(since their whole job is to forward 
 **Each interface must have its own IP address.**<br>
 *(meaining a router will have multiple IPs, one for each interface)*
 
-Each IP address is 4 bytes long, written in dotted-decimal notation.
+Each **IPv4 address** is 4 bytes long, written in dotted-decimal notation.
 <br>
-e.g., `193.32.216.9`, which in binary is `11000001 00100000 11011000 00001001`.
+e.g., `193.32.216.9`, which, in binary, is `11000001 00100000 11011000 00001001`.
 
 Technically, every interface must have a globally unique IP *(except for interfaces behind **NAT**)*.
 
@@ -1661,7 +1661,7 @@ Since a new IP address is obtained from DHCP each time a node connects to a new 
 
 ISPs having to assign a *range* of globally unique, publicly routable IP addresses for every SOHO *(small office/home office)* is not scaleable. And expecting ordinary homeowners to manage IP addresses is unreasonable. This is why we also have **NAT (Network Address Translation)**, which allows a network with a single public IP address to support many hosts.
 
-**Netork Address Translation (NAT):**&ensp;A router technique where the router translates the private IP addresses of devices inside a local network into a single public IP address (and back) as packets leave and enter the network. It also uses a NAT Translation Table to rewrite transport-layer port numbers so many private hosts can share one IPv4 address and communicate with the Internet.<br>
+**Network Address Translation (NAT):**&ensp;A router technique where the router translates the private IP addresses of devices inside a local network into a single public IP address (and back) as packets leave and enter the network. It also uses a NAT Translation Table to rewrite transport-layer port numbers so many private hosts can share one IPv4 address and communicate with the Internet.<br>
 ![Figure 4.25](img/40.png "Figure 4.25")
 
 Private addresses can only be used to send packets within the private network; they are not globally routable on the public Internet.
@@ -1689,7 +1689,7 @@ If an outside host sends an unsolicited packet to the NAT's public IP and some p
 
 > **\*\*NOTE****<br>
 > **NAT isn't an alternative to DHCP**, they work together.<br>
-> The router gets its WAN from the ISP's DHCP server, and the router runs a DHCP server to provide private addresses to hosts on its private network.
+> The router gets its WAN address from the ISP's DHCP server, and the router runs a DHCP server to provide private addresses to hosts on its private network.
 > <!-- --- -->
 
 Attackers, knowing the IP address range of someone's network, can easily send malicious IP datagrams to addresses in their range.
@@ -1702,7 +1702,7 @@ Two popular defenses to malicious packet attacks: **firewalls** and **instrusion
 
 **IPS (Intrusion Prevention System):**&ensp;Same as IDS, except it actually blocks packets in addition to creating alerts.
 
-<br>
+<hr>
 
 **IPv6** was developed because the 32-bit IPv4 address space was being exhausted *(it was fully assigned in 2011)*.
 
@@ -1738,11 +1738,13 @@ This header is stored as an Extension Header in the Data field of the IPv6 datag
 └──────────────────────────┘
 ```
 
-IPv6 doesn't allow fragmentation and reassembly at intermediate routers. If an IPv6 datagram received by a router is too large to be forwarded, the router drops it and sends a "Packet Too Big" ICMP error message back to the sender.<br>This considerably speeds up IP forwarding as fragmentation and and reassembly are time-consuming processes.
+IPv6 doesn't allow fragmentation and reassembly at intermediate routers. If an IPv6 datagram received by a router is too large to be forwarded, the router drops it and sends a "Packet Too Big" ICMP error message back to the sender.
 
-IPv6 deems header checksum redundant since TCP/UDP already do it. This saves packet processing the processing time of checking and recomputing checksum at every router.
+IPv6 deems header checksum redundant since TCP/UDP already do it.
 
-Transitioning to IPv6 is a problem: new IPv6-capable systems can be made backward-compatible, but existing IPv4 systems can't handle IPv6 datagrams.
+Removing both fragmentation and checksum makes router-level packet processing significantly faster. *(fragmentation/reassembly and checking/recomputing checksum were considerably time-consuming processes)*
+
+Transitioning to IPv6 is a problem: new IPv6-capable systems can be made backwards-compatible, but existing IPv4 systems can't handle IPv6 datagrams.
 
 Common technique to send IPv6 datagrams over a path involving IPv4 routers: **tunneling**.
 
@@ -1786,3 +1788,137 @@ IPv6 node on the sending side of the tunnel takes the entire IPv6 datagram and p
 > 2. **Anycast:**&ensp;Identifies a group of interfaces. Packet is delivered to the nearest member of the group by routing distance.
 > 3. **Multicast:**&ensp;Identifies a group of interfaces. Packet is delivered to every member of the group.
 > <!-- --- -->
+
+<hr>
+
+**Generalized Forwarding:**&ensp;A "match-plus-action" paradigm that generalizes destination-based forwarding, such that a packet switch matches on multiple header fields across different layers *(instead of just destination IP)*, and then applies a broad set of actions *(not necessarily just forwarding)*. It is typically implemented via a match-plus-action table computed and installed by a remote controller.
+
+**OpenFlow:**&ensp;A standardized SDN protocol that pioneered the match-plus-action model of generalized forwarding. It lets a remote controller program the match-plus-action tables in packet switches, and the switch executes those rules.
+
+Match-plus-action forwarding tables in OpenFlow are called **Flow Tables**.
+
+**Flow Tables** include:
+- **A set of header field values** to which an incoming packet will be matched.<br>*(Uses TCAM)*
+- **A set of counters**.<br>*(number of packets that have been matched by a table entry, time since table entry last updated, etc.)*
+- **A set of actions to be taken** when a packet matches a flow table entry.<br>*(forwarding to one or more ports, load balancing, rewriting headers, dropping/blocking, etc.)*
+
+**OpenFlow 1.0 Flow Table**<br>
+![Figure 4.29](img/43.png "Figure 4.29")<br>
+Incoming port ID + 11 packet-header fields from 3 different layers of protocol.<br>
+*(Recent OpenFlow specs have way more than 11 header fields)*
+> **\*\*NOTE****<br>
+> Every flow table entry doesn't need to specify every field. A flow-table entry can match on any subset of the available header fields.
+> <!-- --- -->
+
+Each flow table entry also has an associated priority, so that if a packet matches multiple flow table entries, the corresponding action will be that of the highest priority matching entry.
+
+Important possible flow table actions:
+- **Forwarding**
+- **Dropping**
+- **Modify-field**
+
+The main draw of Generalized Forwarding is the ability to implement a number of network-wide behaviors beyond just forwarding at the router level via forwarding tables.
+
+**Example**
+
+![Figure 4.30](img/44.png "Figure 4.30")
+
+**Simple Forwarding:**<br>
+Packets from h5 or h6 destined for h3 or h4 are to be forwarded from s3 to s1, and then s1 to s2.
+```
+______________________________________________________
+|                   s3 Flow Table                    |
+|----------------------------------------------------|
+| Match                                 |   Action   |
+|---------------------------------------|------------|
+| IP Src = 10.3.*.* ; IP Dst = 10.2.*.* | Forward(3) |
+| ...                                   | ...        |
+
+____________________________==___________________________________________
+|                             s1 Flow Table                             |
+|-----------------------------------------------------------------------|
+| Match                                                    |   Action   |
+|----------------------------------------------------------|------------|
+| Ingress Port = 1 ; IP Src = 10.3.*.* ; IP Dst = 10.2.*.* | Forward(4) |
+| ...                                                      | ...        |
+
+_____________________________________________________
+|                   s2 Flow Table                   |
+|---------------------------------------------------|
+| Match                                |   Action   |
+|--------------------------------------|------------|
+| Ingress Port = 2 ; IP Dst = 10.2.*.* | Forward(3) |
+| Ingress Port = 2 ; IP Dst = 10.2.*.* | Forward(4) |
+| ...                                  | ...        |
+```
+
+**Load Balancing:**<br>
+Datagrams from h3 destined to `10.1.*.*` are to be forwarded over the direct link between s2 and s1, while datagrams from h4 destined to `10.1.*.*` are to be forwarded ovcer the link between s2 and s3 and then from s3 to s1.
+```
+_____________________________________________________
+|                   s2 Flow Table                   |
+|---------------------------------------------------|
+| Match                                |   Action   |
+|--------------------------------------|------------|
+| Ingress Port = 3 ; IP Dst = 10.1.*.* | Forward(2) |
+| Ingress Port = 4 ; IP Dst = 10.1.*.* | Forward(1) |
+| ...                                  | ...        |
+
+_____________________________________________________
+|                   s3 Flow Table                   |
+|---------------------------------------------------|
+| Match                                |   Action   |
+|--------------------------------------|------------|
+| Ingress Port = 4 ; IP Dst = 10.1.*.* | Forward(3) |
+| ...                                  | ...        |
+
+_____________________________________________________
+|                   s1 Flow Table                   |
+|---------------------------------------------------|
+| Match                                |   Action   |
+|--------------------------------------|------------|
+| Ingress Port = 1 ; IP Dst = 10.1.0.1 | Forward(2) |
+| Ingress Port = 1 ; IP Dst = 10.1.0.2 | Forward(3) |
+| ...                                  | ...        |
+```
+
+**Firewalling:**<br>
+s2 wants only to receive (on any of its interfaces) traffic sent from hosts attached to s3.
+```
+______________________________________________________
+|                   s2 Flow Table                    |
+|----------------------------------------------------|
+| Match                                 |   Action   |
+|---------------------------------------|------------|
+| IP Src = 10.3.*.* ; IP Dst = 10.2.0.3 | Forward(3) |
+| IP Src = 10.3.*.* ; IP Dst = 10.2.0.4 | Forward(4) |
+| ...                                   | ...        |
+```
+
+**P4 (Programming Protocol-independent Packet Processors):**&ensp;A domain-specific programming language for writing packet-processing programs that run on packet switches. It is more flexible than fixed match-plus-action flow tables because it lets you write custom logic *(with variables, arithmetic, Boolean logic, functions, etc.)*.
+
+**Middleboxes:**&ensp;Intermediary network devices on the data path between a source and destination host that perform functions other than normal IP-router forwarding.
+
+Three broad types of services performed by middleboxes:
+- **NAT Translation** *(NAT boxes)*
+- **Security Services** *(firewalls, IDS/IPS, e-mail filters, etc.)*
+- **Performance Enhancement** *(Web cache, CDN edge server, load balancer, TCP optimizer,etc.)*
+
+As technology progresses and networks become more complex, middleboxes are only increasing. To make the proliferation of middleboxes manageable, there's **NFV (Network Function Virtualization)**.
+
+**Network Function Virtualization (NFV):**The approach of implementing middlebox functions (NAT, firewalls, load balancers) as software on commodity servers instead of an separate, dedicated hardware appliances. These functions share a common software stack, which reduces the operational and capital costs of managing many specialized boxes.
+
+The traditional Internet architecture had a clear separation between the network layer and transport/application layers. Middleboxes violate this separation, but they're necessary.
+
+**Architectural Principles of the Internet:**
+> "...the goal is connectivity, the tool is the Internet Protocol, and the intelligence is end to end rather than hidden network."
+
+The singular network protocol, the IP protocol connects the entire Internet as its backbone. All the functionality *(or "intelligence")* is implementing at the network edge *(i.e. "end to end")*.
+
+
+<hr>
+<br>
+
+
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(00/00/26&ndash;00/00/26)
+
