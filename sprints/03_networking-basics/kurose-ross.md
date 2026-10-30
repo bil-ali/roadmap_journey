@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 22/10/26)
+## (27/07/26 &ndash; 30/10/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1906,12 +1906,12 @@ Three broad types of services performed by middleboxes:
 
 As technology progresses and networks become more complex, middleboxes are only increasing. To make the proliferation of middleboxes manageable, there's **NFV (Network Function Virtualization)**.
 
-**Network Function Virtualization (NFV):**The approach of implementing middlebox functions (NAT, firewalls, load balancers) as software on commodity servers instead of an separate, dedicated hardware appliances. These functions share a common software stack, which reduces the operational and capital costs of managing many specialized boxes.
+**Network Function Virtualization (NFV):**&ensp;The approach of implementing middlebox functions (NAT, firewalls, load balancers) as software on commodity servers instead of an separate, dedicated hardware appliances. These functions share a common software stack, which reduces the operational and capital costs of managing many specialized boxes.
 
 The traditional Internet architecture had a clear separation between the network layer and transport/application layers. Middleboxes violate this separation, but they're necessary.
 
 **Architectural Principles of the Internet:**
-> "...the goal is connectivity, the tool is the Internet Protocol, and the intelligence is end to end rather than hidden network."
+> "...the goal is connectivity, the tool is the Internet Protocol, and the intelligence is end to end rather than hidden in the network."
 
 The singular network protocol, the IP protocol connects the entire Internet as its backbone. All the functionality *(or "intelligence")* is implementing at the network edge *(i.e. "end to end")*.
 
@@ -1920,5 +1920,69 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(00/00/26&ndash;00/00/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;30/10/26)
+
+**Secure communication** is defined by the following properties:
+- **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
+- **Message Integrity**&ensp;*(Ensure message is not altered in transit; checksumming)*
+- **End-Point Authentication**
+- **Operational Security**&ensp;*(Protection from the public Internet; firewalls, IDS, etc.)*
+
+In order to exchange data securely, two hosts exchange control messages as well as data messages, most *(or all)* of which are encrypted.
+
+An intruder can mainly either perform **eavesdropping** or **modification/insertion/deletion of messages and message content**.<br>
+It is particularly bad for the Internet if they do this to DNS, routing, or network management messages.
+
+**Cryptography:**&ensp;The use of mathematical techniques to disguise data so that an intruder can gain no information from the intercepted data.<br>
+Aside from obviously providing confidentiality, cryptography is also central to providing end-point authentication, message integrity and non-repudiation.
+> **\*\*NOTE****<br>
+> **Non-repudiation** is the property that a party cannot credibly deny having sent a message or performed an action, because there is verfiable proof that binds the action to that party (like digital signatures in cryptography).
+> <!-- --- -->
+
+**Plaintext**/**Cleartext** *(original message)*, after going through encryption algorithm, becomes **Ciphertext**.
+
+The encryption algorithm is often known. It's the encrypted message itself that's providing the security.
+
+Encryption/Decryption algorithms use a **Key** to encrypt/decrypt a message.
+
+**Symmetric Key System:**&ensp;The communicating parties share one secret key, which is used for both encryption and decryption.
+
+**Public Key System:**&ensp;Each party has a key pair: a public key known to everyone, and a private key known only to its owner. The public key is used for encryption or signature verification, and the private key is used for decrpytion and signing.
+
+Simplest example of symmetric key cryptography: **Caesar Cipher**.
+
+**Caesar Cipher:**&ensp;A substitution cipher in which each letter of the plaintext is substited by the letter that is $k$ positions later in the alphabet *(with wraparound)*. The integer $k$ serves as the key.
+
+An improvement on the caesar cipher is the **Monoalphabetic Cipher**.
+
+**Monoalphabetic Cipher:**&ensp;A substitution cipher in which each plaintext letter is always replaced by the same fixed ciphertext letter, defined by a one-to-one mapping. The key here is the one-to-one mapping table.
+
+**Polyalphabetic Encryption:**&ensp;An encryption method that uses multiple monoalphabetic ciphers by alternating between them, according to some repeating pattern.<br>
+**e.g.**, using two caesar ciphers, $C_{1}$ and $C_{2}$, where $k_{1} = 5$ and $k_{2} = 19$, and encrypting plaintext letters using the repeating pattern $C_{1}$, $C_{2}$, $C_{2}$, $C_{1}$, $C_{2}$.
+
+How symmetric key encryption is actually done today: **Block Ciphers** *(used in PGP, TLS, IPsec)*.
+
+**Block Cipher:**&ensp;A symmetric-key encryption method that breaks data into fixed-size $k$-bit blocks, and encrypts each blockk separately using one-to-one mappings.
+
+An example one-to-one mapping for a single block for 3-bit block cipher:<br>
+| Input | Output |
+| --- | --- |
+| `000` | `110` |
+| `001` | `111` |
+| `010` | `101` |
+| `011` | `100` |
+| `100` | `011` |
+| `101` | `010` |
+| `110` | `000` |
+| `111` | `001` |
+
+For a block size of $k$ bits,<br>
+- Number of possible input blocks: $2^{k}$
+- Number of possible one-to-one mappings: $(2^{k})!$
+> **\*\*NOTE****<br>
+> In the above 3-bit block example, there are 8 *(i.e., $2^3$)* possible inputs.<br>
+> There are 40,320 *(i.e., $2^{3}!$)* possible mapping tables like this.
+> <!-- --- -->
+
+The simple full-table block is not scaleable. Tables with small $k$ aren't secure enough. While tables with large $k$ are infeasible to maintain *(**e.g.**, $k=2$, means maintaining a table of $2^6 = 18,446,744,073,709,551,616 mappings)*.
 
