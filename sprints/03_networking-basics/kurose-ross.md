@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 30/10/26)
+## (27/07/26 &ndash; 02/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;30/10/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;02/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -1986,3 +1986,46 @@ For a block size of $k$ bits,<br>
 
 The simple full-table block is not scaleable. Tables with small $k$ aren't secure enough. While tables with large $k$ are infeasible to maintain *(**e.g.**, $k=2$, means maintaining a table of $2^6 = 18,446,744,073,709,551,616 mappings)*.
 
+In reality, block ciphers typically use functions that simulate randomly permuted tables.
+
+**Example:**<br>
+![Figure 8.5](img/45.png "Figure 8.5")<br>
+This function simulates a 64-bit block cipher without having to maintain a single $2^{64}$-entry table *(instead, it only maintains 8 $2^8$-entry tables)*.
+
+64-bit input blocks are further broken down into 8 8-bit blocks. These blocks independently go through an 8-bit-to-8-bit table. The output 8-bit blocks go through a scrambler, and are then reassembled into a 64-bit output block. This is done for $n$ rounds, so that each input bit affects most *(if not all)* of the final output bits. They **key** for this block cipher are the 8 permutation tables.
+
+Popular block ciphers: **DES (Data Encryption Standard)**, **3 DES**, **AES (Advanced Encryption Standard)**.
+
+Plain block cipher has one major problem: identical plaintext blocks produce identical ciphertext blocks. 
+*(This can be exploited to decrypt ciphertext)*
+
+The solution to this problem: mix in some randomness.
+
+Let<br>
+$m(i)$ is the $i$th plaintext block,<br>
+$c(i)$ is the $i$th ciphertext block,<br>
+$K_S$ is the block-cipher encryption algorithm, with password $S$.<br>
+The sender creates a random k-bit number, $r(i)$, for the $i$th block.
+
+$c(i)$ is calculated as $c(i) = K_S(m(i) \oplus r(i))$, and, instead of just ciphertext, sender sends c(1), r(1), c(2), r(2), c(3), r(3), and so on.
+> **\*\*NOTE****<br>
+> $\oplus$ is XOR *(exclusive-or)*.
+> <!-- --- -->
+Receiver can thus recover each block of plaintext by computing $m(i) = K_S(c(i)) \oplus r(i)$.
+
+Intruder, despite getting both $c(i)$ and $r(i)$ still can't decrypt because they don't have key $S$.<br>Also, even if m(i) and m(j) are identical, c(i) and c(j) will *(almost always)* be different.
+
+This solution introduces a new problem: it doubles the required bandwidth *(sending c(i) and r(i) for each block instead of just c(i))*.
+
+Solution to the bandwidth problem while keeping randomness: **Cipher Block Chaining (CBC)**.
+
+**Cipher Block Chaining (CBC):**&ensp;A block-cipher **mode** where each plaintext block is XORed with the previous ciphertext block before encryption. For the first block, a random **Initialization Vector (IV)** is used in place of the previous ciphertext; the IV is sent in first, in cleartext. The receiver decrypts each block and XORs it with the previous block to recover the plaintext. This makes identical plaintext blocks produce different ciphertext blocks while adding only one overhead block, the IV.
+
+IV is $c(0)$. The first block is encrypted as $c(1) = K_S(m(1) \oplus c(0))$. The $i$th block is encrypted as $c(i) = K_S(m(i) \oplus c(i-1))$.
+<br>
+The receiver decrypts $c(i)$ with $K_S$ to obtain $s(i) = m(i) \oplus c(i-1)$. It then obtains cleartext block from $m(i) = s(i) \oplus c(i-1).$
+
+> **\*\*NOTE****<br>
+> A block cipher by itself only encrypts one fixed-size block under a key. *(e.g., AES)*<br>
+> A **mode** *(i.e., a block-cipher mode of operation)* is a standardized recipe for using that block cipher. It specifies how blocks are processed and linked. (e.g., CBC).
+> <!-- --- -->
