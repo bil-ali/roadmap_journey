@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 02/11/26)
+## (27/07/26 &ndash; 06/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;02/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;06/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2019,13 +2019,36 @@ This solution introduces a new problem: it doubles the required bandwidth *(send
 
 Solution to the bandwidth problem while keeping randomness: **Cipher Block Chaining (CBC)**.
 
-**Cipher Block Chaining (CBC):**&ensp;A block-cipher **mode** where each plaintext block is XORed with the previous ciphertext block before encryption. For the first block, a random **Initialization Vector (IV)** is used in place of the previous ciphertext; the IV is sent in first, in cleartext. The receiver decrypts each block and XORs it with the previous block to recover the plaintext. This makes identical plaintext blocks produce different ciphertext blocks while adding only one overhead block, the IV.
+**Cipher Block Chaining (CBC):**&ensp;A block-cipher **mode** where each plaintext block is XORed with the previous ciphertext block before encryption. For the first block, a random **Initialization Vector (IV)** is used in place of the previous ciphertext; the IV is sent first, in cleartext. The receiver decrypts each block and XORs it with the previous block to recover the plaintext. This makes identical plaintext blocks produce different ciphertext blocks while adding only one overhead block, the IV.
 
 IV is $c(0)$. The first block is encrypted as $c(1) = K_S(m(1) \oplus c(0))$. The $i$th block is encrypted as $c(i) = K_S(m(i) \oplus c(i-1))$.
 <br>
 The receiver decrypts $c(i)$ with $K_S$ to obtain $s(i) = m(i) \oplus c(i-1)$. It then obtains cleartext block from $m(i) = s(i) \oplus c(i-1).$
 
 > **\*\*NOTE****<br>
-> A block cipher by itself only encrypts one fixed-size block under a key. *(e.g., AES)*<br>
+> A block cipher by itself only encrypts one fixed-size block under a key.<br>
 > A **mode** *(i.e., a block-cipher mode of operation)* is a standardized recipe for using that block cipher. It specifies how blocks are processed and linked. (e.g., CBC).
 > <!-- --- -->
+
+<br>
+
+**Public Key Cryptography, Alice to Bob:**<br>
+Bob has two keys: a public key *($K_B^+$)* and a private key *($K_B^-$)*. Alice first fetches Bob's public key. Alice then encrypts her message, $m$, to Bob using Bob's public key: $K_B^+(m)$. Bob receives this encrypted message, and uses his private key to decrypt it: $K_B^-(K_B^+(m)) = m$.
+
+> **\*\*NOTE****<br>
+> $K_B^-(K_B^+(m)) = K_B^+(K_B^-(m)) = m$
+> <!-- --- -->
+
+The problem with public key cryptography: anyone can use Bob's public key to send him encrypted messages, including Alice or **someone pretending to be Alice**.
+
+Fundamental algorithm in public key cryptography: **RSA Algorithm**.
+> **\*\*NOTE****<br>
+> Important identitities for **RSA**:
+> - $[(a \mod n) + (b \mod n)] \mod n = (a+b) \mod n$
+> - $[(a \mod n) - (b \mod n)] \mod n = (a-b) \mod n$
+> - $[(a \mod n) \cdot (b \mod n)] \mod n = (a \cdot b) \mod n$
+> - $(a \mod n)^d \mod n = a^d \mod n$
+> <!-- --- -->
+
+**RSA Algorithm:**
+- 
