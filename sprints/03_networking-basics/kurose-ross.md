@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 06/11/26)
+## (27/07/26 &ndash; 08/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;06/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;08/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2051,4 +2051,73 @@ Fundamental algorithm in public key cryptography: **RSA Algorithm**.
 > <!-- --- -->
 
 **RSA Algorithm:**
-- 
+- Choose two large numbers, $p$ and $q$. Recommended that the product of $p$ and $q$ be on the order of 1,024 bits.<br>
+  *(Order of 1,024 bits means number takes 1024 bits to represent i.e., its value is between $2^{1023}$ and $2^{1024}-1$)*
+- Compute $n$ and $z$, where $n = pq$ and $z = (1-p)(1-q)$
+- Choose a number, $e$ such that $e$ is relatively prime with $z$ *(i.e., no common factors except $1$)*.
+- Choose a number $d$, such that $ed - 1$ is exactly divisible by $z$ i.e., such that $ed \mod z = 1$
+- The **public key**, $K^+$ is the pair of numbers ($n$, $e$).
+- The **private key**, $K^-$ is the pair of numbers ($n$, $d$).
+- A message $m$ *(with $m<n$)* is encrypted:
+$$
+c = m^e\mod n
+$$
+- The received message, $c$, is decrypted:
+$$
+m = c^d\mod n
+$$
+> **\*\*NOTE****<br>
+> **Why Does RSA Work?**<br>
+> Substitute $c = m^e\mod n$ into decryption:<br>
+> &emsp;$c^d\mod n$<br>
+> = $(m^e\mod n)^d\mod n$<br>
+> Using identity $(a \mod n)^d \mod n = a^d \mod n$<br>
+> = $m^{ed}\mod n$<br>
+> There is a mathematical finding from number theory that if $p$ and $q$ are prime, $n=pq$, and $z=(p-1)(q-1)$, then $x^y\mod n = x^{y\mod z}\mod n$.<br>
+> Applying this rule with $x=m$, $y=ed$:<br>
+> &emsp;$m^{ed}\mod n$<br>
+> = $m^{ed\mod z}\mod n$<br>
+> Since we chose $e$ and $d$ such that $ed\mod z = 1$<br>
+> = $m^1\mod n$<br>
+> = $m$
+>
+> **Fun Fact:**<br>
+> It works even if we reverse the order, and first exponentiate by $d$ then by $e$:<br>
+> $(m^d\mod n)^e\mod n$&emsp;=&emsp;$m^{de}\mod n$&emsp;=&emsp;$m^{ed}\mod n$&emsp;=&emsp;$(m^e\mod n)^d\mod n$&emsp;=&emsp;$m$
+> <!-- --- -->
+
+The security of RSA relies on the fact that there arew no *known* algorithms for quickly factoring a number, $n$, into the primes $p$ and $q$.
+
+Modern alternative to RSA: **ECC (Elliptic Curve Cryptography)**.
+> **\*\*NOTE****<br>
+> RSA and ECC are both being depracted by 2030 as they are both potentially vulnerable to quantum attacks.
+> <!-- --- -->
+
+RSA encryption/decrpytion is a time-consuming process, so, in practice, RSA is used with symmetric key cryptography, in the form of **Session Keys**.
+
+**Session Key:**&ensp;A temporary symmetric key used to encrypt the actual data for one communication session.<br>
+**e.g.**,:<br>
+Alice wants to send Bob a large amount of encrypted data. She generates a session key, and to give it to Bob securely, she encrypts the session key using Bob's RSA public key. All subsequent encrypted data transfer is done using the session key.
+
+Public key cryptography can also be used to *derive* a symmetric key for two communicating entities that have never interacted before. This is the **Diffie-Hellman Key Agreement Protocol:**<br>
+- Either Bob or Alice choose $p$ and $g$, and make their values public.
+- Alice and Bob each independently choose private values SA and SB, respectively.<br>*(The recommended length of $p$, SA, SB, is 2,048 bits or more)*
+- Alice's public key: $K_A^+ = g^{SA} \mod p$
+- Bob's public key: $K_B^+ = g^{SB} \mod p$
+- Alice and Bob compute a common shared secret without ecer explicity exchanging this shared secret.<br>
+  Alice's computed shared secret $= (K_B^+)^{SA} \mod p$<br>
+  Bob's computed shared secret $= (K_A^+)^{SB} \mod p$
+- This shared secret *($g^{SA*SB} \mod p$)* is fed into a **Key Derivation Function (KDF)** by Bob and Alice independently to both get the same private symmetric key.
+> **\*\*NOTE****<br>
+> The computed shared secrets are the same because:<br>
+> Alice's computed shared secret<br>
+> $= (K_B^+)^{SA} \mod p$<br>
+> $= (g^{SB} \mod p)^{SA} \mod p$<br>
+> $= g^{SB*SA} \mod p$<br>
+> $= g^{SA*SB} \mod p$<br>
+>
+> Bob's computed shared secret<br>
+> $= (K_A^+)^{SB} \mod p$<br>
+> $= (g^{SA} \mod p)^{SB} \mod p$<br>
+> $= g^{SA*SB} \mod p$<br>
+> <!-- --- -->
