@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 08/11/26)
+## (27/07/26 &ndash; 09/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;08/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;09/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2121,3 +2121,48 @@ Public key cryptography can also be used to *derive* a symmetric key for two com
 > $= (g^{SA} \mod p)^{SB} \mod p$<br>
 > $= g^{SA*SB} \mod p$<br>
 > <!-- --- -->
+
+Encryption provides **confidentiality**, but the **message integrity** problem still remains.
+
+**Message Integrity problem:**<br>
+Bob needs to verify:<br>
+**(1)** The message actually orginated from Alice.<br>**(2)** The message was not tampered with on its way to Bob.
+
+Message integrity is a particularly critical security concern for link-state routing algorithms. 
+
+Technques for message integrity: **Cryptographic Hash Functions**, **MAC**, **Digital Signatures**, **End-Point Authentication**.
+
+A **hash function** takes an input, $m$, and computes a fixed size string $H(m)$ known as a hash.
+
+A **cryptographic hash function** is a hash function with the additional property: it is computationally infeasible to find any two different messages $x$ and $y$ such that $H(x) = H(y)$.
+
+Major hash functions:&ensp;**MD5** and **SHA-1 (Secure Hash Algorithm)**<br>
+SHA-1 is more secure because it computes a 160-bit hash as opposed to MD5's 128-bit hash.
+> **\*\*NOTE****<br>
+> Both MD5 and SHA-1 are obsolete, deprecated, and replaced now largely by either **SHA-256** or **SHA-3**.
+> <!-- --- -->
+
+Hash function alone *(Sending (m, H(m)) instead of just m)* doesn't provide any message integrity. Solution: **Authentication Key** $s$.<br>*(The **authentication key** is a shared secret between sender and receiver)*
+1. Alice creates message $m$, concatenates $s$ to it, and calculates the hash $H(m+s)$.<br>$H(m+s)$ is called the **Message Authentication Code (MAC)**.
+2. Alice appends **MAC** to $m$ and sends ($m$, $H(m+s)$) instead of just $m$.
+3. Bob receives ($m$, $h$), and since he also knows $s$, calculates $H(m+s)$ himself. If $H(m+s) = h$, Bob knows the message is unaltered.
+
+The most popular MAC standard: **HMAC**&emsp;*(e.g., HMAC-MD5, HMAC-SHA-1, HMAC-SHA-256, etc.)*.
+
+How to share authentication key between communicating entities? Send it with public key encryption.
+
+Hash function and MAC tackle the "not tampered" part of message integrity. To ensure sender is who they say they are: **Digital Signatures**.
+
+Digital signature can't be a shared secret like in MAC; it has to be fully private to sender.
+
+**Digital Signature:**&ensp;A cryptographic technique for proving that a document was signed by a specific party and was not forged or altered. It uses public-key cryptography, where the the signer's private key *($K^-$)* serves as the digital signature. Anyone can use verify a signed message's source using the signer's public key *($K^+$)*.<br>
+![Figure 8.10](img/46.png "Figure 8.10")
+
+Digital signatures actually provides both aspects of message integrity. Besides verifying source, it also ensures message is unaltered: if message is altered to $m'$, it won't match $K^+(K^-(m))$.
+
+Problem: encryption/decryption is expensive, especially for long messages.<br>
+Solution: Apply signature to fixed-length hash of the message instead, i`.e., $K^-(H(m))$.
+![Figure 8.11](img/47.png "Figure 8.11")<br>
+![Figure 8.12](img/48.png "Figure 8.12")
+
+Digital signatures are a "heavy" techniques *(compared to MAC)*. Besides the computational expense of encryption, it also requires an underlying Public Key Infrastructure (PKI) with certification authorities and such.
