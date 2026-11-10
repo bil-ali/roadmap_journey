@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 09/11/26)
+## (27/07/26 &ndash; 10/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;09/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;10/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2166,3 +2166,22 @@ Solution: Apply signature to fixed-length hash of the message instead, i`.e., $K
 ![Figure 8.12](img/48.png "Figure 8.12")
 
 Digital signatures are a "heavy" techniques *(compared to MAC)*. Besides the computational expense of encryption, it also requires an underlying Public Key Infrastructure (PKI) with certification authorities and such.
+
+**Why is PKI required?**<br>
+An intruder, Trudy, could send Alice a message, pretending to be Bob. The message is sent along with Trudy's public key, and signed with Trudy's private key. Alice will think the public key is Bob's, use it, and hence think the digital signature is Bob's.
+
+For public key cryptography and digital signatures to work, **Public Key Certification** is necessary.
+
+**Public Key Certification:**&ensp;The process of a **Certification Authority (CA)** verifying an identity's identity and then issuing a digitally signed certificate that bind that entity's identity to its public key. The certificate contains the public key, globally unique identifying information about the owner, and the CA's digital signature.<br>
+![Figure 8.14](img/49.png "Figure 8.14")
+
+**ITU (International Telecommunication Union)** and **IETF (Internet Engineering Task Force)** have developed standards for CAs&ensp;*(e.g., X.509, [RFC 1422])*.
+
+An intruder can eavesdrop, copy a full message from Bob to Alice with Bob's signature, and send that exact message to Alice themself; the signature still verifies *(This is a **replay attack**)*. Message integrity doesn't prevent this. **End-Point Authentication** does.
+
+Message integrity/signatures ask: "Was this message really from Bob and unaltered?"<br>
+End-point authentication asks: "Am I talking to the real Bob right now, live?"
+
+**End-Point Authentication:**&ensp;The process by which one entity proves its identity to another over a network at the current time. It is done through an **authentication protocol** using exchanged messages.
+
+Authentication protocol is *typically* run first to establish the identities of the two communicating parties, then other protocols get their turn.
