@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 10/11/26)
+## (27/07/26 &ndash; 11/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;10/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;11/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2184,4 +2184,54 @@ End-point authentication asks: "Am I talking to the real Bob right now, live?"
 
 **End-Point Authentication:**&ensp;The process by which one entity proves its identity to another over a network at the current time. It is done through an **authentication protocol** using exchanged messages.
 
-Authentication protocol is *typically* run first to establish the identities of the two communicating parties, then other protocols get their turn.
+Authentication protocol is typically run first to establish the identities of the two communicating parties, then other protocols *(reliable data transfer, routing information exchange, etc.)* are run.
+
+IP address can't be used for authentication, because it's possible, if someone builds their own OS kernel, to create an IP datagram and put whatever in the source IP field *(**IP Spoofing**)*.
+> **\*\*NOTE****<br>
+> **IP Spoofing Prevention:** A host's first-hop router can be configured to forward only datagrams containing that host's IP source address.
+> <!-- --- -->
+
+Simple password can't be used for authentication, because it's vulnerable to **eavesdropping**.
+
+Encrypted password can't be used for authentication, because it's vulnerable to **replay attack**.
+> **\*\*NOTE****<br>
+> **Replay Attack** a.k.a. **Playback Attack**.<br>
+> Even if eavesdropping intruder doesn't know the decrypted password, they can simply play back the encrypted password message to gain access.
+> <!-- --- -->
+
+For proper authentication, Bob needs to be able distinguish between Alice's original authentication and a later playback of Alice's original authentication. The solution: **nonces**.
+
+**Nonce:**&ensp;A random/unique number that a protocol will use only once in a lifetime, to ensure freshness and prevent replay attacks.<br>
+**Example:**
+1. Alice sends the message "I am Alice" to Bob.
+2. Bob chooses a nonce, $R$, and sends it to Alice.
+3. Alice encrypts the nonce using Alice and Bob's symmetric key $K_{A-B}$, and sends $K_{A-B}(R)$ back to Bob.
+4. Bob decrypts the retrieved message, and if the decrypted nonce equals the nonce he sent Alice, then Alice is authenticated *(i.e., she is who she says she is and she is live)*.
+
+<br>
+
+It is possible to provide security services in any of the top four layers of the Internet protocol stack.
+
+Security in a lower layer translates to upstream layers. **e.g.,** when security is provided at the network layer, all transport-layer segmets (and hence all application-layer data) enjoy the security services of the network layer.
+<br>
+This doesn't mean you only need security at lower layers. There is a need for security functionality at higher layers as well as blanket coverage at lower layers.
+
+**Example secure protocols:**
+1. Application layer:&ensp;Secure E-Mail (e.g., PGP)
+2. Transport layer:&ensp;TLS
+3. Network layer:&ensp;IPsec
+4. Link layer:&ensp;IEEE 802.11 wireless LAN protocol.
+
+<br>
+
+**Secure E-Mail** requires the following security services:
+- Confidentiality
+- Sender Authentication
+- Message Integrity
+- Receiver Authentication
+
+Confidentiality can't be provided using symmetric key because securely distributing the private key between sender and receiver is difficult. Public key is inefficient, especially for long messages. The solution: **symmetric keys**.
+
+Secure E-Mail Design:
+
+![Figure 8.21](img/50.png "Figure.22")
