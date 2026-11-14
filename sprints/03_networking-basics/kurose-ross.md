@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 11/11/26)
+## (27/07/26 &ndash; 14/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;11/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;14/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2165,7 +2165,7 @@ Solution: Apply signature to fixed-length hash of the message instead, i`.e., $K
 ![Figure 8.11](img/47.png "Figure 8.11")<br>
 ![Figure 8.12](img/48.png "Figure 8.12")
 
-Digital signatures are a "heavy" techniques *(compared to MAC)*. Besides the computational expense of encryption, it also requires an underlying Public Key Infrastructure (PKI) with certification authorities and such.
+Digital signatures are a "heavy" techniques *(compared to MAC)*. Besides the computational expense of encryption, it also requires an underlying **Public Key Infrastructure (PKI)** with certification authorities and such.
 
 **Why is PKI required?**<br>
 An intruder, Trudy, could send Alice a message, pretending to be Bob. The message is sent along with Trudy's public key, and signed with Trudy's private key. Alice will think the public key is Bob's, use it, and hence think the digital signature is Bob's.
@@ -2210,7 +2210,7 @@ For proper authentication, Bob needs to be able distinguish between Alice's orig
 
 <br>
 
-It is possible to provide security services in any of the top four layers of the Internet protocol stack.
+It is possible to provide security services in any of the top four layers of the Internet protocol stack *(application layer, transport layer, network layer, link layer)*.
 
 Security in a lower layer translates to upstream layers. **e.g.,** when security is provided at the network layer, all transport-layer segmets (and hence all application-layer data) enjoy the security services of the network layer.
 <br>
@@ -2226,12 +2226,29 @@ This doesn't mean you only need security at lower layers. There is a need for se
 
 **Secure E-Mail** requires the following security services:
 - Confidentiality
-- Sender Authentication
 - Message Integrity
+- Sender Authentication
 - Receiver Authentication
 
 Confidentiality can't be provided using symmetric key because securely distributing the private key between sender and receiver is difficult. Public key is inefficient, especially for long messages. The solution: **symmetric keys**.
 
-Secure E-Mail Design:
+Secure E-Mail Design:<br>
+![Figure 8.21](img/50.png "Figure.22")<br>
+Alice applies hash function $H()$ to her message, $m$, then signs the result with her private key, $K_A^-$. The original message, $m$, is concatenated with with this digital signature, $K_A^-(H(m))$, to create a package. Alice selects a random symmetric session key $K_S$, and ecrypts the package with it. She then encrypts the session key with Bob's public key $K_B^+$. The encrypted package $K_S(K_A^-(H(m)) || m)$ and encrypted session key $K_B^+(K_S)$ are concatenated and this final package is sent to Bob's e-mail address.
 
-![Figure 8.21](img/50.png "Figure.22")
+Bob, upon receipt, uses his private key, $K_B^-$, to decrypt the session key, $K_S$, and uses the session key to decrypt $(K_A^-(H(m)) || m)$. He applies Alice's public key, $K_A^+$, to $(K_A^-(H(m))$, and applies hash function $H()$ to $m$, and compares the results.
+
+This design provides confidentiality, sender authentication, and message integrity.
+<br>
+However, the public key certification problem is still there.
+
+This is basically how **PGP (Pretty Good Privacy)** works.
+
+**PGP (Pretty Good Privacy):**&ensp;An email encryption scheme that provides confidentiality, integrity, and sender/receiver authentication. It uses a hybrid approach: symmetric ciphers for the message body, public-key cryptography for key exchange and signatures, and hashes for message digests. It uses a web of trust for public-key certification rather than a CA-based PKI.
+
+PGP messages are placed in the email body, after the **MIME** headers, bounded by `-----BEGIN PGP ...-----` and `-----END PGP ...-----`.
+> **\*\*NOTE****<br>
+> **MIME (Multipurpose Internet Mail Extensions)** is the extended successor to SMTP, that allows emails to carry more than just 7-bit ASCII text *(attachments, images, non-ASCII text, etc.)*.
+> <!-- --- -->
+
+**OpenPGP:**&ensp;The open, standardized version of PGP.&emsp;*([RFC 9580])*
