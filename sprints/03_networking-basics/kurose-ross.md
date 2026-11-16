@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 14/11/26)
+## (27/07/26 &ndash; 16/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;14/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;16/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2233,7 +2233,7 @@ This doesn't mean you only need security at lower layers. There is a need for se
 Confidentiality can't be provided using symmetric key because securely distributing the private key between sender and receiver is difficult. Public key is inefficient, especially for long messages. The solution: **symmetric keys**.
 
 Secure E-Mail Design:<br>
-![Figure 8.21](img/50.png "Figure.22")<br>
+![Figure 8.21](img/50.png "Figure 8.21")<br>
 Alice applies hash function $H()$ to her message, $m$, then signs the result with her private key, $K_A^-$. The original message, $m$, is concatenated with with this digital signature, $K_A^-(H(m))$, to create a package. Alice selects a random symmetric session key $K_S$, and ecrypts the package with it. She then encrypts the session key with Bob's public key $K_B^+$. The encrypted package $K_S(K_A^-(H(m)) || m)$ and encrypted session key $K_B^+(K_S)$ are concatenated and this final package is sent to Bob's e-mail address.
 
 Bob, upon receipt, uses his private key, $K_B^-$, to decrypt the session key, $K_S$, and uses the session key to decrypt $(K_A^-(H(m)) || m)$. He applies Alice's public key, $K_A^+$, to $(K_A^-(H(m))$, and applies hash function $H()$ to $m$, and compares the results.
@@ -2252,3 +2252,50 @@ PGP messages are placed in the email body, after the **MIME** headers, bounded b
 > <!-- --- -->
 
 **OpenPGP:**&ensp;The open, standardized version of PGP.&emsp;*([RFC 9580])*
+
+<br>
+
+**TLS (Transport Layer Security):**&ensp;A cryptographic protocol that runs above the transport-layer protocols (TCP, UDP) and below application-layer protocols like HTTP. It provides confidentiality, integrity, and end-point authentication.
+> **\*\*NOTE****<br>
+> **TLS** is the successor to **SSL (Secure Sockets Layer)**.
+> <!-- --- -->
+
+Historically, TLS has been implemented on top of TCP.
+
+Now, TLS is also run on top of UDP as part of QUIC, which HTTP/3 runs on.
+
+Latest version of TLS: **TLS 1.3**.
+
+Suppose an Internet commerce scenario **(buying perfume)** without TLS:
+- Without confidentiality, intruder could intercept the order and obtain your card information.
+- Without integrity, intruder could modify your order.
+- Without authentication, you could be ordering on a fake website pretending to be Amazon.
+
+TLS has 3 phases:
+1. Handshake
+2. Key Derivation
+3. Data Transfer
+
+**Handshake**<br>
+*Assuming TCP*, Bob needs to<br>
+(a) establish a TCP connection with Alice,<br>
+(b) verify that Alice is really Alice,<br>
+(c) send Alice a Master Secret (MS) key.
+<br>
+![Figure 8.24](img/51.png "Figure 8.24")<br>
+
+**Key Derivation**<br>
+The **MS** is the shared secret, used to derive all the session keys for encryption and MAC for the TLS connection. At the end of the key derivation phase, both sides have all session keys.<br>
+*(**e.g.**, session encryption key for data sent from Bob to Alice; session HMAC key for daya sent from Bob to Alice; session encryption key for data sent from Alice to Bob; session HMAC key for daya sent from Alice to Bob)*
+
+**Data Transfer**<br>
+Since TCP is a byte-stream protocol, TLS breaks the data stream up into records. TLS appends HMAC to each record for integrity checking, before encrypting. *(HMAC = hash function(record data + session HMAC key))*.
+> **\*\*NOTE****<br>
+> Byte stream data is first broken up into **TLS records**, *then* the TLS encrypted bytes are broken up into **TCP segments.**
+> <!-- --- -->
+
+
+> **\*\*NOTE****<br>
+> **Why application-layer PGP is needed despite having transport-layer TLS:**<br>
+> 
+> <!-- --- -->
