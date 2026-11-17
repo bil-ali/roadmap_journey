@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 16/11/26)
+## (27/07/26 &ndash; 17/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;16/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;17/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2276,7 +2276,7 @@ TLS has 3 phases:
 2. Key Derivation
 3. Data Transfer
 
-**Handshake**<br>
+**Handshake:**<br>
 *Assuming TCP*, Bob needs to<br>
 (a) establish a TCP connection with Alice,<br>
 (b) verify that Alice is really Alice,<br>
@@ -2284,16 +2284,19 @@ TLS has 3 phases:
 <br>
 ![Figure 8.24](img/51.png "Figure 8.24")<br>
 
-**Key Derivation**<br>
+**Key Derivation:**<br>
 The **MS** is the shared secret, used to derive all the session keys for encryption and MAC for the TLS connection. At the end of the key derivation phase, both sides have all session keys.<br>
 *(**e.g.**, session encryption key for data sent from Bob to Alice; session HMAC key for daya sent from Bob to Alice; session encryption key for data sent from Alice to Bob; session HMAC key for daya sent from Alice to Bob)*
 
-**Data Transfer**<br>
-Since TCP is a byte-stream protocol, TLS breaks the data stream up into records. TLS appends HMAC to each record for integrity checking, before encrypting. *(HMAC = hash function(record data + session HMAC key))*.
+**Data Transfer:**<br>
+Since TCP is a byte-stream protocol, TLS breaks the data stream up into **records**. TLS appends HMAC to each record for integrity checking, before encrypting. *(HMAC = hash_function(record data + session HMAC key))*.
 > **\*\*NOTE****<br>
-> Byte stream data is first broken up into **TLS records**, *then* the TLS encrypted bytes are broken up into **TCP segments.**
+> Byte stream data is first broken up into **TLS records**, *then* the TLS encrypted bytes are broken up into **TCP**/**UDP segments.**
 > <!-- --- -->
+TCP sequence number header remains unencrypted, so intruders could mess with those. **Solution:** Sender maintains a sequence number counter *(starting from 0, incremented for each TLS record sent)*, and includes the current sequence number in HMAC calculation. This way, the message integrity check on the receiver's end also checks whether sequence number is unaltered.
 
+**TLS 1.3 Actual Handshake**<br>
+![Figure 8.26](img/52.png "Figure 8.26")<br>
 
 > **\*\*NOTE****<br>
 > **Why application-layer PGP is needed despite having transport-layer TLS:**<br>
