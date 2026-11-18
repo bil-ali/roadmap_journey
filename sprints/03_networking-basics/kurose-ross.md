@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 17/11/26)
+## (27/07/26 &ndash; 18/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;17/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;18/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2296,9 +2296,63 @@ Since TCP is a byte-stream protocol, TLS breaks the data stream up into **record
 TCP sequence number header remains unencrypted, so intruders could mess with those. **Solution:** Sender maintains a sequence number counter *(starting from 0, incremented for each TLS record sent)*, and includes the current sequence number in HMAC calculation. This way, the message integrity check on the receiver's end also checks whether sequence number is unaltered.
 
 **TLS 1.3 Actual Handshake**<br>
-![Figure 8.26](img/52.png "Figure 8.26")<br>
+![Figure 8.26](img/52.png "Figure 8.26")
+
+- **`Client Hello`**<br>
+  Client indicates:
+  - the TLS version number *(1.3)*
+  - the choice of one of three **cipher suites** and parameters
+  - a nonce to avoid replay attacks
+  - client's public DH values for shared Master Secret generation
+  > **\*\*NOTE****<br>
+  > **Cipher Suite** consists of:
+  > - a key exchange technique always used to generate a Master Secret,
+  > - a SHA hashing algorithm used to derive additional keys from Master Secret,
+  > - an **AEAD (Authenticated Encryption with Associated Data)** algorithm used during data transfer.
+  > <!-- --- -->
+- **`Server Hello`, `Finished`**<br>
+  Server `Hello` contains:
+  - server's certificate
+  - chosen cipher suite
+  - server-generated nonce
+  - server's public DH values *(Server already generated Master Secret using the received client DH values)*
+
+  Server `Finished` contains a signed hash of the `Client Hello` message *(to verify untampered receipt, and effectively serve as the nonce echo)*.
+
+- **`Client Finished`**<br>
+  Client verifies the signature and certificate. Client generates its own copy of the Master Secret *(from its private DH values and the receive server public DH values)*.<br>
+  The Client `Finished` message contains a signed hash of the `Server Hello`. *(to verify untampered receipt, and effectively serve as the nonce echo)*.
+
+The TLS 1.3 Handhsake takes 1 RTT.<br>
+On top of TCP, it takes 2 RTT *(1 RTT for TCP handshake, then 1 RTT for TLS handshake)*.<br>
+With QUIC, it takes 1 RTT because it TLS doesn't run on top of QUIC, it's integrated into it *(`Client Hello` message is part of the QUIC connection establishment messsage)*.<br>QUIC may even take 0 RTT *(future TLS parameters already agreed on during a previous connection)*.
+
+TLS nonces prevent the **Connection Replay Attack**.
+
+**Connection Replay Attack:**&ensp;A  replay attack aimed at connection establishment. Intruder replays an entire previously recorded connection/handshake in an attempt to make it accepted as a new connection.
+
+Sequence numbers only protect from intruders replaying individual packets during an ongoing session.
+
+TLS 1.3 doesn't have or need an explicit HMAC; the AEAD algorithm provides both confidentiality and integrity for transmitted data.
+
+TLS-protected connection closure requires a **closure record** first before `TCP FIN` to close the connection. This protects from **Truncation Attack**.<br>*(Anyone can send you a simple unencrypted `TCP FIN` message)*
+
+**Truncation Attack:**&ensp;An attacker impersonates one party in a communication and ends the connection early, causing the receiver to process incomplete data as if it were complete.
 
 > **\*\*NOTE****<br>
 > **Why application-layer PGP is needed despite having transport-layer TLS:**<br>
+> **TLS** encrypts data in transit between two endpoints of a single connection. Once the data reaches an endpoint, it's decrypted.
 > 
+> **PGP** encrypts the message content itself, end-to-end, so it stays encrypted across every hop and while stored on servers.
+>
+> *(Transport-layer-encrypted data isn't decrypted literally everyone hop (at IP routers etc.), only on **endpoints**, which have application layers)*
+>
+> Chronologically:
+> 1. Alice's mail client &rarr; Alice's mail server (TLS-protected)
+> 2. Alice's mail server stores the message in plaintext
+> 3. Alice's mail server &rarr; Bob's mail server (TLS protected)
+> 4. Bob's mail server stores the message in plaintext
+> 5. Bob's mail client &rarr; Bob's mail server (TLS protected)
+>
+> PGP protects the data at steps 2. and 4., where they would otherwise lie unencrypted.
 > <!-- --- -->

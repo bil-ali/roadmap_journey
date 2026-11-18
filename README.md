@@ -50,8 +50,7 @@ The plan also weaves in **core CS fundamentals** (OS, networking, data structure
 Each sprint or task includes a **short `.md` proof** with:
 
 1. **Task:** What I attempted.  
-2. **Proof:** Screenshot, code/log snippet, or CI badge.  
-3. **Takeaway:** Short key takeaways
+2. **Proof:** Screenshot, code/log snippet, or CI badge.
 ---
 
 ## Current Status
