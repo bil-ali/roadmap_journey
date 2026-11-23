@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 18/11/26)
+## (27/07/26 &ndash; 23/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;18/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;23/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2356,3 +2356,27 @@ TLS-protected connection closure requires a **closure record** first before `TCP
 >
 > PGP protects the data at steps 2. and 4., where they would otherwise lie unencrypted.
 > <!-- --- -->
+
+<br>
+
+**IPsec:**&ensp;A suite of protocols that secures IP datagrams at the network layer, between any two network-layer entities *(including hosts and routers)*.
+
+IPSec provides:
+- Confidentiality
+- Source Authentication
+- Data Integrity
+- Replay-Attack Prevention
+
+**VPN (Virtual Private Network):**&ensp; A logical private network build over a public/shared network (like the Internet) using encryption and tunneling. It lets remote users/sites communicate as if they were on the same private network, while protecting traffic confidentiality/integrity and often authenticating endpoints.
+<br>
+IPsec is often used to build VPNs.
+
+Headquarters, Branch Office, Salesperson(s) VPN:<br>
+![Figure 8.27](img/53.png "Figure 8.27")<br>
+When a host in headquarters sends an IP datagram to a salesperson, the gateway router in headquarters converts the vanilla IPv4 datagram into an IPsec datagram before forwarding it into the Internet.<br>
+When the IPsec datagram arrives at the salesperson's laptop, the OS in the laptop decrypts the payload, verifies data integrity, and passes the uncencrypted payload to the upper-layer protocol (TCP or UDP).
+
+In the IPsec protocol suite, there are two principal protocols:
+1. **AH (Authentication Header)**
+2. **ESP (Encapsulation Security Payload)**
+
