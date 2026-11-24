@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 23/11/26)
+## (27/07/26 &ndash; 25/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;23/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;25/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2380,3 +2380,91 @@ In the IPsec protocol suite, there are two principal protocols:
 1. **AH (Authentication Header)**
 2. **ESP (Encapsulation Security Payload)**
 
+**AH** provides source authentication and data integrity but *not* confidentiality.
+
+**ESP** provides source authentication, data integrity, *and* confidentiality.<br>
+*(EPS is much more widely used than AH)*
+
+This chapter focuses only on ESP protocol.
+
+Before an IPsec datagram is sent from source entity to destination entity, the source and destination entitities create a network-layer logical connection, called a **Security Association (SA)**.
+
+**SAs** are simplex *(i.e., unidirectional from source to destination)*.
+
+For bidirectional traffic, there would need to be two SAs, one in each direction.
+
+The IPsec gateway router emits both vanilla IPv4 datagrams and secured IPsec datagrams *(IPv4 for regular public Internet traffic, IPsec for traffic between IPsec peers)*.
+> **\*\*NOTE****<br>
+**Gateway:**&ensp;The device at the edge of a site *(like headquarters)* that connects the local private network to the public internet.
+> <!-- --- -->
+
+For an SA from router R1 &rarr; router R2, R1 and R2 maintain the state information:
+- **Security Parameter Index (SPI)**, a 32-bit identifier for the SA
+- The origin interface *(R1's IP)* of the SA and the destination interface *(R2's IP)* of the SA
+- The type of encryption to be used *(e.g., 3DES with CBC)*
+- The encryption key *(negotiated/derived during SA setup)*
+- The type of integrity check *(e.g., HMAC with MD5)*
+- The authentication key
+
+R1 uses this state information when constructing IPsec datagrams for forwarding over this SA.
+<br>
+R2 uses this state information to authenticate and decrypt datagrams that arrive from this SA.
+
+**Security Association Database (SAD):**&ensp;The IPsec data structure in every IPsec entity's OS, that stores the state information for all active SAs for an entity.
+
+When an IPsec datagram arrives, the receiver uses the SPI + destination IP to look up the matching SA in the SAD to know how to decrypt and verify it.
+
+IPsec has two different packet formsd:
+- One for **Tunnel Mode**
+- One for **Transport Mode**
+
+**Transport Mode:**&ensp;Protects the payload of an IP datagram while keeping the original IP header for routing. Original IP header remains visible. Typically used host-to-host *(i.e., where the IPsec endpoints are the communicating hosts themselves)*.
+
+**Tunnel Mode:**&ensp;Protects the entire original IP datagram by encapsulating it inside an new IP packet with a new outer IP header. The inner original IP header is hidden. Typically used gateway-to-gateway *(the IPsec endpoints are security gateways; hosts behind gateways usually don't run IPsec)*.
+
+Tunnel mode is what's used for VPNs, and more widely deployed than transport mode.
+
+This chapter focuses only on tunnel mode.
+
+**IPsec Datagram Format:**<br>
+![Figure 8.29](img/54.png "Figure 8.29")
+
+Suppose router R1 receives an ordinary IPv4 datagram. R1 converts it to an IPsec datagram like so:
+- Appends to the back of the IPv4 datagram an **ESP trailer** field
+- Encrypts the result using the algorithm and key specified by the SA
+- Appends to the front of this encrypted quantity an **ESP header** field. The resulting package is called the "enchilada"
+- Creates an authentication MAC over the whole enchilada using the algorithm and key specified by SA
+- Appends the MAC to the back of the enchilada, forming the payload
+- Finally, creates a brand new IPv4 header and appends it before the payload
+
+To any non-IPsec router, this is just a regular IPv4 datagram to forward.
+
+Supposse the original datagram had source IP `172.16.1.17` and destination IP `172.16.2.48`. These addresses are included as part of the encrypted payload. The new IP header's source and destination IPs will be the source and destination router interfaces at the two ends of the tunnel&mdash;`200.168.1.100` and `193.68.2.23`, for example.<br>
+![Figure 8.28](img/55.png "Figure 8.28")
+
+The new IP header's Protocol field is set to `50`, indicating this is an IPsec datagram using the ESP protocol.
+
+When R2 receives the IPsec datagram:
+- R2 observes that the destination IP address of the datagram is R2 itself, so R2 processes it. Because the Protocol field is `50`, R2 sees that is should apply IPsec ESP processing to the datagram.
+- R2 uses the SPI to determine to which SA the datagram belongs.
+- R2 calculates the MAC *(using SA state info)* of the enchilada and verifies that the MAC is consistent with the ESP MAC field.<br>*(If it is, R2 now knows the datagram comes from R1 and is untampered)*
+- R2 checks the sequence number to make sure it's not a replayed datagram.
+- R2 decrypts *(using SA state info)* the encrypted unit, remooves the padding, and extracts the original IP datagram.
+- R2 forwards the extracted original IP datagram toward its ultimate destination.
+
+**Problem:** How does R1 know an IP datagram should be converted to IPsec? How does R1 know which SA should be used?<br>
+**Solution:** Along with SAD, another data structure is maintained: **Security Policy Database (SPD)**.
+
+**Security Policy Database (SPD):**&ensp;A data structure maintained by IPsec entities that indicates what types of datagrams (as a function of source IP address, destination IP address, and protocol type) are to be IPsec processed, and which SA should be used.
+
+**SPD** indicates *what* to do with an arriving datagram.<br>
+**SAD** indicates *how* to do it.
+
+With IPsec, a man-in-the-middle attacker, Trudy, can't even see the original datagram. For a datagram sent over an SA, all Trudy knows is that there's a datagram going from routers R1 to R2.&emsp;(**Confidentiality**)
+
+Suppose Trudy tries to tamper by flipping a bit, or by masquerading as source IP R1, these datagrams will fail the MAC check at R2.&emsp;(**Data Integrity**, **Source Authentication**)
+
+IPsec's sequence numbers prevent any successful replay attack.&emsp;(**Replay-Attack Prevention**)
+
+**Internet Key Exchange (IKE):**&ensp;The automated protocl IPsec uses to estbalish, negotiate, and maintian SAs. It authenticates the peers (via certificates/public keys), negotiates encryption/authentication algorithms, and securely derives/exchanges the keys for IPsec SAs.<br>
+IKE typically runs in two phases: phase 1 builds a secure IKE SA between the peers; phase 2 uses that protected channel to create the actual IPsec SAs.
