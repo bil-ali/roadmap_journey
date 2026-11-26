@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 25/11/26)
+## (27/07/26 &ndash; 26/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;25/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;26/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2357,7 +2357,7 @@ TLS-protected connection closure requires a **closure record** first before `TCP
 > PGP protects the data at steps 2. and 4., where they would otherwise lie unencrypted.
 > <!-- --- -->
 
-<br>
+<hr>
 
 **IPsec:**&ensp;A suite of protocols that secures IP datagrams at the network layer, between any two network-layer entities *(including hosts and routers)*.
 
@@ -2468,3 +2468,56 @@ IPsec's sequence numbers prevent any successful replay attack.&emsp;(**Replay-At
 
 **Internet Key Exchange (IKE):**&ensp;The automated protocl IPsec uses to estbalish, negotiate, and maintian SAs. It authenticates the peers (via certificates/public keys), negotiates encryption/authentication algorithms, and securely derives/exchanges the keys for IPsec SAs.<br>
 IKE typically runs in two phases: phase 1 builds a secure IKE SA between the peers; phase 2 uses that protected channel to create the actual IPsec SAs.
+
+<hr>
+
+Operational Security Devices that protect an organization's network:
+- Firewalls
+- Intrusion Detection Systems (IDS)
+- Intrusion Prevention Systems (IPS)
+
+**Firewall:**&ensp;A combination of hardware and software that isolates an organization's internal network from the Internet at large, allowing some packets to pass and blocking others.<br>
+![Figure 8.34](img/56.png "Figure 8.34")
+
+A firewall has three goals:
+1. All traffic from outside to inside, and vice versa, passes through the firewall.
+2. Only authorized traffic, as defined by the local security policy, will be allowed to pass.
+3. The firewall itself is immune to penetration.
+
+Three categories of firewalls:
+1. Traditional Packet Filters
+2. Stateful Filters
+3. Application Gateways
+
+**Traditional Packet Filters:**&ensp;A type of firewall, typically located at a gateway router, that examines each IP datagram *in isolation* and decides to allow/drop it based on administrator-defined rules. These rules usually match on IP addresses, protocol type *(TCP/UDP/ICMP)*, port numbers, TCP flags, and interface/direction.
+
+Firewall rules are implemented in routers with access control lists, with each router interface having its own list.
+
+**Example Access Control List:**
+| action | source address | dest address | protocol | source port | dest port | flag bit | 
+| --- | --- | --- | --- | --- | --- | --- |
+| allow | `222.22/16` | outside of `222.22/16` | TCP | >1023 | 80 | any |
+| allow | outside of `222.22/16` | `222.22/16` | TCP | 80 | >1023 | `ACK` |
+| allow | `222.22/16`  | outside of `222.22/16` | UDP | >1023 | 53 | - |
+| allow | outside of `222.22/16` | `222.22/16` | UDP | 53 | >1023 | - |
+| deny | all | all | all | all | all | all |
+- First two rules allow internal users to surf the Web.<br>
+  - Allowing only non-ACK TCP segments from Web makes it so that TCP connections originating externally are blocked; only TCP connections originating internally are allowed.
+- Second two rules together allow DNS packets to enter and leave the organization's network.
+- As a whole, this access control list blocks all traffic except Web traffic initiated from within the organization and DNS traffic.
+
+**Weakness:** An attacker, even without initiating a connection, could just DDoS this organization with unsolicited souce port `80`, `ACK`=1 segments.<br>
+**Solution:** Stop looking at packets in isolation.
+
+**Stateful Packet Filters:**&ensp;A type of firewall that tracks ongoing TCP connections in a **connection table** and uses that connections state to decide whether to allow/drop each packet. It does not judge each packet in isolation.
+
+**Example Connection Table:**
+
+**Example Access Control List for Stateful Filter:**
+| action | source address | dest address | protocol | source port | dest port | flag bit | check connection |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| allow | `222.22/16` | outside of `222.22/16` | TCP | >1023 | 80 | any |  |
+| allow | outside of `222.22/16` | `222.22/16` | TCP | 80 | >1023 | `ACK` | X |
+| allow | `222.22/16`  | outside of `222.22/16` | UDP | >1023 | 53 | - |  |
+| allow | outside of `222.22/16` | `222.22/16` | UDP | 53 | >1023 | - | X |
+| deny | all | all | all | all | all | all |  |
