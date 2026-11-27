@@ -1,5 +1,5 @@
 # ["Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross]
-## (27/07/26 &ndash; 26/11/26)
+## (27/07/26 &ndash; 27/11/26)
 ## **Task:**
 The task is to read the following chapters of [**"Computer Networking: A Top-Down Approach" by James F. Kurose & Keith W. Ross**](https://gaia.cs.umass.edu/kurose_ross/index.php):
 - **Chapter 1: &ensp;Computer Networks and the Internet**
@@ -1920,7 +1920,7 @@ The singular network protocol, the IP protocol connects the entire Internet as i
 <br>
 
 
-### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;26/11/26)
+### **Ch. 8&emsp;SECURITY IN COMPUTER NETWORKS**<br>(26/10/26&ndash;27/11/26)
 
 **Secure communication** is defined by the following properties:
 - **Confidentiality**&ensp;*(Eavesdroppers shouldn't be able to understand message; encryption)*
@@ -2291,7 +2291,7 @@ The **MS** is the shared secret, used to derive all the session keys for encrypt
 **Data Transfer:**<br>
 Since TCP is a byte-stream protocol, TLS breaks the data stream up into **records**. TLS appends HMAC to each record for integrity checking, before encrypting. *(HMAC = hash_function(record data + session HMAC key))*.
 > **\*\*NOTE****<br>
-> Byte stream data is first broken up into **TLS records**, *then* the TLS encrypted bytes are broken up into **TCP**/**UDP segments.**
+> Byte stream data is first broken up into **TLS records**, *then* the TLS-encrypted bytes are broken up into **TCP**/**UDP segments.**
 > <!-- --- -->
 TCP sequence number header remains unencrypted, so intruders could mess with those. **Solution:** Sender maintains a sequence number counter *(starting from 0, incremented for each TLS record sent)*, and includes the current sequence number in HMAC calculation. This way, the message integrity check on the receiver's end also checks whether sequence number is unaltered.
 
@@ -2512,7 +2512,11 @@ Firewall rules are implemented in routers with access control lists, with each r
 **Stateful Packet Filters:**&ensp;A type of firewall that tracks ongoing TCP connections in a **connection table** and uses that connections state to decide whether to allow/drop each packet. It does not judge each packet in isolation.
 
 **Example Connection Table:**
-
+| source address | dest address | source port | dest port |
+| --- | --- | --- | --- |
+| `222.22.1.7` | `37.96.87.123` | 12699 | 80 |
+|  |  |  | 80 |
+|  |  |  | 80 |
 **Example Access Control List for Stateful Filter:**
 | action | source address | dest address | protocol | source port | dest port | flag bit | check connection |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2521,3 +2525,49 @@ Firewall rules are implemented in routers with access control lists, with each r
 | allow | `222.22/16`  | outside of `222.22/16` | UDP | >1023 | 53 | - |  |
 | allow | outside of `222.22/16` | `222.22/16` | UDP | 53 | >1023 | - | X |
 | deny | all | all | all | all | all | all |  |
+
+Suppose an attacker sends a malicious packet with a datagram with TCP source port 80 and `ACK` flag set, into the organization's network. The packet has source port 12543 and source IP `150.23.23.155`.<br>
+When this packet reaches the firewall, the firewall checks the access control list. The access control list indicates that for such a datagram, the connection table must also be checked. The firewall checks the connection table, sees that this packet is not part of an ongoing TCP connection, and rejects the packet.
+
+**Application Gateway:**&ensp;A type of firewall that acts as an application-specific proxy server: all inbound/outbound data for a given application must pass through it, and it makes policy decisions based on application-layer data (not just IP/TCP/UDP headers). This enables finer-grained control (e.g., authenticating users, restricting SSH to specific people, or inspecting application content).
+
+Multiple application gateways can run on one host, but each host is a separate server service/program *(runs its own processes, listens on its own port/socket, etc.)*.
+
+**Anonymity and Privacy:**
+1) You don't want to reveal your IP address to the Web site
+2) You don't want your local ISP to know that you're visiting the Web site
+3) You don't want your local ISP to see the data you are exchanging with the site
+
+Achieved by combining a trusted proxy server and TLS:
+- You first make a TLS connection to the trusted proxy
+- You then send into this TLS connection an HTTP request for a page at the desired site
+- The proxy receives the TLS-encrypted HTTP request, decrypts it and forwards the cleartext HTTP request to the Web site
+- The Web site then responds to the proxy, which in turn forwards the response to you over TLS.
+- Web site only ever sees the IP address of the proxy, so you are obtaining anonymous access to the Web site.
+- Because all traffic between you and the proxy is encrypted, your local ISP can't see anything.
+
+**Problem:**, in this solution, your proxy knows everything. It's only as good as the trustworthiness of your proxy.<br>
+**Solution:** TOR.
+
+TOR randomly chooses *(from a proxy pool)* a chain of three proxies nad routes all traffic between client and server over this chain on non-colluding proxies.<br>
+*(Although cleartext is sent between the last proxy and the server, the last proxy doesn't know what IP address is sending and ultimately receiving the cleartext.)*
+
+Firewalls mainly just inspect IP/TCP/UDP/ICMP headers. Many attacks require deep packet inspection.
+
+**Intrusion Detection System (IDS):**&ensp;A device that performs deep packet inspection on traffic passing through it and generates alerts to a network administrator when it observes potentially malicious packets or traffic patterns.
+
+**Intrusion Packet System (IDS):**&ensp;An IDS that, instead of just generating alerts, actually blocks the suspicious packets.
+
+One of the most populer IDS: **Snort**.
+
+Two classes of IDS: **Signature-based Systems** or **Anomaly-based Systems**.
+
+**Signature-based IDS:**&ensp;Detects intrusions by comparing observed traffic against a database of **attack signatures**. If a packet or series of packets matches a signature, the IDS raises an alert. Effective against known attacks, but generally blind to to unknown attacks since it needs a pre-existing signature. May also have false positives.
+> **\*\*NOTE****<br>
+> **Attack signatures** are *(manually)* predefined rules describing known malicious packets or packet sequences.<br>
+> *(**e.g.**, specific ports, protocol types, payload bit patterns)*
+> <!-- --- -->
+
+**Anomaly-based IDS:**&ensp;First builds a baseline traffic profile by observing traffic in normal network operation, then flags traffic that is statistically unusual compared with that profile. Doesn't rely on known attack signatures, so may detect new attacks. But it's extrememly challenging to distinguish betwen normal traffic and statistically unusual traffic.
+
+Most IDS deployments are primarily signature-based, with some including some anomaly-based features.
